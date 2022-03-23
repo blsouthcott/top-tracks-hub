@@ -122,6 +122,15 @@ def get_pitchfork_top_tracks_html(page=1):
     return None
 
 
+def rm_quotes(string):
+    quote_chars = (chr(34), chr(39), chr(8216), chr(8217), chr(8219), chr(8220), chr(8221))
+    if string[0] in quote_chars:
+        string = string[1:]
+    if string[len(string)-1] in quote_chars:
+        string = string[:len(string)-1]
+    return string
+
+
 def parse_top_tracks_html(html):
 
     tracks = []
@@ -140,6 +149,7 @@ def parse_top_tracks_html(html):
 
         track_name_elems = track_elem.findChildren("h2", {"class": "track-collection-item__title"})
         track_name = track_name_elems[0].text
+        track_name = rm_quotes(track_name)
 
         genres = []
         genre_elems = track_elem.findChildren("li", {"class": "genre-list__item"})
@@ -153,7 +163,7 @@ def parse_top_tracks_html(html):
 
 def get_track_id(spotify: tk.Spotify, track: Track) -> str:
 
-    search = spotify.search(track.track_name)
+    search = spotify.search(f"{track.track_name} {track.artists}")
 
     for search_result in search[0].items:
         track_info = spotify.track(search_result.id)
