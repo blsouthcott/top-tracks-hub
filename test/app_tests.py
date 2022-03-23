@@ -1,11 +1,16 @@
-
+import os
 import unittest
 import logging
 
-from ..app import get_pitchfork_top_tracks_html, parse_top_tracks_html
+import tekore as tk
+
+from ..app import Track, get_pitchfork_top_tracks_html, parse_top_tracks_html, get_track_id
 
 
 logging.basicConfig(level=logging.DEBUG)
+
+
+CONFIG_FILE = "/home/ben/repos/top-tracks-scraper/test/tekore.cfg"
 
 
 class AppTester(unittest.TestCase):
@@ -16,3 +21,14 @@ class AppTester(unittest.TestCase):
             tracks = parse_top_tracks_html(html)
             logging.debug(tracks)
             self.assertTrue(tracks)
+
+    def test_get_track_id(self):
+        conf = tk.config_from_file(CONFIG_FILE, return_refresh=True)
+        token = tk.refresh_user_token(*conf[:2], conf[3])
+        spotify = tk.Spotify(token)
+
+        html = get_pitchfork_top_tracks_html(1)
+        tracks = parse_top_tracks_html(html)
+        for track in tracks:
+            track_id = get_track_id(spotify, track)
+            self.assertTrue(track_id is not None)

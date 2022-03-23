@@ -14,6 +14,7 @@
 
 import os
 from dataclasses import dataclass
+import logging
 
 from flask import Flask, request, redirect, session
 import tekore as tk
@@ -35,6 +36,8 @@ users = {}
 in_link = '<a href="/login">login</a>'
 out_link = '<a href="/logout">logout</a>'
 login_msg = f'You can {in_link} or {out_link}'
+
+logging.basicConfig(level=logging.INFO)
 
 
 def app_factory():
@@ -133,6 +136,7 @@ def parse_top_tracks_html(html):
         artist_elems = artist_list_elems[0].findChildren("li")
         for elem in artist_elems:
             artists.append(elem.text)
+        artists = sorted(artists)
 
         track_name_elems = track_elem.findChildren("h2", {"class": "track-collection-item__title"})
         track_name = track_name_elems[0].text
@@ -145,6 +149,61 @@ def parse_top_tracks_html(html):
         tracks.append(Track(artists, track_name, genres))
 
     return tracks
+
+
+def get_track_id(spotify: tk.Spotify, track: Track) -> str:
+
+    search = spotify.search(track.track_name)
+
+    for search_result in search[0].items:
+        track_info = spotify.track(search_result.id)
+        if track_info.name.lower() == track.track_name.lower(): # the track names match
+            track_artists = []
+            for artist in track_info.artists:
+                track_artists.append(artist.name)
+            track_artists = sorted(track_artists)
+            if len(track_artists) == len(track.artists): # the number of artists is the same
+                artists_match = True
+                cnt = 0
+                while artists_match:
+                    if track_artists[cnt].lower() != track.artists.lower():
+                        artists_match = False
+                    cnt += 1
+                if artists_match:
+                    # TODO: decide how to validate the track beyond the track names matching
+                    return search_result.id
+
+    # we couldn't find a match
+    return None
+
+
+def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
+    curr_user_id = spotify.current_user().id
+    playlists = spotify.playlists(curr_user_id)
+    for playlist in playlists:
+        # TODO: make this a constant or decide otherwise how we'll determine which playlist to add to, maybe store
+        #   in DB for each user?
+        if playlist.name == "Pitchfork Top Tracks":
+            return playlist.id
+
+    # we didn't find the playlist, make a new playlist
+    new_playlist = spotify.playlist_create(curr_user_id,
+                                           "Pitchfork Top Tracks",
+                                           public=False,
+                                           description="Playlist containing Pitchfork recommended tracks")
+    return new_playlist.id
+
+
+def add_top_tracks_to_playlist(spotify: tk.Spotify):
+    html = get_pitchfork_top_tracks_html(1)
+    tracks = parse_top_tracks_html(html)
+    playlist_id = get_top_tracks_playlist_id(spotify)
+    for track in tracks:
+        track_id = get_track_id(spotify, track)
+        if not track_id:
+            logging.warning("Could not get Track ID for {track.track_name} by {track.artists}")
+            continue
+        spotify.playlist_add(playlist_id, spotify.track(track_id).uri)
 
 
 if __name__ == "__main__":
