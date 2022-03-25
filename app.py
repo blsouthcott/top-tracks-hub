@@ -26,8 +26,8 @@ load_dotenv()
 
 TOP_TRACKS_URL = "https://pitchfork.com/reviews/best/tracks/"
 
-conf = tk.config_from_environment()
-cred = tk.Credentials(*conf)
+conf = tk.config_from_environment(return_refresh=True)
+cred = tk.RefreshingCredentials(*conf)
 spotify = tk.Spotify()
 
 auths = {}
@@ -37,42 +37,48 @@ in_link = '<a href="/login">login</a>'
 out_link = '<a href="/logout">logout</a>'
 login_msg = f'You can {in_link} or {out_link}'
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def app_factory():
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = "aliens"
+    #app.config["SECRET_KEY"] = ""
+
+    config_dir = os.path.join(app.root_path, "config_files")
+    logging.debug(config_dir)
 
     @app.route("/", methods=["GET"])
     def main():
-        user = session.get("user", None)
-        token = users.get(user, None)
+        #user = session.get("user", None)
+        #token = users.get(user, None)
 
-        if user is None or token is None:
-            session.pop("user", None)
-            return f"User ID: None<br>{login_msg}"
+        #if user is None or token is None:
+        #    session.pop("user", None)
+        #    return f"User ID: None<br>{login_msg}"
 
-        page = f"User ID: {user}<br><br>{login_msg} \n"
-        if token.is_expiring:
-            token = cred.refresh(token)
-            users[user] = token
+        #page = f"User ID: {user}<br><br>{login_msg} \n"
+        #if token.is_expiring:
+        #    token = cred.refresh(token)
+        #    users[user] = token
 
-        try:
-            with spotify.token_as(token):
-                playback = spotify.playback_currently_playing()
-                item = playback.item.name if playback else None
+        for fi in os.listdir(config_dir):
+            fi_conf = tk.config_from_file(os.path.join(config_dir, fi), return_refresh=True)
+            token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
 
-                playlists = spotify.playlists(spotify.current_user().id)
+            spotify = tk.Spotify(token)
+            add_top_tracks_to_playlist(spotify, 6)
 
-            page += f'<br>Now playing: {item} \n'
-            for playlist in playlists.items:
-                page += f"{playlist.id} \n"
+            current_tracks = []
+            playlist_id = get_top_tracks_playlist_id(spotify)
+            playlist_items = spotify.playlist_items(playlist_id)
+            for playlist_item in playlist_items.items:
+                curr_track = f"{playlist_item.track.name} by "
+                track_artists = playlist_item.track.artists
+                for track_artist in track_artists:
+                    curr_track += f"{track_artist.name}, "
+                current_tracks.append(curr_track)
 
-        except tk.HTTPError:
-            return "Error retrieving Spotify information!"
-
-        return page
+            return "<br>".join(current_tracks)
 
     @app.route("/login", methods=["GET"])
     def login():
@@ -94,8 +100,14 @@ def app_factory():
             return "Invalid state!", 400
 
         token = auth.request_token(code, state)
-        session["user"] = state
-        users[state] = token
+
+        config_dir = os.path.join(app.root_path, "config_files")
+        conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
+        tk.config_to_file(os.path.join(config_dir, "tekore.cfg"), conf + (token.refresh_token,))
+
+        #session["user"] = state
+        #users[state] = token
+
         return redirect("/", 307)
 
     @app.route("/logout", methods=["GET"])
@@ -161,7 +173,7 @@ def parse_top_tracks_html(html):
     return tracks
 
 
-def get_track_id(spotify: tk.Spotify, track: Track) -> str:
+def get_track_id(spotify: tk.Spotify, track: Track) -> str or None:
 
     search = spotify.search(f"{track.track_name} {track.artists}")
 
@@ -175,8 +187,8 @@ def get_track_id(spotify: tk.Spotify, track: Track) -> str:
             if len(track_artists) == len(track.artists): # the number of artists is the same
                 artists_match = True
                 cnt = 0
-                while artists_match:
-                    if track_artists[cnt].lower() != track.artists.lower():
+                while artists_match and cnt < len(track.artists):
+                    if track_artists[cnt].lower() != track.artists[cnt].lower():
                         artists_match = False
                     cnt += 1
                 if artists_match:
@@ -190,7 +202,7 @@ def get_track_id(spotify: tk.Spotify, track: Track) -> str:
 def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
     curr_user_id = spotify.current_user().id
     playlists = spotify.playlists(curr_user_id)
-    for playlist in playlists:
+    for playlist in playlists.items:
         # TODO: make this a constant or decide otherwise how we'll determine which playlist to add to, maybe store
         #   in DB for each user?
         if playlist.name == "Pitchfork Top Tracks":
@@ -204,16 +216,28 @@ def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
     return new_playlist.id
 
 
-def add_top_tracks_to_playlist(spotify: tk.Spotify):
-    html = get_pitchfork_top_tracks_html(1)
-    tracks = parse_top_tracks_html(html)
+def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
+
+    tracks = []
+    for page in range(num_recommendation_pages):
+        html = get_pitchfork_top_tracks_html(page=page)
+        tracks.extend(parse_top_tracks_html(html))
+
     playlist_id = get_top_tracks_playlist_id(spotify)
+
+    top_tracks_playlist = spotify.playlist(playlist_id)
+    top_tracks_playlist_tracks = top_tracks_playlist.tracks
+    track_ids = set()
+    for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
+        track_ids.add(top_tracks_playlist_track.track.id)
+
     for track in tracks:
         track_id = get_track_id(spotify, track)
         if not track_id:
-            logging.warning("Could not get Track ID for {track.track_name} by {track.artists}")
+            logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
             continue
-        spotify.playlist_add(playlist_id, spotify.track(track_id).uri)
+        if track_id not in track_ids:
+            spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
 
 
 if __name__ == "__main__":
