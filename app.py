@@ -10,9 +10,14 @@
     4. search for tracks by name, artist, album, figure out ID of track
     4. add tracks to playlist by IDs
     5. let user know?
+
+    TODO: 1. figure out user authentication
+          2. store tracks in DB
+          3. probably store playlist IDs for each user in DB?
 """
 
 import os
+import re
 from dataclasses import dataclass
 import logging
 
@@ -66,19 +71,21 @@ def app_factory():
             token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
 
             spotify = tk.Spotify(token)
-            add_top_tracks_to_playlist(spotify, 6)
+            added_tracks = add_top_tracks_to_playlist(spotify, 6)
 
-            current_tracks = []
-            playlist_id = get_top_tracks_playlist_id(spotify)
-            playlist_items = spotify.playlist_items(playlist_id)
-            for playlist_item in playlist_items.items:
-                curr_track = f"{playlist_item.track.name} by "
-                track_artists = playlist_item.track.artists
-                for track_artist in track_artists:
-                    curr_track += f"{track_artist.name}, "
-                current_tracks.append(curr_track)
+            return "<br>".join(added_tracks)
 
-            return "<br>".join(current_tracks)
+            #current_tracks = []
+            #playlist_id = get_top_tracks_playlist_id(spotify)
+            #playlist_items = spotify.playlist_items(playlist_id)
+            #for playlist_item in playlist_items.items:
+            #    curr_track = f"{playlist_item.track.name} by "
+            #    track_artists = playlist_item.track.artists
+            #    for track_artist in track_artists:
+            #        curr_track += f"{track_artist.name}, "
+            #    current_tracks.append(curr_track)
+
+            #return "<br>".join(current_tracks)
 
     @app.route("/login", methods=["GET"])
     def login():
@@ -150,6 +157,25 @@ def parse_top_tracks_html(html):
     soup = bs(html, "html.parser")
     track_elems = soup.find_all("div", {"class": "track-collection-item"})
 
+    newest_top_track_elems = soup.find_all("div", {"class": "track-hero"})
+    newest_artists = []
+    newest_artist_list_elems = newest_top_track_elems[0].findChildren("ul", {"class": "artist-list"})
+    newest_artist_elems = newest_artist_list_elems[0].findChildren("li")
+    for elem in newest_artist_elems:
+        newest_artists.append(elem.text)
+    newest_artists = sorted(newest_artists)
+
+    newest_track_name_elems = newest_top_track_elems[0].findChildren("h2", {"class": "title"})
+    newest_track_name = newest_track_name_elems[0].text
+    newest_track_name = rm_quotes(newest_track_name)
+
+    newest_genres = []
+    newest_genre_elems = newest_top_track_elems[0].findChildren("li", {"class": "genre-list__item"})
+    for genre_elem in newest_genre_elems:
+        newest_genres.append(genre_elem.text)
+
+    tracks.append(Track(newest_artists, newest_track_name, newest_genres))
+
     for track_elem in track_elems:
 
         artists = []
@@ -175,16 +201,27 @@ def parse_top_tracks_html(html):
 
 def get_track_id(spotify: tk.Spotify, track: Track) -> str or None:
 
-    search = spotify.search(f"{track.track_name} {track.artists}")
+    logging.debug(f"Track info: {track.track_name}, {track.artists}")
+
+    possible_matches = []
+
+    search = spotify.search(f"{track.track_name} artist:{track.artists[0]}")
 
     for search_result in search[0].items:
         track_info = spotify.track(search_result.id)
-        if track_info.name.lower() == track.track_name.lower(): # the track names match
+        # TODO: these are a pain to log because of the object structure, maybe make a logging function?
+
+        search_result_track_name = re.sub(f"\(feat.*\)", "", track_info.name)
+
+        logging.debug(f"Search result track name: {search_result_track_name}")
+
+        if search_result_track_name.lower() == track.track_name.lower(): # the track names match
             track_artists = []
             for artist in track_info.artists:
                 track_artists.append(artist.name)
             track_artists = sorted(track_artists)
-            if len(track_artists) == len(track.artists): # the number of artists is the same
+            logging.debug(f"Search result track artists: {track_artists}")
+            if len(track_artists) == len(track.artists):  # the number of artists is the same
                 artists_match = True
                 cnt = 0
                 while artists_match and cnt < len(track.artists):
@@ -194,6 +231,12 @@ def get_track_id(spotify: tk.Spotify, track: Track) -> str or None:
                 if artists_match:
                     # TODO: decide how to validate the track beyond the track names matching
                     return search_result.id
+
+            elif track_artists[0].lower() == track.artists[0].lower():
+                possible_matches.append(search_result.id)
+
+    if possible_matches:
+        return possible_matches[0]  # just return the track ID for the one possible match
 
     # we couldn't find a match
     return None
@@ -219,7 +262,7 @@ def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
 def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
 
     tracks = []
-    for page in range(num_recommendation_pages):
+    for page in range(1, num_recommendation_pages+1):
         html = get_pitchfork_top_tracks_html(page=page)
         tracks.extend(parse_top_tracks_html(html))
 
@@ -231,13 +274,19 @@ def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
     for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
         track_ids.add(top_tracks_playlist_track.track.id)
 
+    added_tracks = []
+
     for track in tracks:
         track_id = get_track_id(spotify, track)
         if not track_id:
             logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
             continue
         if track_id not in track_ids:
-            spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
+            added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
+            logging.debug(f"playlist_add returned: {added}")
+            added_tracks.append(spotify.track(track_id).name)
+
+    return added_tracks
 
 
 if __name__ == "__main__":

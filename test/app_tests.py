@@ -1,3 +1,6 @@
+""" To run local tests, a configuration file must be saved in the test directory """
+
+
 import os
 import unittest
 import logging
