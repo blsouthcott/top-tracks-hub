@@ -185,6 +185,7 @@ def save_new_artist(artist):
     if not Artist.query.get(artist):
         db.session.add(Artist(name=artist))
         db.session.commit()
+        return True
 
     return False
 
@@ -224,14 +225,11 @@ def save_new_track_to_db(track: Track):
         song_artists = [Artist.query.get(artist) for artist in track.artists]
         song_genres = [Genre.query.get(genre) for genre in track.genres]
 
-        new_song = Song(
-            name=track.track_name,
-            artists=song_artists,
-            genres=song_genres
-        )
+        new_song = Song(name=track.track_name, artists=song_artists, genres=song_genres)
 
         db.session.add(new_song)
         db.session.commit()
+
         return True
 
     return False
