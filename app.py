@@ -1,5 +1,6 @@
 """ tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
     Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
+    Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
 
     1. authenticate user (-> determine which app to authenticate with, for now just Spotify)
     2. determine which playlist to add top tracks to
@@ -22,18 +23,20 @@ from dataclasses import dataclass
 import logging
 
 from flask import Flask, request, redirect, session
+from flask_sqlalchemy import SQLAlchemy
 import tekore as tk
 from bs4 import BeautifulSoup as bs
 import requests
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 TOP_TRACKS_URL = "https://pitchfork.com/reviews/best/tracks/"
 
-conf = tk.config_from_environment(return_refresh=True)
-cred = tk.RefreshingCredentials(*conf)
-spotify = tk.Spotify()
+#conf = tk.config_from_environment(return_refresh=True)
+#cred = tk.RefreshingCredentials(*conf)
+#spotify = tk.Spotify()
 
 auths = {}
 users = {}
@@ -45,86 +48,129 @@ login_msg = f'You can {in_link} or {out_link}'
 logging.basicConfig(level=logging.DEBUG)
 
 
-def app_factory():
-    app = Flask(__name__)
-    #app.config["SECRET_KEY"] = ""
+app = Flask(__name__)
+
+#app.config["SECRET_KEY"] = ""
+
+CONFIG_DIR = os.path.join(app.root_path, "config_files")
+logging.debug(CONFIG_DIR)
+
+NAMESPACE = os.getenv("NAMESPACE")
+if NAMESPACE == "local":
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////{os.path.join(app.root_path, 'test', 'test.db')}"
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////{os.path.join(app.root_path, 'recommended_tracks.db')}"
+
+
+db = SQLAlchemy(app)
+
+
+track_artists_table = db.Table("track_artists_table",
+                               db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
+                               db.Column("artist_name", db.String(80), db.ForeignKey("artist.name")))
+
+track_genres_table = db.Table("track_genres_table",
+                              db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
+                              db.Column("genre_name", db.String(80), db.ForeignKey("genre.name")))
+
+
+class User(db.Model):
+    email = db.Column(db.String(120), primary_key=True)
+    playlist_id = db.Column(db.String(120), unique=True, nullable=False)
+
+
+class Artist(db.Model):
+    name = db.Column(db.String(80), primary_key=True)
+
+
+class Song(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    artists = db.relationship("Artist", secondary=track_artists_table, lazy="subquery")
+                              #backref=db.backref("tracks", lazy=True))
+    genres = db.relationship("Genre", secondary=track_genres_table, lazy="subquery")
+                             #backref=db.backref("tracks", lazy=True))
+
+
+class Genre(db.Model):
+    name = db.Column(db.String(80), primary_key=True)
+
+
+
+@app.route("/", methods=["GET"])
+def main():
+    #user = session.get("user", None)
+    #token = users.get(user, None)
+
+    #if user is None or token is None:
+    #    session.pop("user", None)
+    #    return f"User ID: None<br>{login_msg}"
+
+    #page = f"User ID: {user}<br><br>{login_msg} \n"
+    #if token.is_expiring:
+    #    token = cred.refresh(token)
+    #    users[user] = token
+
+    for fi in os.listdir(CONFIG_DIR):
+        fi_conf = tk.config_from_file(os.path.join(CONFIG_DIR, fi), return_refresh=True)
+        token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
+
+        spotify = tk.Spotify(token)
+        added_tracks = add_top_tracks_to_playlist(spotify, 6)
+
+        return "<br>".join(added_tracks)
+
+        #current_tracks = []
+        #playlist_id = get_top_tracks_playlist_id(spotify)
+        #playlist_items = spotify.playlist_items(playlist_id)
+        #for playlist_item in playlist_items.items:
+        #    curr_track = f"{playlist_item.track.name} by "
+        #    track_artists = playlist_item.track.artists
+        #    for track_artist in track_artists:
+        #        curr_track += f"{track_artist.name}, "
+        #    current_tracks.append(curr_track)
+
+        #return "<br>".join(current_tracks)
+
+
+@app.route("/login", methods=["GET"])
+def login():
+    if "user" in session:
+        return redirect("/", 307)
+
+    scope = tk.scope.user_read_currently_playing
+    auth = tk.UserAuth(cred, scope)
+    auths[auth.state] = auth
+    return redirect(auth.url, 307)
+
+
+@app.route("/callback", methods=["GET"])
+def login_callback():
+    code = request.args.get("code", None)
+    state = request.args.get("state", None)
+    auth = auths.pop(state, None)
+
+    if auth is None:
+        return "Invalid state!", 400
+
+    token = auth.request_token(code, state)
 
     config_dir = os.path.join(app.root_path, "config_files")
-    logging.debug(config_dir)
+    conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
+    tk.config_to_file(os.path.join(config_dir, "tekore.cfg"), conf + (token.refresh_token,))
 
-    @app.route("/", methods=["GET"])
-    def main():
-        #user = session.get("user", None)
-        #token = users.get(user, None)
+    #session["user"] = state
+    #users[state] = token
 
-        #if user is None or token is None:
-        #    session.pop("user", None)
-        #    return f"User ID: None<br>{login_msg}"
+    return redirect("/", 307)
 
-        #page = f"User ID: {user}<br><br>{login_msg} \n"
-        #if token.is_expiring:
-        #    token = cred.refresh(token)
-        #    users[user] = token
 
-        for fi in os.listdir(config_dir):
-            fi_conf = tk.config_from_file(os.path.join(config_dir, fi), return_refresh=True)
-            token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
-
-            spotify = tk.Spotify(token)
-            added_tracks = add_top_tracks_to_playlist(spotify, 6)
-
-            return "<br>".join(added_tracks)
-
-            #current_tracks = []
-            #playlist_id = get_top_tracks_playlist_id(spotify)
-            #playlist_items = spotify.playlist_items(playlist_id)
-            #for playlist_item in playlist_items.items:
-            #    curr_track = f"{playlist_item.track.name} by "
-            #    track_artists = playlist_item.track.artists
-            #    for track_artist in track_artists:
-            #        curr_track += f"{track_artist.name}, "
-            #    current_tracks.append(curr_track)
-
-            #return "<br>".join(current_tracks)
-
-    @app.route("/login", methods=["GET"])
-    def login():
-        if "user" in session:
-            return redirect("/", 307)
-
-        scope = tk.scope.user_read_currently_playing
-        auth = tk.UserAuth(cred, scope)
-        auths[auth.state] = auth
-        return redirect(auth.url, 307)
-
-    @app.route("/callback", methods=["GET"])
-    def login_callback():
-        code = request.args.get("code", None)
-        state = request.args.get("state", None)
-        auth = auths.pop(state, None)
-
-        if auth is None:
-            return "Invalid state!", 400
-
-        token = auth.request_token(code, state)
-
-        config_dir = os.path.join(app.root_path, "config_files")
-        conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
-        tk.config_to_file(os.path.join(config_dir, "tekore.cfg"), conf + (token.refresh_token,))
-
-        #session["user"] = state
-        #users[state] = token
-
-        return redirect("/", 307)
-
-    @app.route("/logout", methods=["GET"])
-    def logout():
-        uid = session.pop("user", None)
-        if uid is not None:
-            users.pop(uid, None)
-        return redirect("/", 307)
-
-    return app
+@app.route("/logout", methods=["GET"])
+def logout():
+    uid = session.pop("user", None)
+    if uid is not None:
+        users.pop(uid, None)
+    return redirect("/", 307)
 
 
 @dataclass
@@ -132,6 +178,60 @@ class Track:
     artists: list
     track_name: str
     genres: list
+
+
+def save_new_artist(artist):
+    if not Artist.query.get(artist):
+        db.session.add(Artist(name=artist))
+        db.session.commit()
+
+
+def save_new_genre(genre):
+    if not Genre.query.get(genre):
+        db.session.add(Genre(name=genre))
+        db.session.commit()
+
+
+def save_new_track_to_db(track: Track):
+
+    query = Song.query.filter(Song.name == track.track_name)
+
+    cnt = 0
+    while query.all() and cnt < len(track.artists):
+        query = query.filter(Song.artists.any(name=track.artists[cnt]))
+        cnt += 1
+
+    cnt = 0
+    while query.all() and cnt < len(track.genres):
+        query = query.filter(Song.genres.any(name=track.genres[cnt]))
+        cnt += 1
+
+    if not query.all():
+
+        for artist in track.artists:
+            save_new_artist(artist)
+
+        for genre in track.genres:
+            save_new_genre(genre)
+
+        new_song = Song(
+            name=track.track_name,
+            artists=[Artist.query.get(track.artists[0])],
+            genres=[Genre.query.get(track.genres[0])]
+        )
+
+        db.session.add(new_song)
+        db.session.commit()
+
+        db.session.refresh(new_song)
+
+        if len(track.artists) > 1:
+            for cnt in range(1, len(track.artists)):
+                Song.query.get(new_song.id).artists.append(Artist.query.get(track.artists[cnt]))
+
+        if len(track.genres) > 1:
+            for cnt in range(1, len(track.genres)):
+                Song.query.get(new_song.id).genres.append(Genre.query.get(track.genres[cnt]))
 
 
 def get_pitchfork_top_tracks_html(page=1):
@@ -150,7 +250,7 @@ def rm_quotes(string):
     return string
 
 
-def parse_top_tracks_html(html):
+def parse_top_tracks_html(html) -> list[Track]:
 
     tracks = []
 
@@ -289,6 +389,15 @@ def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
     return added_tracks
 
 
+def add_new_top_tracks(spotify: tk.Spotify, user: User, num_recommendation_pages: int = 1):
+
+    tracks = []
+    for page in range(1, num_recommendation_pages + 1):
+        html = get_pitchfork_top_tracks_html(page=page)
+        tracks.extend(parse_top_tracks_html(html))
+
+    # ... TODO: finish implementing this function
+
+
 if __name__ == "__main__":
-    application = app_factory()
-    application.run("127.0.0.1", 5000)
+    app.run("127.0.0.1", 5000)

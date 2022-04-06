@@ -13,7 +13,17 @@ from ..app import Track, get_pitchfork_top_tracks_html, parse_top_tracks_html, g
 logging.basicConfig(level=logging.DEBUG)
 
 
-CONFIG_FILE = "/home/ben/repos/top-tracks-scraper/test/tekore.cfg"
+CONFIG_FILE = f"{os.getenv('HOME')}/repos/scrape-top-tracks/test/tekore.cfg"
+
+
+def local_config():
+    """ run this function so tests can run locally """
+    with open(CONFIG_FILE, "w") as f:
+        f.write("")
+    conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
+
+    token = tk.prompt_for_user_token(*conf, scope=tk.scope.every)
+    tk.config_to_file(CONFIG_FILE, conf + (token.refresh_token,))
 
 
 class AppTester(unittest.TestCase):
