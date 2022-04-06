@@ -181,15 +181,22 @@ class Track:
 
 
 def save_new_artist(artist):
+
     if not Artist.query.get(artist):
         db.session.add(Artist(name=artist))
         db.session.commit()
 
+    return False
+
 
 def save_new_genre(genre):
+
     if not Genre.query.get(genre):
         db.session.add(Genre(name=genre))
         db.session.commit()
+        return True
+
+    return False
 
 
 def save_new_track_to_db(track: Track):
@@ -214,24 +221,20 @@ def save_new_track_to_db(track: Track):
         for genre in track.genres:
             save_new_genre(genre)
 
+        song_artists = [Artist.query.get(artist) for artist in track.artists]
+        song_genres = [Genre.query.get(genre) for genre in track.genres]
+
         new_song = Song(
             name=track.track_name,
-            artists=[Artist.query.get(track.artists[0])],
-            genres=[Genre.query.get(track.genres[0])]
+            artists=song_artists,
+            genres=song_genres
         )
 
         db.session.add(new_song)
         db.session.commit()
+        return True
 
-        db.session.refresh(new_song)
-
-        if len(track.artists) > 1:
-            for cnt in range(1, len(track.artists)):
-                Song.query.get(new_song.id).artists.append(Artist.query.get(track.artists[cnt]))
-
-        if len(track.genres) > 1:
-            for cnt in range(1, len(track.genres)):
-                Song.query.get(new_song.id).genres.append(Genre.query.get(track.genres[cnt]))
+    return False
 
 
 def get_pitchfork_top_tracks_html(page=1):
