@@ -73,6 +73,10 @@ track_genres_table = db.Table("track_genres_table",
                               db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
                               db.Column("genre_name", db.String(80), db.ForeignKey("genre.name")))
 
+sites_table = db.Table("sites_table",
+                       db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
+                       db.Column("site_name", db.String(80), db.ForeignKey("site.name")))
+
 
 class User(db.Model):
     email = db.Column(db.String(120), primary_key=True)
@@ -85,15 +89,21 @@ class Artist(db.Model):
 
 class Song(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80))
-    artists = db.relationship("Artist", secondary=track_artists_table, lazy="subquery")
+    name = db.Column(db.String(80), nullable=False)
+    artists = db.relationship("Artist", secondary=track_artists_table, lazy="subquery", backref="song")
                               #backref=db.backref("tracks", lazy=True))
-    genres = db.relationship("Genre", secondary=track_genres_table, lazy="subquery")
+    genres = db.relationship("Genre", secondary=track_genres_table, lazy="subquery", backref="song")
                              #backref=db.backref("tracks", lazy=True))
+    site_name = db.Column(db.String(80), db.ForeignKey("site.name"), nullable=False)
 
 
 class Genre(db.Model):
     name = db.Column(db.String(80), primary_key=True)
+
+
+class Site(db.Model):
+    name = db.Column(db.String(80), primary_key=True)
+    songs = db.relationship("Song", backref="site", lazy=True)
 
 
 
@@ -180,6 +190,16 @@ class Track:
     genres: list
 
 
+def save_new_recommendations_site(site_name):
+
+    if Site.query.get(site_name):
+        return False
+
+    db.session.add(Site(name=site_name))
+    db.session.commit()
+    return True
+
+
 def save_new_artist(artist):
 
     if not Artist.query.get(artist):
@@ -200,8 +220,10 @@ def save_new_genre(genre):
     return False
 
 
-def save_new_track_to_db(track: Track):
-
+def save_new_track_to_db(track: Track, site: str):
+    """ track should be a Track object, site should be a string of the name of the recommendations site
+        new recommendation site names should be added to the DB before calling this function
+    """
     query = Song.query.filter(Song.name == track.track_name)
 
     cnt = 0
@@ -225,7 +247,12 @@ def save_new_track_to_db(track: Track):
         song_artists = [Artist.query.get(artist) for artist in track.artists]
         song_genres = [Genre.query.get(genre) for genre in track.genres]
 
-        new_song = Song(name=track.track_name, artists=song_artists, genres=song_genres)
+        new_song = Song(
+            name=track.track_name,
+            artists=song_artists,
+            genres=song_genres,
+            site=Site.query.get(site)
+        )
 
         db.session.add(new_song)
         db.session.commit()
@@ -243,12 +270,19 @@ def get_pitchfork_top_tracks_html(page=1):
 
 
 def rm_quotes(string):
-    quote_chars = (chr(34), chr(39), chr(8216), chr(8217), chr(8219), chr(8220), chr(8221))
-    if string[0] in quote_chars:
-        string = string[1:]
-    if string[len(string)-1] in quote_chars:
-        string = string[:len(string)-1]
+    quote_chars = {chr(34), chr(39), chr(8216), chr(8217), chr(8219), chr(8220), chr(8221)}
+    for char in quote_chars:
+        if char in string:
+            string = string.replace(char, "")
     return string
+
+
+def rm_feat_artist(track_name):
+    return re.sub(r"(\[|\(+)(feat|ft|featuring)(.*)", "", track_name)
+
+
+def sanitize_track_name(track_name):
+    return rm_feat_artist(rm_quotes(track_name)).strip()
 
 
 def parse_top_tracks_html(html) -> list[Track]:
@@ -268,7 +302,7 @@ def parse_top_tracks_html(html) -> list[Track]:
 
     newest_track_name_elems = newest_top_track_elems[0].findChildren("h2", {"class": "title"})
     newest_track_name = newest_track_name_elems[0].text
-    newest_track_name = rm_quotes(newest_track_name)
+    newest_track_name = sanitize_track_name(newest_track_name)
 
     newest_genres = []
     newest_genre_elems = newest_top_track_elems[0].findChildren("li", {"class": "genre-list__item"})
@@ -288,7 +322,7 @@ def parse_top_tracks_html(html) -> list[Track]:
 
         track_name_elems = track_elem.findChildren("h2", {"class": "track-collection-item__title"})
         track_name = track_name_elems[0].text
-        track_name = rm_quotes(track_name)
+        track_name = sanitize_track_name(track_name)
 
         genres = []
         genre_elems = track_elem.findChildren("li", {"class": "genre-list__item"})
@@ -300,23 +334,20 @@ def parse_top_tracks_html(html) -> list[Track]:
     return tracks
 
 
-def get_track_id(spotify: tk.Spotify, track: Track) -> str or None:
+def search_track_id(spotify: tk.Spotify, track: Track) -> str or None:
+    # update this to handle where track is a `Song`
 
     logging.debug(f"Track info: {track.track_name}, {track.artists}")
 
     possible_matches = []
-
     search = spotify.search(f"{track.track_name} artist:{track.artists[0]}")
-
     for search_result in search[0].items:
         track_info = spotify.track(search_result.id)
         # TODO: these are a pain to log because of the object structure, maybe make a logging function?
-
-        search_result_track_name = re.sub(f"\(feat.*\)", "", track_info.name)
-
+        search_result_track_name = sanitize_track_name(track_info.name)
         logging.debug(f"Search result track name: {search_result_track_name}")
 
-        if search_result_track_name.lower() == track.track_name.lower(): # the track names match
+        if search_result_track_name.lower() == track.track_name.lower():  # the track names match
             track_artists = []
             for artist in track_info.artists:
                 track_artists.append(artist.name)
@@ -378,7 +409,7 @@ def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
     added_tracks = []
 
     for track in tracks:
-        track_id = get_track_id(spotify, track)
+        track_id = search_track_id(spotify, track)
         if not track_id:
             logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
             continue
@@ -390,14 +421,15 @@ def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
     return added_tracks
 
 
-def add_new_top_tracks(spotify: tk.Spotify, user: User, num_recommendation_pages: int = 1):
-
-    tracks = []
-    for page in range(1, num_recommendation_pages + 1):
-        html = get_pitchfork_top_tracks_html(page=page)
-        tracks.extend(parse_top_tracks_html(html))
-
-    # ... TODO: finish implementing this function
+def fill_pitchfork_top_tracks_db():
+    page = 1
+    html = get_pitchfork_top_tracks_html(page=page)
+    while html:
+        tracks = parse_top_tracks_html(html)
+        for track in tracks:
+            save_new_track_to_db(track, "Pitchfork")
+        page += 1
+        html = get_pitchfork_top_tracks_html(page)
 
 
 if __name__ == "__main__":
