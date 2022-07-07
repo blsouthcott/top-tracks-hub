@@ -7,13 +7,13 @@ import logging
 
 import tekore as tk
 
-from ..app import Track, get_pitchfork_top_tracks_html, parse_top_tracks_html, get_track_id, get_top_tracks_playlist_id
+from ..controller import get_pitchfork_top_tracks_html, parse_top_tracks_html, search_track_id, get_top_tracks_playlist_id
 
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-CONFIG_FILE = f"{os.getenv('HOME')}/repos/scrape-top-tracks/test/tekore.cfg"
+CONFIG_FILE = f"{os.getenv('HOME')}/repos/scrape-top-tracks/app/test/tekore.cfg"
 
 
 def local_config():
@@ -51,7 +51,7 @@ class AppTester(unittest.TestCase):
         html = get_pitchfork_top_tracks_html(1)
         tracks = parse_top_tracks_html(html)
         for track in tracks:
-            track_id = get_track_id(spotify, track)
+            track_id = search_track_id(spotify, track)
             self.assertTrue(track_id is not None)
             track_match = spotify.track(track_id)
             print(f"Track: {track.track_name}")
