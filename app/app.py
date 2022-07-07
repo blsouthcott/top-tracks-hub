@@ -130,16 +130,6 @@ def main():
 def login():
     return render_template("login.html")
 
-    if "user" in session:
-        return redirect("/", 307)
-
-    conf = tk.config_from_environment(return_refresh=True)
-    cred = tk.RefreshingCredentials(*conf)
-    scope = tk.scope.user_read_currently_playing
-    auth = tk.UserAuth(cred, scope)
-    auths[auth.state] = auth
-    return redirect(auth.url, 307)
-
 
 @app.route("/login", methods=["POST"])
 def login_post():
@@ -159,7 +149,19 @@ def login_post():
     return redirect(url_for("profile"))
 
 
+@app.route("/authorize")
+@login_required
+def authorize():
+    conf = tk.config_from_environment(return_refresh=True)
+    cred = tk.RefreshingCredentials(*conf)
+    scope = tk.scope.user_read_currently_playing
+    auth = tk.UserAuth(cred, scope)
+    auths[auth.state] = auth
+    return redirect(auth.url, 307)
+
+
 @app.route("/callback", methods=["GET"])
+@login_required
 def login_callback():
     code = request.args.get("code", None)
     state = request.args.get("state", None)
@@ -172,12 +174,36 @@ def login_callback():
 
     config_dir = os.path.join(app.root_path, "config_files")
     conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
-    tk.config_to_file(os.path.join(config_dir, "tekore.cfg"), conf + (token.refresh_token,))
+    # TODO: can we get the spotify account ID or something like that so we're not duplicating any authorizations
+    #   and adding tracks multiple times to people's playlists?
+    tk.config_to_file(os.path.join(config_dir, f"{current_user.email}.cfg"), conf + (token.refresh_token,))
 
-    #session["user"] = state
-    #users[state] = token
+    flash("Your Spotify account has been successfully authorized!")
+    return redirect(url_for("profile"), 307)
 
-    return redirect("/", 307)
+
+@app.route("/un-authorize")
+@login_required
+def un_authorize():
+    config_dir = os.path.join(app.root_path, "config_files")
+    user_removed = False
+    for fi in os.listdir(config_dir):
+        if current_user.email in fi:
+            os.remove(os.path.join(config_dir, fi))
+            user_removed = True
+            break
+
+    if user_removed:
+        flash(
+            "Your Spotify account has been removed. You will no longer receive new tracks in your playlist."
+        )
+    else:
+        flash(
+            "Your Spotify account is not currently authorized. You are not currently "
+            "receiving new tracks in your playlist"
+        )
+
+    return redirect(url_for("profile"))
 
 
 @app.route("/signup")
