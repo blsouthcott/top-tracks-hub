@@ -58,9 +58,6 @@ def get_spotify_obj():
 #sched.start()
 
 
-db = SQLAlchemy()
-
-
 def create_app():
     app = Flask(__name__)
 
@@ -250,3 +247,10 @@ def logout():
     if uid is not None:
         users.pop(uid, None)
     return redirect("/", 307)
+
+
+@app.route("/songs", methods=["GET"])
+@login_required
+def stored_songs():
+    songs = Song.query.all()
+    return render_template("display_tracks.html", songs=songs)

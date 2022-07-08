@@ -8,8 +8,8 @@ import requests
 from bs4 import BeautifulSoup as bs
 import tekore as tk
 
-from .app import db, get_spotify_obj
-from .models import User, Song, Site, Artist, Genre
+from .app import get_spotify_obj
+from .models import db, User, Song, Site, Artist, Genre
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -180,8 +180,9 @@ def add_new_track():
             spotify_obj = get_spotify_obj()
             track_id = search_track_id(spotify_obj, new_track)
             if not track_id:
-                # send an automated email to me telling me I have to manually put in in the track ID
+                # send an automated email to me telling me I have to manually put in the track ID
                 return
+
 
 def search_track_id(spotify: tk.Spotify, track: Track) -> str or None:
     # update this to handle where track is a `Song`
@@ -274,7 +275,7 @@ def fill_pitchfork_top_tracks_db():
     page = 1
     html = get_pitchfork_top_tracks_html(page=page)
     while html:
-        tracks = parse_top_tracks_html(html)
+        tracks = parse_top_tracks_html(html, only_newest=False)
         for track in tracks:
             save_new_track_to_db(track, "Pitchfork")
         page += 1
