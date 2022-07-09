@@ -39,6 +39,7 @@ class Song(db.Model):
     genres = db.relationship("Genre", secondary=track_genres_table, lazy="subquery", backref="song")
                              #backref=db.backref("tracks", lazy=True))
     site_name = db.Column(db.String(80), db.ForeignKey("site.name"), nullable=False)
+    spotify_track_id = db.Column(db.String(100))
 
 
 class Genre(db.Model):

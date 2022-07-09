@@ -21,7 +21,6 @@ import os
 import logging
 
 from flask import Flask, request, redirect, session, render_template, flash, url_for
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import tekore as tk
@@ -44,7 +43,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def get_spotify_obj():
-    fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], fi), return_refresh=True)
+    fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], "tekore.cfg"), return_refresh=True)
     token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
     spotify = tk.Spotify(token)
     return spotify
@@ -59,6 +58,7 @@ def get_spotify_obj():
 
 
 def create_app():
+
     app = Flask(__name__)
 
     app.config["SECRET_KEY"] = "MyExtraUniqueSecretKey"
@@ -243,14 +243,31 @@ def logout():
     logout_user()
     return redirect(url_for("main"))
 
-    uid = session.pop("user", None)
-    if uid is not None:
-        users.pop(uid, None)
-    return redirect("/", 307)
-
 
 @app.route("/songs", methods=["GET"])
 @login_required
-def stored_songs():
+def display_songs():
     songs = Song.query.all()
-    return render_template("display_tracks.html", songs=songs)
+    songs = sorted(songs, key=lambda song: str(song.artists[0]))
+    return render_template("display-songs.html", songs=songs)
+
+
+@app.route("/view-song/<song_id>")
+@login_required
+def view_song(song_id):
+    return render_template("song-info.html", song=Song.query.get(song_id))
+
+
+@app.route("/update-track-id", methods=["POST"])
+@login_required
+def update_track_id():
+    track_id = request.form.get("spotify-track-id")
+    song_id = request.form.get("song-id")
+    song_name = request.form.get("song-name")
+    logging.info(f"Track ID: {track_id}")
+    logging.info(f"Song ID: {song_id}")
+    song = Song.query.get(song_id)
+    song.spotify_track_id = track_id
+    db.session.commit()
+    flash(f"The Spotify Track ID for {song_name} with Song ID: {song_id} has been updated.")
+    return redirect(url_for("display_songs"))

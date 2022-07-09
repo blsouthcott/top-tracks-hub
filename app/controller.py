@@ -1,5 +1,4 @@
 
-import os
 import re
 import logging
 from dataclasses import dataclass
@@ -91,9 +90,21 @@ def save_new_track_to_db(track: Track, site: str):
         db.session.add(new_song)
         db.session.commit()
 
-        return True
+        return
 
     return False
+
+
+def get_song_by_name_and_artist(song_name: str, song_artist: str) -> Song:
+
+    query = Song.query.filter(
+        Song.name == song_name,
+        Song.artists.any(name=song_artist)
+    )
+    songs = query.all()
+    if not songs:
+        return None
+    return songs[0]
 
 
 def rm_quotes(string):
@@ -154,7 +165,7 @@ def parse_top_tracks_html(html, only_newest=True) -> list[Track]:
         artist_elems = artist_list_elems[0].findChildren("li")
         for elem in artist_elems:
             artists.append(elem.text)
-        artists = sorted(artists)
+        # artists = sorted(artists)
 
         track_name_elems = track_elem.findChildren("h2", {"class": "track-collection-item__title"})
         track_name = track_name_elems[0].text
@@ -170,55 +181,43 @@ def parse_top_tracks_html(html, only_newest=True) -> list[Track]:
     return tracks
 
 
-def add_new_track():
-    html = get_pitchfork_top_tracks_html()
-    tracks = parse_top_tracks_html(html)
-    if tracks:
-        new_track = tracks[0]
-        new_track_saved = save_new_track_to_db(new_track, "Pitchfork")
-        if new_track_saved:
-            spotify_obj = get_spotify_obj()
-            track_id = search_track_id(spotify_obj, new_track)
-            if not track_id:
-                # send an automated email to me telling me I have to manually put in the track ID
-                return
-
-
-def search_track_id(spotify: tk.Spotify, track: Track) -> str or None:
+def search_track_id(spotify: tk.Spotify, song: Song) -> str or None:
     # update this to handle where track is a `Song`
 
-    logging.debug(f"Track info: {track.track_name}, {track.artists}")
+    logging.debug(f"Track info: {song.track_name}, {song.artists}")
 
     possible_matches = []
-    search = spotify.search(f"{track.track_name} artist:{track.artists[0]}")
+    search = spotify.search(f"{song.track_name} artist:{song.artists[0].name}")
     for search_result in search[0].items:
-        track_info = spotify.track(search_result.id)
+        spotify_track_info = spotify.track(search_result.id)
         # TODO: these are a pain to log because of the object structure, maybe make a logging function?
-        search_result_track_name = sanitize_track_name(track_info.name)
-        logging.debug(f"Search result track name: {search_result_track_name}")
+        spotify_track_name = sanitize_track_name(spotify_track_info.name)
+        logging.debug(f"Search result track name: {spotify_track_name}")
 
-        if search_result_track_name.lower() == track.track_name.lower():  # the track names match
-            track_artists = []
-            for artist in track_info.artists:
-                track_artists.append(artist.name)
-            track_artists = sorted(track_artists)
-            logging.debug(f"Search result track artists: {track_artists}")
-            if len(track_artists) == len(track.artists):  # the number of artists is the same
+        if spotify_track_name.lower() == song.name.lower():  # the track names match
+            spotify_track_artists = []
+            for artist in spotify_track_info.artists:
+                spotify_track_artists.append(artist.name)
+            spotify_track_artists = spotify_track_artists.sort()
+            song_artists = list(song.artists).sort(key=lambda artist: artist.name)
+            logging.debug(f"Search result track artists: {spotify_track_artists}")
+            if len(spotify_track_artists) == len(song_artists):  # the number of artists is the same
                 artists_match = True
                 cnt = 0
-                while artists_match and cnt < len(track.artists):
-                    if track_artists[cnt].lower() != track.artists[cnt].lower():
+                while artists_match and cnt < len(song_artists):
+                    if spotify_track_artists[cnt].lower() != song_artists[cnt].name.lower():
                         artists_match = False
                     cnt += 1
                 if artists_match:
                     # TODO: decide how to validate the track beyond the track names matching
+                    # for now, only return the track id if it's an exact match
                     return search_result.id
 
-            elif track_artists[0].lower() == track.artists[0].lower():
-                possible_matches.append(search_result.id)
+            # elif spotify_track_artists[0].lower() == song_artists[0].name.lower():
+            #     possible_matches.append(search_result.id)
 
-    if possible_matches:
-        return possible_matches[0]  # just return the track ID for the one possible match
+    # if possible_matches:
+    #     return possible_matches[0]  # just return the track ID for the one possible match
 
     # we couldn't find a match
     return None
@@ -237,7 +236,8 @@ def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
     new_playlist = spotify.playlist_create(curr_user_id,
                                            "Pitchfork Top Tracks",
                                            public=False,
-                                           description="Playlist containing Pitchfork recommended tracks")
+                                           description="Playlist containing Pitchfork recommended tracks"
+                                           )
     return new_playlist.id
 
 
@@ -272,6 +272,7 @@ def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
 
 
 def fill_pitchfork_top_tracks_db():
+    save_new_recommendations_site("Pitchfork")
     page = 1
     html = get_pitchfork_top_tracks_html(page=page)
     while html:
@@ -280,3 +281,22 @@ def fill_pitchfork_top_tracks_db():
             save_new_track_to_db(track, "Pitchfork")
         page += 1
         html = get_pitchfork_top_tracks_html(page)
+
+
+def add_new_track():
+    html = get_pitchfork_top_tracks_html()
+    tracks = parse_top_tracks_html(html)
+    if tracks:
+        new_track = tracks[0]
+        new_track_saved = save_new_track_to_db(new_track, "Pitchfork")
+        if new_track_saved:
+            spotify_obj = get_spotify_obj()
+            track_id = search_track_id(spotify_obj, new_track)
+            if not track_id:
+                # TODO: send an automated email to me telling me I have to manually put in the track ID
+                pass
+            else:
+                # TODO: update track ID in the database
+                song = get_song_by_name_and_artist(new_track.track_name, new_track.artists[0])
+                song.spotify_track_id = track_id
+                db.session.commit()
