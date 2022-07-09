@@ -11,12 +11,12 @@
 <div class="table-container">
     <table class="table">
         <thead>
-            <th>Song ID</th>
-            <th>Song Name</th>
-            <th>Song Artists</th>
-            <th>Song Genres</th>
-            <th>Site</th>
-            <th>Spotify Track ID</th>
+            <th><a href="/songs?sort-by=song-id">Song ID</a></th>
+            <th><a href="/songs?sort-by=song-name">Song Name</a></th>
+            <th><a href="/songs?sort-by=song-artist">Song Artists</a></th>
+            <th><a href="/songs?sort-by=song-genre">Song Genres</a></th>
+            <th><a href="/songs?sort-by=site-name">Site</a></th>
+            <th><a href="/songs?sort-by=spotify-track-id">Spotify Track ID</a></th>
         </thead>
         <tbody>
             {% for song in songs %}

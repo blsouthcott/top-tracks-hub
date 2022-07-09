@@ -181,13 +181,14 @@ def parse_top_tracks_html(html, only_newest=True) -> list[Track]:
     return tracks
 
 
-def search_track_id(spotify: tk.Spotify, song: Song) -> str or None:
+def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
     # update this to handle where track is a `Song`
 
-    logging.debug(f"Track info: {song.track_name}, {song.artists}")
+    logging.debug(f"Track info: {song.name}, {song.artists}")
 
     possible_matches = []
-    search = spotify.search(f"{song.track_name} artist:{song.artists[0].name}")
+    search = spotify.search(f"{song.name} artist:{song.artists[0].name}")
+    logging.debug(f"Searched for: '{song.name} artist:{song.artists[0].name}'")
     for search_result in search[0].items:
         spotify_track_info = spotify.track(search_result.id)
         # TODO: these are a pain to log because of the object structure, maybe make a logging function?
@@ -198,8 +199,9 @@ def search_track_id(spotify: tk.Spotify, song: Song) -> str or None:
             spotify_track_artists = []
             for artist in spotify_track_info.artists:
                 spotify_track_artists.append(artist.name)
-            spotify_track_artists = spotify_track_artists.sort()
-            song_artists = list(song.artists).sort(key=lambda artist: artist.name)
+            spotify_track_artists.sort()
+            song_artists = list(song.artists)
+            song_artists.sort(key=lambda artist: artist.name)
             logging.debug(f"Search result track artists: {spotify_track_artists}")
             if len(spotify_track_artists) == len(song_artists):  # the number of artists is the same
                 artists_match = True
@@ -241,36 +243,6 @@ def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
     return new_playlist.id
 
 
-def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
-
-    tracks = []
-    for page in range(1, num_recommendation_pages+1):
-        html = get_pitchfork_top_tracks_html(page=page)
-        tracks.extend(parse_top_tracks_html(html))
-
-    playlist_id = get_top_tracks_playlist_id(spotify)
-
-    top_tracks_playlist = spotify.playlist(playlist_id)
-    top_tracks_playlist_tracks = top_tracks_playlist.tracks
-    track_ids = set()
-    for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
-        track_ids.add(top_tracks_playlist_track.track.id)
-
-    added_tracks = []
-
-    for track in tracks:
-        track_id = search_track_id(spotify, track)
-        if not track_id:
-            logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
-            continue
-        if track_id not in track_ids:
-            added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
-            logging.debug(f"playlist_add returned: {added}")
-            added_tracks.append(spotify.track(track_id).name)
-
-    return added_tracks
-
-
 def fill_pitchfork_top_tracks_db():
     save_new_recommendations_site("Pitchfork")
     page = 1
@@ -291,7 +263,7 @@ def add_new_track():
         new_track_saved = save_new_track_to_db(new_track, "Pitchfork")
         if new_track_saved:
             spotify_obj = get_spotify_obj()
-            track_id = search_track_id(spotify_obj, new_track)
+            track_id = search_spotify_track_id(spotify_obj, new_track)
             if not track_id:
                 # TODO: send an automated email to me telling me I have to manually put in the track ID
                 pass
@@ -300,3 +272,45 @@ def add_new_track():
                 song = get_song_by_name_and_artist(new_track.track_name, new_track.artists[0])
                 song.spotify_track_id = track_id
                 db.session.commit()
+
+
+def update_song_spotify_track_id(spotify: tk.Spotify, song: Song):
+
+    track_id = search_spotify_track_id(spotify, song)
+    if not track_id:
+        logging.info(f"Could not find Spotify Track ID for song with Song ID: {song.id}")
+        return False
+
+    song.spotify_track_id = track_id
+    db.session.commit()
+    return True
+
+
+# def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
+#
+#     tracks = []
+#     for page in range(1, num_recommendation_pages+1):
+#         html = get_pitchfork_top_tracks_html(page=page)
+#         tracks.extend(parse_top_tracks_html(html))
+#
+#     playlist_id = get_top_tracks_playlist_id(spotify)
+#
+#     top_tracks_playlist = spotify.playlist(playlist_id)
+#     top_tracks_playlist_tracks = top_tracks_playlist.tracks
+#     track_ids = set()
+#     for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
+#         track_ids.add(top_tracks_playlist_track.track.id)
+#
+#     added_tracks = []
+#
+#     for track in tracks:
+#         track_id = search_track_id(spotify, track)
+#         if not track_id:
+#             logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
+#             continue
+#         if track_id not in track_ids:
+#             added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
+#             logging.debug(f"playlist_add returned: {added}")
+#             added_tracks.append(spotify.track(track_id).name)
+#
+#     return added_tracks

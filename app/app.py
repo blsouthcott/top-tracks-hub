@@ -248,7 +248,20 @@ def logout():
 @login_required
 def display_songs():
     songs = Song.query.all()
-    songs = sorted(songs, key=lambda song: str(song.artists[0]))
+    sort_by = request.args.get("sort-by")
+    if sort_by == "song-id":
+        songs = sorted(songs, key=lambda song: song.id)
+    elif sort_by == "song-name":
+        songs = sorted(songs, key=lambda song: song.name)
+    elif sort_by == "song-artist":
+        songs = sorted(songs, key=lambda song: str(song.artists[0]))
+    elif sort_by == "song-genre":
+        songs = sorted(songs, key=lambda song: str(song.genres[0]) if song.genres else "")
+    elif sort_by == "site-name":
+        songs = sorted(songs, key=lambda song: str(song.site_name))
+    elif sort_by == "spotify-track-id":
+        songs = sorted(songs, key=lambda song: str(song.spotify_track_id))
+
     return render_template("display-songs.html", songs=songs)
 
 
