@@ -309,4 +309,4 @@ def search_track(song_id):
         spotify_track_info = spotify.track(search_result.id)
         spotify_track_info.artists = str([artist.name for artist in spotify_track_info.artists])
         search_results_tracks.append(spotify_track_info)
-    return render_template("search-results.html", search_results=search_results_tracks)
+    return render_template("search-results.html", search_results=search_results_tracks, song=song)
