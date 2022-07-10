@@ -2,19 +2,9 @@
     Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
     Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
 
-    1. authenticate user (-> determine which app to authenticate with, for now just Spotify)
-    2. determine which playlist to add top tracks to
-    3. scrap site(s) (for now, just Pitchfork) to get tracks to add
-        a. by genre?
-        b. all tracks on 'top tracks' page?
-        c. get 8.0+ albums? -> in Spotify determine 2 most-streamed tracks and add those?
-    4. search for tracks by name, artist, album, figure out ID of track
-    4. add tracks to playlist by IDs
-    5. let user know?
-
-    TODO: 1. figure out user authentication
-          2. store tracks in DB
-          3. probably store playlist IDs for each user in DB?
+    TODO: 1. add scheduled check for new track recommendation function
+          2. if new rec, push to authenticated users playlists
+          3. add option on signup to add previous tracks or just get future tracks
 """
 
 import os
