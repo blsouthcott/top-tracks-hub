@@ -25,10 +25,6 @@ from .models import *
 auths = {}
 users = {}
 
-in_link = '<a href="/login">login</a>'
-out_link = '<a href="/logout">logout</a>'
-login_msg = f'You can {in_link} or {out_link}'
-
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -76,18 +72,6 @@ app = create_app()
 
 @app.route("/", methods=["GET"])
 def main():
-    return render_template("index.html")
-    #user = session.get("user", None)
-    #token = users.get(user, None)
-
-    #if user is None or token is None:
-    #    session.pop("user", None)
-    #    return f"User ID: None<br>{login_msg}"
-
-    #page = f"User ID: {user}<br><br>{login_msg} \n"
-    #if token.is_expiring:
-    #    token = cred.refresh(token)
-    #    users[user] = token
 
     ###### MAIN FUNCTIONALITY HERE ######
     # config_dir = app.config["CONFIG_DIR"]
@@ -100,17 +84,7 @@ def main():
     #
     #     return "<br>".join(added_tracks)
 
-        #current_tracks = []
-        #playlist_id = get_top_tracks_playlist_id(spotify)
-        #playlist_items = spotify.playlist_items(playlist_id)
-        #for playlist_item in playlist_items.items:
-        #    curr_track = f"{playlist_item.track.name} by "
-        #    track_artists = playlist_item.track.artists
-        #    for track_artist in track_artists:
-        #        curr_track += f"{track_artist.name}, "
-        #    current_tracks.append(curr_track)
-
-        #return "<br>".join(current_tracks)
+    return render_template("index.html")
 
 
 @app.route("/login", methods=["GET"])
