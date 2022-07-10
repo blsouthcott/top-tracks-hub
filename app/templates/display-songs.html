@@ -8,15 +8,16 @@
       </div>
   {% endif %}
   {% endwith %}
+  {% set sorted_by = sort_by %}
 <div class="table-container">
     <table class="table">
         <thead>
-            <th><a href="/songs?sort-by=song-id">Song ID</a></th>
-            <th><a href="/songs?sort-by=song-name">Song Name</a></th>
-            <th><a href="/songs?sort-by=song-artist">Song Artists</a></th>
-            <th><a href="/songs?sort-by=song-genre">Song Genres</a></th>
-            <th><a href="/songs?sort-by=site-name">Site</a></th>
-            <th><a href="/songs?sort-by=spotify-track-id">Spotify Track ID</a></th>
+            <th><a href="/songs?sort-by=song-id&sorted_by={{ sorted_by }}">Song ID</a></th>
+            <th><a href="/songs?sort-by=song-name&sorted_by={{ sorted_by }}">Song Name</a></th>
+            <th><a href="/songs?sort-by=song-artist&sorted_by={{ sorted_by }}">Song Artists</a></th>
+            <th><a href="/songs?sort-by=song-genre&sorted_by={{ sorted_by }}">Song Genres</a></th>
+            <th><a href="/songs?sort-by=site-name&sorted_by={{ sorted_by }}">Site</a></th>
+            <th><a href="/songs?sort-by=spotify-track-id&sorted_by={{ sorted_by }}">Spotify Track ID</a></th>
         </thead>
         <tbody>
             {% for song in songs %}

@@ -254,20 +254,25 @@ def logout():
 def display_songs():
     songs = Song.query.all()
     sort_by = request.args.get("sort-by")
+    sorted_by = request.args.get("sorted_by")
+    reverse = True if sorted_by == sort_by else False
     if sort_by == "song-id":
-        songs = sorted(songs, key=lambda song: song.id)
+        songs.sort(key=lambda song: song.id, reverse=reverse)
     elif sort_by == "song-name":
-        songs = sorted(songs, key=lambda song: song.name)
+        songs.sort(key=lambda song: song.name, reverse=reverse)
     elif sort_by == "song-artist":
-        songs = sorted(songs, key=lambda song: str(song.artists[0]))
+        songs.sort(key=lambda song: str(song.artists[0]), reverse=reverse)
     elif sort_by == "song-genre":
-        songs = sorted(songs, key=lambda song: str(song.genres[0]) if song.genres else "")
+        songs.sort(key=lambda song: str(song.genres[0]) if song.genres else "", reverse=reverse)
     elif sort_by == "site-name":
-        songs = sorted(songs, key=lambda song: str(song.site_name))
+        songs.sort(songs, key=lambda song: str(song.site_name), reverse=reverse)
     elif sort_by == "spotify-track-id":
-        songs = sorted(songs, key=lambda song: str(song.spotify_track_id))
+        songs.sort(key=lambda song: str(song.spotify_track_id), reverse=reverse)
 
-    return render_template("display-songs.html", songs=songs)
+    if reverse:
+        sort_by += "_reversed"
+
+    return render_template("display-songs.html", songs=songs, sort_by=sort_by)
 
 
 @app.route("/view-song/<song_id>")
