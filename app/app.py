@@ -149,6 +149,11 @@ def login_post():
 @app.route("/authorize")
 @login_required
 def authorize():
+    email = current_user.email
+    for fi in os.listdir(app.config["CONFIG_DIR"]):
+        if email in fi:
+            flash("Your account is already authorized with Spotify.")
+            return redirect(url_for("profile"))
     conf = tk.config_from_environment(return_refresh=True)
     cred = tk.RefreshingCredentials(*conf)
     scope = tk.scope.user_read_currently_playing
@@ -284,7 +289,7 @@ def update_track_id():
     db.session.commit()
     flash(f"The Spotify Track ID for {song_name} with Song ID: {song_id} has been updated.")
     sort_by = request.args.get("sort-by")
-    return redirect(f"/songs?sort-by={sort_by}")
+    return redirect(f"/songs?sort-by=song-id#{song.id}")
 
 
 @app.route("/search/<song_id>")
