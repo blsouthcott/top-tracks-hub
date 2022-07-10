@@ -4,7 +4,7 @@
 <h1 class="title is-spaced">
   {{ song.name }}
 </h1>
-<form action="/update-track-id" method="POST">
+<form action="/update-track-id?sort-by=spotify-track-id" method="POST">
   <label for="song-id">Song ID:</label>
   <input class="input is-info" type="text" value="{{ song.id }}" id="song-id" name="song-id" readonly>
 

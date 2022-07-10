@@ -283,4 +283,20 @@ def update_track_id():
     song.spotify_track_id = track_id
     db.session.commit()
     flash(f"The Spotify Track ID for {song_name} with Song ID: {song_id} has been updated.")
-    return redirect(url_for("display_songs"))
+    sort_by = request.args.get("sort-by")
+    return redirect(f"/songs?sort-by={sort_by}")
+
+
+@app.route("/search/<song_id>")
+@login_required
+def search_track(song_id):
+    spotify = get_spotify_obj()
+    song = Song.query.get(song_id)
+    search = spotify.search(f"{song.name} artist:{song.artists[0].name}")
+    search_results_tracks = []
+    search_results = search[0].items
+    for search_result in search_results:
+        spotify_track_info = spotify.track(search_result.id)
+        spotify_track_info.artists = str([artist.name for artist in spotify_track_info.artists])
+        search_results_tracks.append(spotify_track_info)
+    return render_template("search-results.html", search_results=search_results_tracks)
