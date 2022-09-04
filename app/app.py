@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from .models import *
+from .api import api
 
 
 auths = {}
@@ -55,6 +56,8 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
 
     db.init_app(app)
+
+    app.register_blueprint(api, url_prefix="/api")
 
     login_manager = LoginManager()
     login_manager.login_view = "login"
@@ -239,7 +242,7 @@ def display_songs():
     return render_template("display-songs.html", songs=songs, sort_by=sort_by)
 
 
-@app.route("/view-song/<song_id>")
+@app.route("/song/<song_id>")
 @login_required
 def view_song(song_id):
     return render_template("song-info.html", song=Song.query.get(song_id))
