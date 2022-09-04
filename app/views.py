@@ -35,7 +35,7 @@ def login_post():
 
     user = User.query.filter_by(email=email).first()
     if not user:
-        flash("This user account is associated with this email address")
+        flash("This email address is not associated with a user account")
         return redirect(url_for("login"))
     elif not check_password_hash(user.password, password):
         flash("Incorrect password! Please try again.")
