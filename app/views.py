@@ -1,6 +1,8 @@
 
 import os
 import logging
+import random
+import time
 
 from flask import request, redirect, session, render_template, flash, url_for
 from flask_login import login_user, logout_user, login_required, current_user
@@ -14,7 +16,11 @@ from .spotify import get_spotify_obj
 
 logging.basicConfig(level=logging.DEBUG)
 
+
+VERIFICATION_CODE_TIME_LIMIT = 1200
+
 auths = {}
+tmp_new_users = {}
 
 
 @app.route("/", methods=["GET"])
@@ -129,9 +135,40 @@ def signup_post():
         password=generate_password_hash(password, method='sha256')
     )
 
-    db.session.add(new_user)
-    db.session.commit()
+    new_user_code = "".join([str(random.randint(0,9)) for _ in range(8)])
+    tmp_new_users[email] = (new_user, new_user_code, time.perf_counter())
 
+    # send email here with new_user_code
+    return redirect(url_for("verify_email", new_user_email=email))
+
+
+@app.route("/verify-email", methods=["GET"])
+def verify_email(new_user_email):
+    flash("Please check your email and enter the verification code")
+    return render_template("verify-email", new_user_email=new_user_email)
+
+
+@app.route("/verify-email", methods=["POST"])
+def verify_email():
+
+    new_user_email = request.args.get("new-user-email")
+    new_user_code = request.form.get("new-user-code")
+    new_user_info = tmp_new_users[new_user_email]
+
+    if not new_user_info:
+        flash("Something went wrong. Please try again.")
+        return redirect(url_for("signup"))
+    elif time.perf_counter() - new_user_info[2] > VERIFICATION_CODE_TIME_LIMIT:
+        flash("The verification code expired.")
+        # TODO: implement option to resend code
+        return redirect(url_for("signup"))
+    elif new_user_code.strip() != new_user_info[1]:
+        flash("The verification code does not match. Please try again.")
+        return redirect(url_for("verify-email", new_user_email=new_user_email))
+
+    db.session.add(new_user_info[0])
+    db.session.commit()
+    flash("Signup successful! Please login.")
     return redirect(url_for("login"))
 
 
