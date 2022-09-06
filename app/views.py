@@ -6,6 +6,7 @@ import time
 
 from flask import request, redirect, session, render_template, flash, url_for
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import tekore as tk
 
@@ -135,40 +136,49 @@ def signup_post():
         password=generate_password_hash(password, method='sha256')
     )
 
-    new_user_code = "".join([str(random.randint(0,9)) for _ in range(8)])
-    tmp_new_users[email] = (new_user, new_user_code, time.perf_counter())
+    verif_code = "".join([str(random.randint(0,9)) for _ in range(6)])
+    new_user_code = "".join([str(random.randint(0,9)) for _ in range(32)])
+    tmp_new_users[new_user_code] = (new_user, verif_code, time.perf_counter())
 
-    # send email here with new_user_code
-    return redirect(url_for("verify_email", new_user_email=email))
+    mail = Mail(app)
+    msg = Message(
+        "Top Tracks Email Signup Verification Code",
+        recipients=[email]
+    )
+    msg.body = f"Your email verification code is {verif_code}. This code expires in 20 minutes."
+    mail.send(msg)
+
+    return redirect(f"/verify-email/{new_user_code}")
 
 
-@app.route("/verify-email", methods=["GET"])
-def verify_email(new_user_email):
+@app.route("/verify-email/<new_user_code>", methods=["GET"])
+def verify_email(new_user_code):
     flash("Please check your email and enter the verification code")
-    return render_template("verify-email", new_user_email=new_user_email)
+    return render_template("verify-email.html", new_user_code=new_user_code)
 
 
-@app.route("/verify-email", methods=["POST"])
-def verify_email():
+@app.route("/verify-email/<new_user_code>", methods=["POST"])
+def verify_email_post(new_user_code):
 
-    new_user_email = request.args.get("new-user-email")
-    new_user_code = request.form.get("new-user-code")
-    new_user_info = tmp_new_users[new_user_email]
+    user_verif_code = request.form.get("user-verif-code")
+    new_user_info = tmp_new_users.get(new_user_code)
 
     if not new_user_info:
         flash("Something went wrong. Please try again.")
         return redirect(url_for("signup"))
+    elif user_verif_code.strip() != new_user_info[1]:
+        flash("The verification code does not match. Please try again.")
+        return redirect(f"/verify-email/{new_user_code}")
     elif time.perf_counter() - new_user_info[2] > VERIFICATION_CODE_TIME_LIMIT:
         flash("The verification code expired.")
         # TODO: implement option to resend code
         return redirect(url_for("signup"))
-    elif new_user_code.strip() != new_user_info[1]:
-        flash("The verification code does not match. Please try again.")
-        return redirect(url_for("verify-email", new_user_email=new_user_email))
 
+    tmp_new_users.pop(new_user_code)
     db.session.add(new_user_info[0])
     db.session.commit()
-    flash("Signup successful! Please login.")
+
+    flash("Signup successful! Please log in.")
     return redirect(url_for("login"))
 
 

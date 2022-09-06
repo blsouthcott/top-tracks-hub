@@ -36,6 +36,14 @@ def create_app():
 
     app.config["SECRET_KEY"] = "MyExtraUniqueSecretKey"
 
+    app.config["MAIL_SERVER"] = "smtp.gmail.com"
+    app.config["MAIL_PORT"] = 465
+    app.config["MAIL_USERNAME"] = "benjamin.southcott@gmail.com"
+    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+    app.config["MAIL_DEFAULT_SENDER"] = "no-reply@example.com"
+    app.config["MAIL_USE_TLS"] = False
+    app.config["MAIL_USE_SSL"] = True
+
     app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
     logging.debug(app.config["CONFIG_DIR"])
 

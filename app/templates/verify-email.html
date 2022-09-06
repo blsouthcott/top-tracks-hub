@@ -3,15 +3,17 @@
 {% block content %}
 
 {% with messages = get_flashed_messages() %}
-{% if messages %}
-    <div class="notification is-info">
-        {{ messages[0] }}
-    </div>
-{% endif %}
+    {% if messages %}
+        <div class="notification is-info">
+            {{ messages[0] }}
+        </div>
+    {% endif %}
+{% endwith %}
 
-<form action="/verify-email?new-user-email={{new_user_email}}" method="POST">
-    <label for="new-user-code">Verification Code</label>
-    <input class="input is-info" type="text" id="new-user-code" name="new-user-code" placeholder="Enter verification code">
+<form action="/verify-email/{{new_user_code}}" method="POST">
+    <label for="user-verif-code">Verification Code</label>
+    <input class="input is-info" type="text" id="user-verif-code" name="user-verif-code" placeholder="Enter verification code">
+    <input type="submit" value="Verify Email">
 </form>
 
 {% endblock %}
