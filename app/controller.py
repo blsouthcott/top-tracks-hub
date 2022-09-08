@@ -98,7 +98,23 @@ def get_song_by_name_and_artist(song_name: str, song_artist: str) -> Song:
     return songs[0]
 
 
+def update_song_spotify_track_id(spotify: tk.Spotify, song: Song):
+
+    track_id = search_spotify_track_id(spotify, song)
+    if not track_id:
+        logging.info(f"Could not find Spotify Track ID for song with Song ID: {song.id}")
+        return False
+
+    song.spotify_track_id = track_id
+    db.session.commit()
+    return True
+
+
 def fill_pitchfork_top_tracks_db():
+    """ this can be used to fill the database if for some reason we have to start over from scratch
+        it makes a request to get the html for each page of recommended tracks until we get a 404
+        status code and the function doesn't return anything, and then adds those tracks to the db
+    """
     save_new_recommendations_site("Pitchfork")
     page = 1
     html = get_pitchfork_top_tracks_html(page=page)
@@ -111,6 +127,7 @@ def fill_pitchfork_top_tracks_db():
 
 
 def add_new_track():
+    """ this finds and adds the newest recommended track to the database if it hasn't already been added """
     html = get_pitchfork_top_tracks_html()
     tracks = parse_top_tracks_html(html)
     if tracks:
@@ -127,18 +144,6 @@ def add_new_track():
                 song = get_song_by_name_and_artist(new_track.track_name, new_track.artists[0])
                 song.spotify_track_id = track_id
                 db.session.commit()
-
-
-def update_song_spotify_track_id(spotify: tk.Spotify, song: Song):
-
-    track_id = search_spotify_track_id(spotify, song)
-    if not track_id:
-        logging.info(f"Could not find Spotify Track ID for song with Song ID: {song.id}")
-        return False
-
-    song.spotify_track_id = track_id
-    db.session.commit()
-    return True
 
 
 # def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
