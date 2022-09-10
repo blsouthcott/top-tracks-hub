@@ -9,6 +9,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import tekore as tk
+import requests
 
 from .app import app
 from .models import db, User, Song
@@ -153,6 +154,8 @@ def signup_post():
 
 @app.route("/verify-email/<new_user_code>", methods=["GET"])
 def verify_email(new_user_code):
+    if not tmp_new_users.get(new_user_code):
+        return "An error occurred. Please go back to the signup page.", 404
     flash("Please check your email and enter the verification code")
     return render_template("verify-email.html", new_user_code=new_user_code)
 
@@ -199,7 +202,10 @@ def logout():
 @login_required
 def display_songs():
 
-    songs = Song.query.all()
+    resp = requests.get("http://localhost:5000/api/songs")
+    if resp.status_code != 200:
+        return "There was an error retrieving songs from the database on the server", 500
+    songs = resp.json()
 
     sort_by = request.args.get("sort-by")
     sorted_by = request.args.get("sorted_by")
@@ -207,17 +213,17 @@ def display_songs():
     if sort_by:
         reverse = True if sorted_by == sort_by else False
         if sort_by == "song-id":
-            songs.sort(key=lambda song: song.id, reverse=reverse)
+            songs.sort(key=lambda song: song["id"], reverse=reverse)
         elif sort_by == "song-name":
-            songs.sort(key=lambda song: song.name, reverse=reverse)
+            songs.sort(key=lambda song: song["name"], reverse=reverse)
         elif sort_by == "song-artist":
-            songs.sort(key=lambda song: str(song.artists[0]), reverse=reverse)
+            songs.sort(key=lambda song: song["artists"][0], reverse=reverse)
         elif sort_by == "song-genre":
-            songs.sort(key=lambda song: str(song.genres[0]) if song.genres else "", reverse=reverse)
+            songs.sort(key=lambda song: song["genres"][0] if song["genres"] else "", reverse=reverse)
         elif sort_by == "site-name":
-            songs.sort(songs, key=lambda song: str(song.site_name), reverse=reverse)
+            songs.sort(key=lambda song: song["site_name"], reverse=reverse)
         elif sort_by == "spotify-track-id":
-            songs.sort(key=lambda song: str(song.spotify_track_id), reverse=reverse)
+            songs.sort(key=lambda song: str(song["spotify_track_id"]), reverse=reverse)
 
     if reverse:
         sort_by += "_reversed"
@@ -234,24 +240,34 @@ def view_song(song_id):
 @app.route("/update-track-id", methods=["POST"])
 @login_required
 def update_track_id():
-    track_id = request.form.get("spotify-track-id")
+    spotify_track_id = request.form.get("spotify-track-id")
     song_id = request.form.get("song-id")
     song_name = request.form.get("song-name")
-    logging.info(f"Track ID: {track_id}")
-    logging.info(f"Song ID: {song_id}")
-    song = Song.query.get(song_id)
-    song.spotify_track_id = track_id
-    db.session.commit()
-    flash(f"The Spotify Track ID for {song_name} with Song ID: {song_id} has been updated.")
-    sort_by = request.args.get("sort-by")
-    return redirect(f"/songs?sort-by=song-id#{song.id}")
+    resp = requests.patch(
+        "http://localhost:5000/api/track-id",
+        json={
+            "song-id": song_id,
+            "spotify-track-id": spotify_track_id
+        }
+    )
+    if resp.status_code == 204:
+        flash(
+            f"The Spotify Track ID for {song_name} with Song ID: {song_id} has been updated.",
+            "notification is-success is-light"
+        )
+    else:
+        flash(
+            f"There was a problem updating the Track ID. Please try again",
+            "notification is-danger"
+        )
+    return redirect(f"/songs?sort-by=song-id#{song_id}")
 
 
 @app.route("/search/<song_id>")
 @login_required
 def search_track(song_id):
-    spotify = get_spotify_obj()
     song = Song.query.get(song_id)
+    spotify = get_spotify_obj()
     search = spotify.search(f"{song.name} artist:{song.artists[0].name}")
     search_results_tracks = []
     search_results = search[0].items

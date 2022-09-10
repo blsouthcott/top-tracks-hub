@@ -1,7 +1,9 @@
 
 
 def row_to_dict(row):
-    row_info = {}
-    for col in row.__table__.columns:
-        row_info[col.name] = getattr(row, col.name)
-    return row_info
+    row_dict = row.__dict__
+    row_dict.pop("_sa_instance_state")
+    for k in row_dict:
+        if row_dict[k] and type(row_dict[k]) not in (str, int):
+            row_dict[k] = [val.name for val in row_dict[k]]
+    return row_dict

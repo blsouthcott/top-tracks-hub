@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-      <div class="notification is-success is-light">
-          {{ messages[0] }}
+      <div class="{{ messages[0][0] }}">
+          {{ messages[0][1] }}
       </div>
   {% endif %}
   {% endwith %}
