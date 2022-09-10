@@ -3,8 +3,7 @@ beautifulsoup4==4.10.0
 Flask==2.0.3
 Flask-Login==0.5.0
 Flask-Mail==0.9.1
-Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.32
 python-dotenv==0.20.0
 requests==2.26.0
-tekore==4.3.0
-webargs==8.2.0
+

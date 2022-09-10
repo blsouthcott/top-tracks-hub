@@ -7,8 +7,8 @@ import logging
 
 import tekore as tk
 
-from ..controller import get_pitchfork_top_tracks_html, parse_top_tracks_html, search_spotify_track_id, get_top_tracks_playlist_id
-
+from ..controller import get_pitchfork_top_tracks_html, parse_top_tracks_html
+from ..spotify import search_spotify_track_id, get_top_tracks_playlist_id
 
 logging.basicConfig(level=logging.DEBUG)
 
