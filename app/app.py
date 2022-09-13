@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 # sched = BackgroundScheduler(daemon=True)
-
+#
 # sched.add_job(send_scheduled_email_test, "interval", hours=12, id="00001", next_run_time=datetime.now()+timedelta(seconds=30))
 # sched.add_job(track_foreign_priority, "cron", day_of_week="mon-fri", hour="11,19", id="00002", next_run_time=datetime.now()+timedelta(seconds=60))
 # sched.start()

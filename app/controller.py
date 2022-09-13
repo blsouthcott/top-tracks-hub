@@ -1,8 +1,6 @@
 import logging
 
-import tekore as tk
-
-from .models import db, User, Song, Site, Artist, Genre
+from .models import db, Song, Site, Artist, Genre
 from .scrape_top_tracks import (
     Track,
     get_pitchfork_top_tracks_html,

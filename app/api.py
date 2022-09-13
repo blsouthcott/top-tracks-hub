@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
-from .models import *
+from .models import db, Song
 from .controller import get_songs_by_str_val, get_songs_by_list_vals
 from .api_utils import row_to_dict
 
