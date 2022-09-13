@@ -8,7 +8,7 @@ import logging
 import tekore as tk
 
 from ..controller import get_pitchfork_top_tracks_html, parse_top_tracks_html
-from ..spotify import search_spotify_track_id, get_top_tracks_playlist_id
+from ..spotify import search_spotify_track_id, get_spotify_playlist_id
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -31,7 +31,7 @@ class AppTester(unittest.TestCase):
     def test_parse_tracks(self):
         for i in range(10):
             html = get_pitchfork_top_tracks_html(int(i)+1)
-            tracks = parse_top_tracks_html(html)
+            tracks = parse_top_tracks_html(html, newest_only=False)
             print(tracks)
             self.assertTrue(tracks)
 
@@ -40,7 +40,7 @@ class AppTester(unittest.TestCase):
         token = tk.refresh_user_token(*conf[:2], conf[3])
         spotify = tk.Spotify(token)
 
-        playlist_id = get_top_tracks_playlist_id(spotify)
+        playlist_id = get_spotify_playlist_id(spotify)
         self.assertTrue(playlist_id)
 
     def test_get_track_id(self):
@@ -49,7 +49,7 @@ class AppTester(unittest.TestCase):
         spotify = tk.Spotify(token)
 
         html = get_pitchfork_top_tracks_html(1)
-        tracks = parse_top_tracks_html(html)
+        tracks = parse_top_tracks_html(html, newest_only=False)
         for track in tracks:
             track_id = search_spotify_track_id(spotify, track)
             self.assertTrue(track_id is not None)

@@ -115,9 +115,9 @@ def get_song_by_name_and_artist(song_name: str, song_artist: str) -> Song:
 def fill_pitchfork_top_tracks_db():
     save_new_recommendations_site("Pitchfork")
     page = 1
-    html = get_pitchfork_top_tracks_html(page=page)
+    html = get_pitchfork_top_tracks_html(page)
     while html:
-        tracks = parse_top_tracks_html(html, only_newest=False)
+        tracks = parse_top_tracks_html(html, newest_only=False)
         for track in tracks:
             save_new_track_to_db(track, "Pitchfork")
         page += 1
@@ -137,40 +137,10 @@ def fill_pitchfork_top_tracks_db():
     """
     save_new_recommendations_site("Pitchfork")
     page = 1
-    html = get_pitchfork_top_tracks_html(page=page)
+    html = get_pitchfork_top_tracks_html(page)
     while html:
-        tracks = parse_top_tracks_html(html, only_newest=False)
+        tracks = parse_top_tracks_html(html, newest_only=False)
         for track in tracks:
             save_new_track_to_db(track, "Pitchfork")
         page += 1
         html = get_pitchfork_top_tracks_html(page)
-
-
-# def add_top_tracks_to_playlist(spotify: tk.Spotify, num_recommendation_pages=1):
-#
-#     tracks = []
-#     for page in range(1, num_recommendation_pages+1):
-#         html = get_pitchfork_top_tracks_html(page=page)
-#         tracks.extend(parse_top_tracks_html(html))
-#
-#     playlist_id = get_top_tracks_playlist_id(spotify)
-#
-#     top_tracks_playlist = spotify.playlist(playlist_id)
-#     top_tracks_playlist_tracks = top_tracks_playlist.tracks
-#     track_ids = set()
-#     for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
-#         track_ids.add(top_tracks_playlist_track.track.id)
-#
-#     added_tracks = []
-#
-#     for track in tracks:
-#         track_id = search_track_id(spotify, track)
-#         if not track_id:
-#             logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
-#             continue
-#         if track_id not in track_ids:
-#             added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
-#             logging.debug(f"playlist_add returned: {added}")
-#             added_tracks.append(spotify.track(track_id).name)
-#
-#     return added_tracks

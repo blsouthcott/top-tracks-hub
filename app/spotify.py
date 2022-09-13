@@ -4,15 +4,21 @@ import logging
 import tekore as tk
 
 from .app import app
-from .models import Song
+from .models import db, Song, User
 from .scrape_top_tracks import sanitize_track_name
 
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-def get_spotify_obj():
-    fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], "tekore.cfg"), return_refresh=True)
+PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
+
+
+def get_spotify_obj(config_file=None):
+    if config_file is None:
+        fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], "tekore.cfg"), return_refresh=True)
+    else:
+        fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], config_file), return_refresh=True)
     token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
     spotify = tk.Spotify(token)
     return spotify
@@ -62,19 +68,43 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
     return None
 
 
-def get_top_tracks_playlist_id(spotify: tk.Spotify) -> str:
-    curr_user_id = spotify.current_user().id
-    playlists = spotify.playlists(curr_user_id)
-    for playlist in playlists.items:
-        # TODO: make this a constant or decide otherwise how we'll determine which playlist to add to, maybe store
-        #   in DB for each user?
-        if playlist.name == "Pitchfork Top Tracks":
-            return playlist.id
+def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
+    """ this returns the """
 
-    # we didn't find the playlist, make a new playlist
-    new_playlist = spotify.playlist_create(curr_user_id,
-                                           "Pitchfork Top Tracks",
-                                           public=False,
-                                           description="Playlist containing Pitchfork recommended tracks"
-                                           )
+    if user.playlist_id:
+        return user.playlist_id
+
+    # the user doesn't have a playlist ID saved in the db, make a new playlist for them and save the ID
+    curr_user_id = spotify.current_user().id
+    new_playlist = spotify.playlist_create(
+        curr_user_id,
+        "Pitchfork Top Tracks",
+        public=False,
+        description="Playlist containing Pitchfork recommended tracks"
+    )
+    user.playlist_id = new_playlist.id
+    db.session.commit()
     return new_playlist.id
+
+
+def add_track_to_playlist(spotify: tk.Spotify, user: User, spotify_track_uri):
+
+    top_tracks_playlist = spotify.playlist(playlist_id)
+    top_tracks_playlist_tracks = top_tracks_playlist.tracks
+    track_ids = set()
+    for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
+        track_ids.add(top_tracks_playlist_track.track.id)
+
+    added_tracks = []
+
+    for track in tracks:
+        track_id = search_track_id(spotify, track)
+        if not track_id:
+            logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
+            continue
+        if track_id not in track_ids:
+            added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
+            logging.debug(f"playlist_add returned: {added}")
+            added_tracks.append(spotify.track(track_id).name)
+
+    return added_tracks

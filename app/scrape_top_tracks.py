@@ -41,15 +41,18 @@ def sanitize_track_name(track_name):
     return rm_feat_artist(rm_quotes(track_name)).strip()
 
 
-def get_pitchfork_top_tracks_html(page=1):
+def get_pitchfork_top_tracks_html(page):
     resp = requests.get(f"{TOP_TRACKS_URL}?page={page}")
     if resp.status_code == 200:
         return resp.content
     return None
 
 
-def parse_top_tracks_html(html, only_newest=True) -> list[Track]:
-
+def parse_top_tracks_html(html, newest_only) -> list[Track]:
+    """ this function returns a list of Tracks after parsing the HTML
+        if newest_only is set to True it returns a list with one element
+        TODO: make parsing each element its own function
+    """
     tracks = []
 
     soup = bs(html, "html.parser")
@@ -73,7 +76,7 @@ def parse_top_tracks_html(html, only_newest=True) -> list[Track]:
         newest_genres.append(genre_elem.text)
 
     tracks.append(Track(newest_artists, newest_track_name, newest_genres))
-    if only_newest is True:
+    if newest_only is True:
         return tracks
 
     for track_elem in track_elems:
