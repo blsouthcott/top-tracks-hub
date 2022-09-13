@@ -1,6 +1,15 @@
+import os
+
+from dotenv import load_dotenv
 
 from app.app import app
 from app import views
 
+load_dotenv()
+
+
+PORT = int(os.environ["PORT"])
+
+
 if __name__ == "__main__":
-    app.run("127.0.0.1", 5000)
+    app.run(port=PORT)

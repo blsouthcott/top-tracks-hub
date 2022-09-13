@@ -10,6 +10,7 @@ from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import tekore as tk
 import requests
+from dotenv import load_dotenv
 
 from .app import app
 from .models import db, User, Song
@@ -17,7 +18,10 @@ from .spotify import get_spotify_obj
 
 
 logging.basicConfig(level=logging.DEBUG)
+load_dotenv()
 
+BASE_URL = os.environ["BASE_URL"]
+PORT = os.environ["PORT"]
 
 VERIFICATION_CODE_TIME_LIMIT = 1200
 
@@ -202,7 +206,7 @@ def logout():
 @login_required
 def display_songs():
 
-    resp = requests.get("http://localhost:5000/api/songs")
+    resp = requests.get(f"{BASE_URL}:{PORT}{url_for('api.get_songs')}")
     if resp.status_code != 200:
         return "There was an error retrieving songs from the database on the server", 500
     songs = resp.json()
@@ -244,7 +248,7 @@ def update_track_id():
     song_id = request.form.get("song-id")
     song_name = request.form.get("song-name")
     resp = requests.patch(
-        "http://localhost:5000/api/track-id",
+        f"{BASE_URL}:{PORT}{url_for('api.update_spotify_track_id')}",
         json={
             "song-id": song_id,
             "spotify-track-id": spotify_track_id
