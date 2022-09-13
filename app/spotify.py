@@ -16,10 +16,17 @@ PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 def get_spotify_obj(config_file=None):
     if config_file is None:
-        fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], "tekore.cfg"), return_refresh=True)
+        fi_conf = tk.config_from_file(
+            os.path.join(app.config["CONFIG_DIR"], "tekore.cfg"), return_refresh=True
+        )
     else:
-        fi_conf = tk.config_from_file(os.path.join(app.config["CONFIG_DIR"], config_file), return_refresh=True)
-    token = tk.refresh_user_token(*fi_conf[:2], fi_conf[3], )
+        fi_conf = tk.config_from_file(
+            os.path.join(app.config["CONFIG_DIR"], config_file), return_refresh=True
+        )
+    token = tk.refresh_user_token(
+        *fi_conf[:2],
+        fi_conf[3],
+    )
     spotify = tk.Spotify(token)
     return spotify
 
@@ -46,11 +53,16 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
             song_artists = list(song.artists)
             song_artists.sort(key=lambda artist: artist.name)
             logging.debug(f"Search result track artists: {spotify_track_artists}")
-            if len(spotify_track_artists) == len(song_artists):  # the number of artists is the same
+            if len(spotify_track_artists) == len(
+                song_artists
+            ):  # the number of artists is the same
                 artists_match = True
                 cnt = 0
                 while artists_match and cnt < len(song_artists):
-                    if spotify_track_artists[cnt].lower() != song_artists[cnt].name.lower():
+                    if (
+                        spotify_track_artists[cnt].lower()
+                        != song_artists[cnt].name.lower()
+                    ):
                         artists_match = False
                     cnt += 1
                 if artists_match:
@@ -69,7 +81,7 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
 
 
 def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
-    """ this returns the """
+    """this returns the"""
 
     if user.playlist_id:
         return user.playlist_id
@@ -80,7 +92,7 @@ def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
         curr_user_id,
         "Pitchfork Top Tracks",
         public=False,
-        description="Playlist containing Pitchfork recommended tracks"
+        description="Playlist containing Pitchfork recommended tracks",
     )
     user.playlist_id = new_playlist.id
     db.session.commit()
@@ -100,7 +112,9 @@ def add_track_to_playlist(spotify: tk.Spotify, user: User, spotify_track_uri):
     for track in tracks:
         track_id = search_track_id(spotify, track)
         if not track_id:
-            logging.warning(f"Could not get Track ID for {track.track_name} by {track.artists}")
+            logging.warning(
+                f"Could not get Track ID for {track.track_name} by {track.artists}"
+            )
             continue
         if track_id not in track_ids:
             added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])

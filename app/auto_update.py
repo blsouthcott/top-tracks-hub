@@ -1,4 +1,3 @@
-
 import os
 import logging
 
@@ -26,9 +25,7 @@ def check_for_and_add_new_recommended_track():
     spotify_track_id = search_spotify_track_id(spotify_obj, new_song)
     if not spotify_track_id:
         # TODO: send an automated email to me telling me I have to manually put in the track ID
-        logging.info(
-            f"Unable to find a Spotify Track ID that matched {new_track}"
-        )
+        logging.info(f"Unable to find a Spotify Track ID that matched {new_track}")
         pass
     else:
         new_song.spotify_track_id = spotify_track_id
@@ -47,7 +44,11 @@ def update_spotify_playlists(config_dir):
         # if we're authenticating through other music streaming services, we may want to
         if file != GENERIC_SPOTIFY_CONFIG_FILE:
             spotify_obj = get_spotify_obj(file)
-            spotify_playlist_id = get_spotify_playlist_id(spotify_obj, User.query.get(file.replace(".cfg", "")))
+            spotify_playlist_id = get_spotify_playlist_id(
+                spotify_obj, User.query.get(file.replace(".cfg", ""))
+            )
             new_spotify_track_uri = spotify_obj.track(new_spotify_track_id).uri
             spotify_obj.playlist_add(spotify_playlist_id, [new_spotify_track_uri])
-            logging.info(f"Updated spotify playlist {spotify_playlist_id} with track {new_spotify_track_id}")
+            logging.info(
+                f"Updated spotify playlist {spotify_playlist_id} with track {new_spotify_track_id}"
+            )

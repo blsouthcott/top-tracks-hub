@@ -1,4 +1,3 @@
-
 import os
 import logging
 import random
@@ -86,10 +85,17 @@ def login_callback():
     token = auth.request_token(code, state)
 
     config_dir = os.path.join(app.root_path, "config_files")
-    conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
+    conf = (
+        os.getenv("SPOTIFY_CLIENT_ID"),
+        os.getenv("SPOTIFY_CLIENT_SECRET"),
+        os.getenv("SPOTIFY_REDIRECT_URI"),
+    )
     # TODO: can we get the spotify account ID or something like that so we're not duplicating any authorizations
     #   and adding tracks multiple times to people's playlists?
-    tk.config_to_file(os.path.join(config_dir, f"{current_user.email}.cfg"), conf + (token.refresh_token,))
+    tk.config_to_file(
+        os.path.join(config_dir, f"{current_user.email}.cfg"),
+        conf + (token.refresh_token,),
+    )
 
     flash("Your Spotify account has been successfully authorized!")
     return redirect(url_for("profile"), 307)
@@ -138,18 +144,15 @@ def signup_post():
     new_user = User(
         email=email,
         name=name,
-        password=generate_password_hash(password, method='sha256')
+        password=generate_password_hash(password, method="sha256"),
     )
 
-    verif_code = "".join([str(random.randint(0,9)) for _ in range(6)])
-    new_user_code = "".join([str(random.randint(0,9)) for _ in range(32)])
+    verif_code = "".join([str(random.randint(0, 9)) for _ in range(6)])
+    new_user_code = "".join([str(random.randint(0, 9)) for _ in range(32)])
     tmp_new_users[new_user_code] = (new_user, verif_code, time.perf_counter())
 
     mail = Mail(app)
-    msg = Message(
-        "Top Tracks Email Signup Verification Code",
-        recipients=[email]
-    )
+    msg = Message("Top Tracks Email Signup Verification Code", recipients=[email])
     msg.body = f"Your email verification code is {verif_code}. This code expires in 20 minutes."
     mail.send(msg)
 
@@ -208,7 +211,10 @@ def display_songs():
 
     resp = requests.get(f"{BASE_URL}:{PORT}{url_for('api.get_songs')}")
     if resp.status_code != 200:
-        return "There was an error retrieving songs from the database on the server", 500
+        return (
+            "There was an error retrieving songs from the database on the server",
+            500,
+        )
     songs = resp.json()
 
     sort_by = request.args.get("sort-by")
@@ -223,7 +229,10 @@ def display_songs():
         elif sort_by == "song-artist":
             songs.sort(key=lambda song: song["artists"][0], reverse=reverse)
         elif sort_by == "song-genre":
-            songs.sort(key=lambda song: song["genres"][0] if song["genres"] else "", reverse=reverse)
+            songs.sort(
+                key=lambda song: song["genres"][0] if song["genres"] else "",
+                reverse=reverse,
+            )
         elif sort_by == "site-name":
             songs.sort(key=lambda song: song["site_name"], reverse=reverse)
         elif sort_by == "spotify-track-id":
@@ -249,20 +258,17 @@ def update_track_id():
     song_name = request.form.get("song-name")
     resp = requests.patch(
         f"{BASE_URL}:{PORT}{url_for('api.update_spotify_track_id')}",
-        json={
-            "song-id": song_id,
-            "spotify-track-id": spotify_track_id
-        }
+        json={"song-id": song_id, "spotify-track-id": spotify_track_id},
     )
     if resp.status_code == 204:
         flash(
             f"The Spotify Track ID for {song_name} with Song ID: {song_id} has been updated.",
-            "notification is-success is-light"
+            "notification is-success is-light",
         )
     else:
         flash(
             f"There was a problem updating the Track ID. Please try again",
-            "notification is-danger"
+            "notification is-danger",
         )
     return redirect(f"/songs?sort-by=song-id#{song_id}")
 
@@ -277,6 +283,10 @@ def search_track(song_id):
     search_results = search[0].items
     for search_result in search_results:
         spotify_track_info = spotify.track(search_result.id)
-        spotify_track_info.artists = str([artist.name for artist in spotify_track_info.artists])
+        spotify_track_info.artists = str(
+            [artist.name for artist in spotify_track_info.artists]
+        )
         search_results_tracks.append(spotify_track_info)
-    return render_template("search-results.html", search_results=search_results_tracks, song=song)
+    return render_template(
+        "search-results.html", search_results=search_results_tracks, song=song
+    )

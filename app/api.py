@@ -34,7 +34,7 @@ get_songs_query_params = {
     "site-name": fields.Str(validate=validate.Length(max=120)),
     "song-name": fields.Str(validate=validate.Length(max=240)),
     "artists": fields.DelimitedList(fields.Str()),
-    "genres": fields.DelimitedList(fields.Str())
+    "genres": fields.DelimitedList(fields.Str()),
 }
 
 
@@ -90,7 +90,7 @@ def get_songs(args):
 
 patch_track_id_params = {
     "song-id": fields.Int(required=True),
-    "spotify-track-id": fields.Str(validate=lambda x: len(x) == 22, required=True)
+    "spotify-track-id": fields.Str(validate=lambda x: len(x) == 22, required=True),
 }
 
 
@@ -101,4 +101,7 @@ def update_spotify_track_id(args):
     song = Song.query.get(args.get("song-id"))
     song.spotify_track_id = args.get("spotify-track-id")
     db.session.commit()
-    return f"The Spotify Track ID for {song.name} with Song ID: {song.id} has been updated.", 204
+    return (
+        f"The Spotify Track ID for {song.name} with Song ID: {song.id} has been updated.",
+        204,
+    )

@@ -17,20 +17,23 @@ CONFIG_FILE = f"{os.getenv('HOME')}/repos/scrape-top-tracks/app/test/tekore.cfg"
 
 
 def local_config():
-    """ run this function so tests can run locally """
+    """run this function so tests can run locally"""
     with open(CONFIG_FILE, "w") as f:
         f.write("")
-    conf = (os.getenv("SPOTIFY_CLIENT_ID"), os.getenv("SPOTIFY_CLIENT_SECRET"), os.getenv("SPOTIFY_REDIRECT_URI"))
+    conf = (
+        os.getenv("SPOTIFY_CLIENT_ID"),
+        os.getenv("SPOTIFY_CLIENT_SECRET"),
+        os.getenv("SPOTIFY_REDIRECT_URI"),
+    )
 
     token = tk.prompt_for_user_token(*conf, scope=tk.scope.every)
     tk.config_to_file(CONFIG_FILE, conf + (token.refresh_token,))
 
 
 class AppTester(unittest.TestCase):
-
     def test_parse_tracks(self):
         for i in range(10):
-            html = get_pitchfork_top_tracks_html(int(i)+1)
+            html = get_pitchfork_top_tracks_html(int(i) + 1)
             tracks = parse_top_tracks_html(html, newest_only=False)
             print(tracks)
             self.assertTrue(tracks)

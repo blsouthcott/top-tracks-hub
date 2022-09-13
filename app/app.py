@@ -18,16 +18,17 @@ from .models import db, User
 from .api import api
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-#sched = BackgroundScheduler(daemon=True)
+# sched = BackgroundScheduler(daemon=True)
 
 # sched.add_job(send_scheduled_email_test, "interval", hours=12, id="00001", next_run_time=datetime.now()+timedelta(seconds=30))
 # sched.add_job(track_foreign_priority, "cron", day_of_week="mon-fri", hour="11,19", id="00002", next_run_time=datetime.now()+timedelta(seconds=60))
-#sched.start()
+# sched.start()
 
 
 def create_app():
@@ -47,7 +48,9 @@ def create_app():
     app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
     logging.debug(app.config["CONFIG_DIR"])
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
+    app.config[
+        "SQLALCHEMY_DATABASE_URI"
+    ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
 
     db.init_app(app)
 

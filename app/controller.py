@@ -1,10 +1,13 @@
-
 import logging
 
 import tekore as tk
 
 from .models import db, User, Song, Site, Artist, Genre
-from .scrape_top_tracks import Track, get_pitchfork_top_tracks_html, parse_top_tracks_html
+from .scrape_top_tracks import (
+    Track,
+    get_pitchfork_top_tracks_html,
+    parse_top_tracks_html,
+)
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -35,8 +38,8 @@ def save_new_genre(genre):
 
 
 def save_new_track_to_db(track: Track, site: str):
-    """ track should be a Track object, site should be a string of the name of the recommendations site
-        new recommendation site names should be added to the DB before calling this function
+    """track should be a Track object, site should be a string of the name of the recommendations site
+    new recommendation site names should be added to the DB before calling this function
     """
     query = Song.query.filter(Song.name == track.track_name)
 
@@ -65,7 +68,7 @@ def save_new_track_to_db(track: Track, site: str):
             name=track.track_name,
             artists=song_artists,
             genres=song_genres,
-            site=Site.query.get(site)
+            site=Site.query.get(site),
         )
 
         db.session.add(new_song)
@@ -103,8 +106,7 @@ def get_songs_by_list_vals(list_attr: str, list_vals: list, query=None):
 
 def get_song_by_name_and_artist(song_name: str, song_artist: str) -> Song:
     query = Song.query.filter(
-        Song.name == song_name,
-        Song.artists.any(name=song_artist)
+        Song.name == song_name, Song.artists.any(name=song_artist)
     )
     songs = query.all()
     if not songs:
@@ -131,9 +133,9 @@ def update_song_spotify_track_id(song: Song, track_id: str):
 
 
 def fill_pitchfork_top_tracks_db():
-    """ this can be used to fill the database if for some reason we have to start over from scratch
-        it makes a request to get the html for each page of recommended tracks until we get a 404
-        status code and the function doesn't return anything, and then adds those tracks to the db
+    """this can be used to fill the database if for some reason we have to start over from scratch
+    it makes a request to get the html for each page of recommended tracks until we get a 404
+    status code and the function doesn't return anything, and then adds those tracks to the db
     """
     save_new_recommendations_site("Pitchfork")
     page = 1

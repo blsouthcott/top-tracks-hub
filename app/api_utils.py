@@ -1,5 +1,3 @@
-
-
 def row_to_dict(row):
     row_dict = row.__dict__
     row_dict.pop("_sa_instance_state")

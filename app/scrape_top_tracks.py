@@ -24,7 +24,7 @@ def rm_quotes(string):
         chr(8217),
         chr(8219),
         chr(8220),
-        chr(8221)
+        chr(8221),
     }
 
     for char in quote_chars:
@@ -49,9 +49,9 @@ def get_pitchfork_top_tracks_html(page):
 
 
 def parse_top_tracks_html(html, newest_only) -> list[Track]:
-    """ this function returns a list of Tracks after parsing the HTML
-        if newest_only is set to True it returns a list with one element
-        TODO: make parsing each element its own function
+    """this function returns a list of Tracks after parsing the HTML
+    if newest_only is set to True it returns a list with one element
+    TODO: make parsing each element its own function
     """
     tracks = []
 
@@ -60,18 +60,24 @@ def parse_top_tracks_html(html, newest_only) -> list[Track]:
 
     newest_top_track_elems = soup.find_all("div", {"class": "track-hero"})
     newest_artists = []
-    newest_artist_list_elems = newest_top_track_elems[0].findChildren("ul", {"class": "artist-list"})
+    newest_artist_list_elems = newest_top_track_elems[0].findChildren(
+        "ul", {"class": "artist-list"}
+    )
     newest_artist_elems = newest_artist_list_elems[0].findChildren("li")
     for elem in newest_artist_elems:
         newest_artists.append(elem.text)
     newest_artists = sorted(newest_artists)
 
-    newest_track_name_elems = newest_top_track_elems[0].findChildren("h2", {"class": "title"})
+    newest_track_name_elems = newest_top_track_elems[0].findChildren(
+        "h2", {"class": "title"}
+    )
     newest_track_name = newest_track_name_elems[0].text
     newest_track_name = sanitize_track_name(newest_track_name)
 
     newest_genres = []
-    newest_genre_elems = newest_top_track_elems[0].findChildren("li", {"class": "genre-list__item"})
+    newest_genre_elems = newest_top_track_elems[0].findChildren(
+        "li", {"class": "genre-list__item"}
+    )
     for genre_elem in newest_genre_elems:
         newest_genres.append(genre_elem.text)
 
@@ -88,7 +94,9 @@ def parse_top_tracks_html(html, newest_only) -> list[Track]:
             artists.append(elem.text)
         # artists = sorted(artists)
 
-        track_name_elems = track_elem.findChildren("h2", {"class": "track-collection-item__title"})
+        track_name_elems = track_elem.findChildren(
+            "h2", {"class": "track-collection-item__title"}
+        )
         track_name = track_name_elems[0].text
         track_name = sanitize_track_name(track_name)
 
