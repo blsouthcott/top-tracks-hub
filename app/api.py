@@ -85,7 +85,7 @@ def get_songs(args):
         for song in query.all():
             songs_info.append(row_to_dict(song))
 
-    return jsonify(songs_info)
+    return jsonify(songs_info), 200
 
 
 patch_track_id_params = {

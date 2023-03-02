@@ -32,11 +32,13 @@ def get_spotify_obj(config_file=None):
 
 
 def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
-    # update this to handle where track is a `Song`
+    """searches for the song through the Spotify API based on the song name and first artist
+    if both the song name matches and the number of artists match and the artists' names match it returns the track ID
+    otherwise we can't find an exact match and it returns None
+    """
 
     logging.debug(f"Track info: {song.name}, {song.artists}")
 
-    possible_matches = []
     search = spotify.search(f"{song.name} artist:{song.artists[0].name}")
     logging.debug(f"Searched for: '{song.name} artist:{song.artists[0].name}'")
     for search_result in search[0].items:
@@ -70,12 +72,6 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
                     # for now, only return the track id if it's an exact match
                     return search_result.id
 
-            # elif spotify_track_artists[0].lower() == song_artists[0].name.lower():
-            #     possible_matches.append(search_result.id)
-
-    # if possible_matches:
-    #     return possible_matches[0]  # just return the track ID for the one possible match
-
     # we couldn't find a match
     return None
 
@@ -99,26 +95,19 @@ def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
     return new_playlist.id
 
 
-def add_track_to_playlist(spotify: tk.Spotify, user: User, spotify_track_uri):
+def add_track_to_playlist(spotify: tk.Spotify, user: User, new_track_id: str):
+    """TODO: implement a more efficient version of this function"""
 
-    top_tracks_playlist = spotify.playlist(playlist_id)
+    top_tracks_playlist = spotify.playlist(user.playlist_id)
     top_tracks_playlist_tracks = top_tracks_playlist.tracks
-    track_ids = set()
-    for top_tracks_playlist_track in top_tracks_playlist_tracks.items:
-        track_ids.add(top_tracks_playlist_track.track.id)
 
-    added_tracks = []
+    # TODO: confirm that Spotify API won't allow duplciates in playlists
+    # check which track IDs are already in the playlist so we avoid adding duplicates
+    # playlist_track_ids = set()
+    # for playlist_track in top_tracks_playlist_tracks.items:
+    #     playlist_track_ids.add(playlist_track.track.id)
+    # if new_track_id not in playlist_track_ids:
+    #     added = spotify.playlist_add(user.playlist_id, [spotify.track(new_track_id).uri])
 
-    for track in tracks:
-        track_id = search_track_id(spotify, track)
-        if not track_id:
-            logging.warning(
-                f"Could not get Track ID for {track.track_name} by {track.artists}"
-            )
-            continue
-        if track_id not in track_ids:
-            added = spotify.playlist_add(playlist_id, [spotify.track(track_id).uri])
-            logging.debug(f"playlist_add returned: {added}")
-            added_tracks.append(spotify.track(track_id).name)
-
-    return added_tracks
+    added = spotify.playlist_add(user.playlist_id, [spotify.track(new_track_id).uri])
+    logging.debug(f"playlist_add returned: {added}")
