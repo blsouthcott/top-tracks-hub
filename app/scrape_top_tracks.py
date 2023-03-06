@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from datetime import datetime, date
 
 import requests
 from bs4 import BeautifulSoup as bs
@@ -13,6 +14,8 @@ class Track:
     artists: list
     track_name: str
     genres: list
+    link: str
+    date_published: date
 
 
 def rm_quotes(string):
@@ -80,8 +83,14 @@ def parse_top_tracks_html(html, newest_only) -> list[Track]:
     )
     for genre_elem in newest_genre_elems:
         newest_genres.append(genre_elem.text)
+    
+    link_elems = newest_top_track_elems[0].findChildren("a", {"class": "artwork"})
+    link = link_elems[0]["href"]
 
-    tracks.append(Track(newest_artists, newest_track_name, newest_genres))
+    time_elems = newest_top_track_elems[0].findChildren("time", {"class": "pub-date"})
+    date_published = datetime.strptime(time_elems[0]["datetime"], "%Y-%m-%dT%H:%M:%S").date()
+
+    tracks.append(Track(newest_artists, newest_track_name, newest_genres, link, date_published))
     if newest_only is True:
         return tracks
 
@@ -105,6 +114,12 @@ def parse_top_tracks_html(html, newest_only) -> list[Track]:
         for genre_elem in genre_elems:
             genres.append(genre_elem.text)
 
-        tracks.append(Track(artists, track_name, genres))
+        link_elems = track_elem.findChildren("a", {"class": "track-collection-item__track-link"})
+        link = link_elems[0]["href"]
+
+        time_elems = track_elem.findChildren("time", {"class": "pub-date"})
+        date_published = datetime.strptime(time_elems[0]["datetime"], "%Y-%m-%dT%H:%M:%S").date()
+
+        tracks.append(Track(artists, track_name, genres, link, date_published))
 
     return tracks

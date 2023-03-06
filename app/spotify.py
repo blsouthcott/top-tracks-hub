@@ -3,38 +3,36 @@ import logging
 
 import tekore as tk
 
-from .app import app
 from .models import db, Song, User
 from .scrape_top_tracks import sanitize_track_name
 
 
 logging.basicConfig(level=logging.DEBUG)
 
-
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 
 def get_spotify_obj(config_file=None):
     if config_file is None:
         fi_conf = tk.config_from_file(
-            os.path.join(app.config["CONFIG_DIR"], "tekore.cfg"), return_refresh=True
+            os.path.join(CONFIG_DIR, "tekore.cfg"), return_refresh=True
         )
     else:
         fi_conf = tk.config_from_file(
-            os.path.join(app.config["CONFIG_DIR"], config_file), return_refresh=True
+            os.path.join(CONFIG_DIR, config_file), return_refresh=True
         )
     token = tk.refresh_user_token(
         *fi_conf[:2],
         fi_conf[3],
     )
-    spotify = tk.Spotify(token)
-    return spotify
+    return tk.Spotify(token)
 
 
 def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
     """searches for the song through the Spotify API based on the song name and first artist
-    if both the song name matches and the number of artists match and the artists' names match it returns the track ID
-    otherwise we can't find an exact match and it returns None
+    if both the song name matches and the number of artists match and the artists' names match it,
+    it returns the track ID, otherwise we can't find an exact match and it returns None
     """
 
     logging.debug(f"Track info: {song.name}, {song.artists}")
@@ -101,13 +99,13 @@ def add_track_to_playlist(spotify: tk.Spotify, user: User, new_track_id: str):
     top_tracks_playlist = spotify.playlist(user.playlist_id)
     top_tracks_playlist_tracks = top_tracks_playlist.tracks
 
-    # TODO: confirm that Spotify API won't allow duplciates in playlists
+    # Spotify does allow duplicate tracks in a playlist
     # check which track IDs are already in the playlist so we avoid adding duplicates
-    # playlist_track_ids = set()
-    # for playlist_track in top_tracks_playlist_tracks.items:
-    #     playlist_track_ids.add(playlist_track.track.id)
-    # if new_track_id not in playlist_track_ids:
-    #     added = spotify.playlist_add(user.playlist_id, [spotify.track(new_track_id).uri])
+    for playlist_track in top_tracks_playlist_tracks.items:
+        if playlist_track.track.id == new_track_id:
+            logging.debug(f"skipped adding duplicate track with id {new_track_id} to playlist")
+            return False
 
     added = spotify.playlist_add(user.playlist_id, [spotify.track(new_track_id).uri])
     logging.debug(f"playlist_add returned: {added}")
+    return added

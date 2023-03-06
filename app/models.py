@@ -49,6 +49,8 @@ class Song(db.Model):
     )
     # backref=db.backref("tracks", lazy=True))
     site_name = db.Column(db.String(80), db.ForeignKey("site.name"), nullable=False)
+    link = db.Column(db.String(80))
+    date_published = db.Column(db.Date)
     spotify_track_id = db.Column(db.String(100))
 
 

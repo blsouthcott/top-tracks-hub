@@ -67,6 +67,8 @@ def save_new_track_to_db(track: Track, site: str):
             artists=song_artists,
             genres=song_genres,
             site=Site.query.get(site),
+            link=track.link,
+            date_published=track.date_published
         )
 
         db.session.add(new_song)
@@ -128,19 +130,3 @@ def update_song_spotify_track_id(song: Song, track_id: str):
     song.spotify_track_id = track_id
     db.session.commit()
     return True
-
-
-def fill_pitchfork_top_tracks_db():
-    """this can be used to fill the database if for some reason we have to start over from scratch
-    it makes a request to get the html for each page of recommended tracks until we get a 404
-    status code and the function doesn't return anything, and then adds those tracks to the db
-    """
-    save_new_recommendations_site("Pitchfork")
-    page = 1
-    html = get_pitchfork_top_tracks_html(page)
-    while html:
-        tracks = parse_top_tracks_html(html, newest_only=False)
-        for track in tracks:
-            save_new_track_to_db(track, "Pitchfork")
-        page += 1
-        html = get_pitchfork_top_tracks_html(page)

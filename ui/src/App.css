@@ -28,3 +28,15 @@
 .table-header:hover {
   cursor: pointer;
 }
+
+.full-width {
+  width: 100%;
+}
+
+.is-scrollable {
+  overflow-y: auto;
+  max-height: 500px;
+  /* width: 100%; */
+  /* margin: auto; */
+  border-bottom: 1px solid rgba(220,220,220,0.5);
+}

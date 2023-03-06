@@ -13,10 +13,22 @@ import logging
 from flask import Flask
 from flask_login import LoginManager
 from flask_cors import CORS
-from apscheduler.schedulers.background import BackgroundScheduler
+from flask_restful import Api
+from flask_jwt_extended import JWTManager
+# from apscheduler.schedulers.background import BackgroundScheduler
 
 from .models import db, User
-from .api import api
+from .api import (
+    Signup, 
+    Login, 
+    Authorize,
+    Unauthorize,
+    AccountIsAuthorized,
+    AuthCallback, 
+    Tracks,
+    PlaylistTracks,
+    TrackId
+)
 
 from dotenv import load_dotenv
 
@@ -36,16 +48,10 @@ def create_app():
 
     app = Flask(__name__)
     CORS(app, origins="http://localhost:3000")
+    JWTManager(app)
 
-    app.config["SECRET_KEY"] = "MyExtraUniqueSecretKey"
-
-    app.config["MAIL_SERVER"] = "smtp.gmail.com"
-    app.config["MAIL_PORT"] = 465
-    app.config["MAIL_USERNAME"] = "benjamin.southcott@gmail.com"
-    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
-    app.config["MAIL_DEFAULT_SENDER"] = "no-reply@example.com"
-    app.config["MAIL_USE_TLS"] = False
-    app.config["MAIL_USE_SSL"] = True
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
     app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
     logging.debug(app.config["CONFIG_DIR"])
@@ -55,8 +61,6 @@ def create_app():
     ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
 
     db.init_app(app)
-
-    app.register_blueprint(api, url_prefix="/api")
 
     login_manager = LoginManager()
     login_manager.login_view = "login"
@@ -70,3 +74,13 @@ def create_app():
 
 
 app = create_app()
+api = Api(app)
+api.add_resource(Signup, "/signup")
+api.add_resource(Login, "/login")
+api.add_resource(Authorize, "/authorize")
+api.add_resource(Unauthorize, "/unauthorize")
+api.add_resource(AccountIsAuthorized, "/account-is-authorized")
+api.add_resource(AuthCallback, "/callback")
+api.add_resource(Tracks, "/tracks")
+api.add_resource(PlaylistTracks, "/playlist-tracks")
+api.add_resource(TrackId, "/track-id")

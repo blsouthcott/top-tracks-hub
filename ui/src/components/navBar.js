@@ -1,20 +1,27 @@
 import React, { useState } from "react";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRecordVinyl } from '@fortawesome/free-solid-svg-icons';
+import { faRecordVinyl, faCirclePlay } from '@fortawesome/free-solid-svg-icons';
 
-export default function Navbar() {
+export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
+  const navigate = useNavigate();
   const [isActive, setIsActive] = useState(false);
 
   const toggleBurger = () => {
     setIsActive(!isActive);
   };
 
+  const logout = () => {
+    localStorage.removeItem("access_token");
+    setIsAuthenticated(false);
+    navigate("/");
+  }
+
   return (
     <nav className="navbar" role="navigation" aria-label="main navigation">
       <div className="navbar-brand">
         <Link className="navbar-item" to="/">
-          <FontAwesomeIcon icon={faRecordVinyl} />        
+          <FontAwesomeIcon icon={faCirclePlay} />        
         </Link>
 
         <button
@@ -62,12 +69,19 @@ export default function Navbar() {
         <div className="navbar-end">
           <div className="navbar-item">
             <div className="buttons">
-              <Link className="button is-primary" to="/">
-                <strong>Sign up</strong>
-              </Link>
-              <Link className="button is-light" to="/">
-                Log in
-              </Link>
+              {!isAuthenticated && 
+                <Link className="button is-primary" to="/">
+                  <strong>Sign up</strong>
+                </Link>}
+              {isAuthenticated ?
+                <button className="button is-light" onClick={logout}>
+                  Log out
+                </button>
+                :
+                <Link className="button is-light" to="/">
+                  Log in
+                </Link>
+              }
             </div>
           </div>
         </div>

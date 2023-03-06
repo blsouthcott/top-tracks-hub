@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 from app.app import app
-from app import views
+from app import api
 
 load_dotenv()
 

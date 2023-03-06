@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from './components/home';
@@ -12,10 +12,19 @@ function App() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  useEffect(() => {
+    const access_token = localStorage.getItem("access_token");
+    if (access_token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    };
+  }, [])
+
   return (
       <>
         <Router>
-          <Navbar />
+          <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
           <Routes>
             <Route path="/" exact element={<Home isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated}/>} />
             <Route path="/tracks" exact element={<Tracks />} />

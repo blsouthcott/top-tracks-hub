@@ -1,13 +1,34 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"
+import { url } from "../constants/backend_url";
 
 export default function Login ({ setIsAuthenticated }) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const login = async () => {
-    // do some stuff here to authenticate
-    setIsAuthenticated(true);
+  const login = async (e) => {
+    e.preventDefault();
+    const resp = await fetch(`${url}/login`, {
+      method: "POST",
+      body: JSON.stringify({
+        email: email,
+        password: password
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+    if (resp.status !== 200) {
+      window.alert("unable to login");
+    } else {
+      const respData = await resp.json();
+      const jwt = respData.access_token;
+      localStorage.setItem("access_token", jwt);
+      setIsAuthenticated(true);
+    };
+  }
+
+  const signUp = async (e) => {
+    e.preventDefault();
   }
 
   return (
@@ -17,14 +38,14 @@ export default function Login ({ setIsAuthenticated }) {
           <h1 className="title has-text-centered">Login</h1>
           <form onSubmit={login}>
             <label className="label">
-              Username
+              Email
               <br />
               <input
                 className="input"
                 type="text"
                 placeholder="Enter username..."
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
               />
             </label>
             <br />
@@ -33,7 +54,7 @@ export default function Login ({ setIsAuthenticated }) {
               <br />
               <input
                 className="input"
-                type="text"
+                type="password"
                 placeholder="Enter password..."
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -47,6 +68,22 @@ export default function Login ({ setIsAuthenticated }) {
               Login
             </button>
           </form>
+          <div className="section p-5">
+          <form>
+            
+              <div className="content">  
+                <p className="has-text-centered">Or click here to sign up</p>
+                <button
+                  type="submit"
+                  className="button is-primary is-outlined is-fullwidth"
+                  onClick={signUp}
+                >
+                  Sign up
+                </button>
+              </div>
+            
+          </form>
+          </div>
         </div>
       </div>
     </div>
