@@ -181,7 +181,7 @@ export default function Tracks () {
 
   return (
     <>
-      {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
+      {isLoading ? <ClipLoader size={75} cssOverride={{ display: "block", margin: "0 auto" }}/> :
         <div className="section">
           <div className="columns is-centered">
             <div className="is-half">
