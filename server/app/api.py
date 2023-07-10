@@ -86,10 +86,10 @@ class AuthCallback(Resource):
     def get(self):
         code = request.args.get("code")
         state = request.args.get("state")
-        auth_info = auths.pop(state)
-        if not auth_info:
+        if state not in auths:
             return "Invalid state", 400
         
+        auth_info = auths.pop(state)
         auth, email = auth_info
         token = auth.request_token(code, state)
         conf = (
