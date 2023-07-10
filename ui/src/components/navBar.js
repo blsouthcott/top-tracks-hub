@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRecordVinyl, faCirclePlay } from '@fortawesome/free-solid-svg-icons';
+import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
 
 export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   const navigate = useNavigate();

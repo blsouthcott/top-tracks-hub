@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { backendUrl } from "../config";
 import { tableHeaders } from "./tableHeaders";
+import { spinnerStyle } from "./spinnerStyle";
 
 
 export default function Tracks () {
@@ -160,7 +161,7 @@ export default function Tracks () {
 
   return (
     <>
-      {isLoading ? <ClipLoader size={75} cssOverride={{ display: "block", margin: "0 auto" }}/> :
+      {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
         <div className="section">
           <div className="columns is-centered">
             <div className="is-half">

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { backendUrl } from "../config";
 import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
+import { spinnerStyle } from "./spinnerStyle";
 
 
 export default function AddSpotifyTrackId ({ match }) {
@@ -31,7 +32,7 @@ export default function AddSpotifyTrackId ({ match }) {
 
   return (
     <>
-    {isLoading ? <ClipLoader size={75} cssOverride={{ display: "block", margin: "0 auto" }}/>
+    {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/>
     :
       <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
         <thead>
