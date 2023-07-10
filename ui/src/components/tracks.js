@@ -2,19 +2,17 @@ import React, { useState, useEffect } from "react";
 import 'bulma/css/bulma.min.css';
 import { Link } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { spinnerStyle } from "../spinnerStyle";
 import { url } from "../constants/backend_url";
 
 
 export default function Tracks () {
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [tracks, setTracks] = useState([]);
   const [displayedTracks, setDisplayedTracks] = useState([]);
   const [sortedBy, setSortedBy] = useState("name");
   const [orderedBy, setOrderedBy] = useState('asc');
   const [selectedTrackIds, setSelectedTrackIds] = useState([]);
-  // const [searchTerm, setSearchTerm] = useState('');
 
   const fetchTracks = async () => {
     const resp = await fetch(`${url}/tracks`);
@@ -44,7 +42,7 @@ export default function Tracks () {
       window.alert("unable to load tracks data");
       return;
     };
-    tracksData = tracksData.filter(track => track.spotify_track_id !== null);
+    // tracksData = tracksData.filter(track => track.spotify_track_id !== null);
     tracksData = mapKeysToTracks(tracksData);
     console.log("tracks data: ", tracksData);
     setTracks(tracksData);
@@ -96,10 +94,10 @@ export default function Tracks () {
       value: "site",
       display: "Site"
     },
-    // {
-    //   value: "spotify_track_id",
-    //   display: "Spotify Track ID"
-    // }
+    {
+      value: "spotify_track_id",
+      display: "Spotify Track ID"
+    }
   ];
 
   const handleCheckboxChange = (e) => {
@@ -126,6 +124,17 @@ export default function Tracks () {
       };
     }
     
+  }
+
+  const unselectAllTracks = () => {
+    const tracksCopy = [...tracks];
+    for (let track of tracksCopy) {
+      if (track.checked) {
+        track.checked = false;
+      };
+    };
+    setTracks(tracksCopy);
+    setSelectedTrackIds([]);
   }
 
   function sortTracksTable(attr) {
@@ -219,7 +228,13 @@ export default function Tracks () {
                   {/* <caption className="title">Pitchfork Top Tracks</caption> */}
                   <thead className="sticky-header">
                     <tr id='table-header-row'>
-                      <th className="has-background-primary has-text-white"></th>
+                      <th className="has-background-primary has-text-white">
+                        <input
+                          type="checkbox"
+                          checked={selectedTrackIds.length > 0}
+                          onChange={unselectAllTracks}
+                        />
+                      </th>
                       {tableHeaders.map((header, i) => {
                         return (
                           <th
@@ -252,7 +267,7 @@ export default function Tracks () {
                           <td>{track.date_published}</td>
                           <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
                           <td>{track.site_name}</td>
-                          {/* <td>{track.spotify_track_id}</td> */}
+                          <td>{track.spotify_track_id}</td>
                         </tr>
                       )
                     })}
