@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { url } from "../constants/backend_url";
+import { backendUrl } from "../config";
 
 export default function Login ({ setIsAuthenticated }) {
   const [email, setEmail] = useState('');
@@ -7,7 +7,7 @@ export default function Login ({ setIsAuthenticated }) {
 
   const login = async (e) => {
     e.preventDefault();
-    const resp = await fetch(`${url}/login`, {
+    const resp = await fetch(`${backendUrl}/login`, {
       method: "POST",
       body: JSON.stringify({
         email: email,

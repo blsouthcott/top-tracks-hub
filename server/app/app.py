@@ -1,10 +1,6 @@
 """ tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
     Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
     Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
-
-    TODO: 1. add scheduled check for new track recommendation function
-          2. if new rec, push to authenticated users playlists
-          3. add option on signup to add previous tracks or just get future tracks
 """
 
 import os
@@ -15,7 +11,6 @@ from flask_login import LoginManager
 from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
-# from apscheduler.schedulers.background import BackgroundScheduler
 
 from .models import db, User
 from .api import (
@@ -31,13 +26,6 @@ from .api import (
 )
 
 logging.basicConfig(level=logging.DEBUG)
-
-
-# sched = BackgroundScheduler(daemon=True)
-#
-# sched.add_job(send_scheduled_email_test, "interval", hours=12, id="00001", next_run_time=datetime.now()+timedelta(seconds=30))
-# sched.add_job(track_foreign_priority, "cron", day_of_week="mon-fri", hour="11,19", id="00002", next_run_time=datetime.now()+timedelta(seconds=60))
-# sched.start()
 
 
 def create_app():

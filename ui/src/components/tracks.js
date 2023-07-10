@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import 'bulma/css/bulma.min.css';
 import { Link } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { url } from "../constants/backend_url";
+import { backendUrl } from "../config";
+import { tableHeaders } from "./tableHeaders";
 
 
 export default function Tracks () {
@@ -15,7 +16,7 @@ export default function Tracks () {
   const [selectedTrackIds, setSelectedTrackIds] = useState([]);
 
   const fetchTracks = async () => {
-    const resp = await fetch(`${url}/tracks`);
+    const resp = await fetch(`${backendUrl}/tracks`);
     if (resp.status !== 200) {
       return;
     };
@@ -53,7 +54,7 @@ export default function Tracks () {
   const addTracksToPlaylist = async () => {
     setIsLoading(true);
     const access_token = localStorage.getItem("access_token");
-    const resp = await fetch(`${url}/playlist-tracks`, {
+    const resp = await fetch(`${backendUrl}/playlist-tracks`, {
       method: "POST",
       body: JSON.stringify({spotify_track_ids: selectedTrackIds}),
       headers: {
@@ -68,37 +69,6 @@ export default function Tracks () {
       window.alert("Error adding tracks to playlist")
     };
   }
-
-  const tableHeaders = [
-    {
-      value: "name",
-      display: "Song Name"
-    },
-    {
-      value: "artists",
-      display: "Artists"
-    },
-    {
-      value: "genres",
-      display: "Genres"
-    },
-    {
-      value: "date_published",
-      display: "Date Published"
-    },
-    {
-      value: "link",
-      display: "Link"
-    },
-    {
-      value: "site",
-      display: "Site"
-    },
-    {
-      value: "spotify_track_id",
-      display: "Spotify Track ID"
-    }
-  ];
 
   const handleCheckboxChange = (e) => {
     console.log("selected Track IDs: ", selectedTrackIds);
@@ -267,7 +237,10 @@ export default function Tracks () {
                           <td>{track.date_published}</td>
                           <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
                           <td>{track.site_name}</td>
-                          <td>{track.spotify_track_id}</td>
+                          <td>{track.spotify_track_id ? 
+                              track.spotify_track_id
+                              : <Link to={`/add-spotify-track-id/${track.id}`} target="_blank">Add Spotify Track ID</Link>}
+                          </td>
                         </tr>
                       )
                     })}

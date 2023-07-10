@@ -7,6 +7,7 @@ import Navbar from './components/navBar';
 import About from './components/about';
 import Contact from './components/contact';
 import ReportAnIssue from './components/reportAnIssue';
+import AddSpotifyTrackId from './components/addSpotifyTrackId';
 
 function App() {
   
@@ -28,6 +29,7 @@ function App() {
           <Routes>
             <Route path="/" exact element={<Home isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated}/>} />
             <Route path="/tracks" exact element={<Tracks />} />
+            <Route path="/add-spotify-track-id/:trackId" exact element={<AddSpotifyTrackId />} />
             <Route path="/about" exact element={<About />} />
             <Route path="/contact" exact element={<Contact />} />
             <Route path="/report-an-issue" exact element={<ReportAnIssue />} />

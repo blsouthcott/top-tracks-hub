@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Login from "./login";
-import { url } from "../constants/backend_url";
+import { backendUrl } from "../config";
 
 
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
@@ -11,7 +11,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   const authorizeAccount = async (e) => {
     e.preventDefault();
     const access_token = localStorage.getItem("access_token");
-    const resp = await fetch(`${url}/authorize`, {
+    const resp = await fetch(`${backendUrl}/authorize`, {
       method: "POST",
       body: JSON.stringify({}),
       headers: {
@@ -30,7 +30,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   const unauthorizeAccount = async (e) => {
     e.preventDefault();
     const access_token = localStorage.getItem("access_token");
-    const resp = await fetch(`${url}/unauthorize`, {
+    const resp = await fetch(`${backendUrl}/unauthorize`, {
       method: "POST",
       body: JSON.stringify({}),
       headers: {
@@ -48,7 +48,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const getSpotifyAccountAuthorizationStatus = async () => {
     const access_token = localStorage.getItem("access_token");
-    const resp = await fetch(`${url}/account-is-authorized`, {
+    const resp = await fetch(`${backendUrl}/account-is-authorized`, {
       headers: {
         "Authorization": `Bearer ${access_token}`,
       }
