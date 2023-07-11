@@ -22,7 +22,8 @@ from .api import (
     AuthCallback, 
     Tracks,
     PlaylistTracks,
-    TrackId
+    SpotifyTrackId,
+    SearchSpotifyTracks
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -67,4 +68,5 @@ api.add_resource(AccountIsAuthorized, "/account-is-authorized")
 api.add_resource(AuthCallback, "/callback")
 api.add_resource(Tracks, "/tracks")
 api.add_resource(PlaylistTracks, "/playlist-tracks")
-api.add_resource(TrackId, "/track-id")
+api.add_resource(SearchSpotifyTracks, "/spotify-tracks")
+api.add_resource(SpotifyTrackId, "/spotify-track-id")

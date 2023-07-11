@@ -1,10 +1,11 @@
 import logging
 import os
+from datetime import timedelta
 
 from flask import request, jsonify
 from flask_restful import Resource
 
-from flask_jwt_extended import create_refresh_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import tekore as tk
@@ -42,7 +43,7 @@ class Signup(Resource):
         db.session.add(new_user)
         db.session.commit()
 
-        access_token = create_refresh_token(identity=user.get_id())
+        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
         return {"access_token": access_token}, 200
     
 
@@ -61,13 +62,13 @@ class Login(Resource):
             logging.info("wrong password")
             return "incorrect password", 400
 
-        access_token = create_refresh_token(identity=user.get_id())
+        access_token = create_access_token(identity=user.get_id())
         return {"access_token": access_token}, 200
 
 
 class Authorize(Resource):
 
-    @jwt_required(refresh=True)
+    @jwt_required()
     def post(self):
         email = get_jwt_identity()
         for fi in os.listdir(CONFIG_DIR):
@@ -112,7 +113,7 @@ class AuthCallback(Resource):
 
 class Unauthorize(Resource):
 
-    @jwt_required(refresh=True)
+    @jwt_required()
     def post(self):
         email = get_jwt_identity()
         user = User.query.filter_by(email=email).first()
@@ -127,7 +128,7 @@ class Unauthorize(Resource):
 
 class AccountIsAuthorized(Resource):
 
-    @jwt_required(refresh=True)
+    @jwt_required()
     def get(self):
         email = get_jwt_identity()
         for fi in os.listdir(CONFIG_DIR):
@@ -186,13 +187,14 @@ class Tracks(Resource):
         return songs_info, 200
 
 
-class TrackId(Resource):
+class SpotifyTrackId(Resource):
 
+    @jwt_required()
     def patch(self):
-        args = request.args
-        logging.info(f"args for patch request {args}")
-        track = Song.query.get(args.get("song-id"))
-        track.spotify_track_id = args.get("spotify-track-id")
+        body = request.get_json()
+        logging.info(f"body for patch request {body}")
+        track = Song.query.get(body.get("song-id"))
+        track.spotify_track_id = body.get("spotify-track-id")
         db.session.commit()
         return (
             f"The Spotify Track ID for {track.name} with Song ID: {track.id} has been updated.",
@@ -202,12 +204,12 @@ class TrackId(Resource):
 
 class PlaylistTracks(Resource):
 
-    @jwt_required(refresh=True)
+    @jwt_required()
     def get(self):
         """ return all the track Ids in the playlist passed up in the request query """
         pass
 
-    @jwt_required(refresh=True)
+    @jwt_required()
     def post(self):
         body = request.get_json()
         email = get_jwt_identity()
@@ -219,3 +221,18 @@ class PlaylistTracks(Resource):
             added = add_track_to_playlist(spotify_obj, user, track_id)
             results.append({track_id: "success" if added else "error"})
         return results, 200
+    
+
+class SearchSpotifyTracks(Resource):
+
+    @jwt_required()
+    def get(self):
+        song_name = request.args.get("song-name")
+        artists = request.args.get("artists")
+        if not song_name or not artists:
+            return "song-name and artists are required query params", 400
+        logging.debug(f"song name: {song_name}, artists: {artists}")
+        spotify_obj = get_spotify_obj()
+        search_results = spotify_obj.search(f"{song_name} artist:{artists.split(',')[0]}")[0].items
+        track_results = [spotify_obj.track(search_result.id) for search_result in search_results]
+        return jsonify(track_results)
