@@ -240,7 +240,7 @@ export default function Tracks () {
                           <td>{track.site_name}</td>
                           <td>{track.spotify_track_id ? 
                               track.spotify_track_id
-                              : <Link to={`/add-spotify-track-id/${track.id}`} target="_blank">Add Spotify Track ID</Link>}
+                              : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
                           </td>
                         </tr>
                       )
