@@ -15,8 +15,9 @@ PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 def get_spotify_obj(config_file=None):
     if config_file is None:
+        config_file = os.listdir(CONFIG_DIR)[0]
         fi_conf = tk.config_from_file(
-            os.path.join(CONFIG_DIR, "tekore.cfg"), return_refresh=True
+            os.path.join(CONFIG_DIR, config_file), return_refresh=True
         )
     else:
         fi_conf = tk.config_from_file(
