@@ -51,75 +51,51 @@ def get_pitchfork_top_tracks_html(page):
     return None
 
 
-def parse_top_tracks_html(html, newest_only) -> list[Track]:
-    """this function returns a list of Tracks after parsing the HTML
-    if newest_only is set to True it returns a list with one element
-    TODO: make parsing each element its own function
+def parse_top_tracks_html(html: str) -> list[Track]:
     """
+    this function returns a list of Tracks after parsing the HTML
+    if newest_only is set to True it returns a list with one element
+    """
+    soup = bs(html, "html.parser")
     tracks = []
 
-    soup = bs(html, "html.parser")
-    track_elems = soup.find_all("div", {"class": "track-collection-item"})
-
-    newest_top_track_elems = soup.find_all("div", {"class": "track-hero"})
-    newest_artists = []
-    newest_artist_list_elems = newest_top_track_elems[0].findChildren(
-        "ul", {"class": "artist-list"}
-    )
-    newest_artist_elems = newest_artist_list_elems[0].findChildren("li")
-    for elem in newest_artist_elems:
-        newest_artists.append(elem.text)
-    newest_artists = sorted(newest_artists)
-
-    newest_track_name_elems = newest_top_track_elems[0].findChildren(
-        "h2", {"class": "title"}
-    )
-    newest_track_name = newest_track_name_elems[0].text
-    newest_track_name = sanitize_track_name(newest_track_name)
-
-    newest_genres = []
-    newest_genre_elems = newest_top_track_elems[0].findChildren(
-        "li", {"class": "genre-list__item"}
-    )
-    for genre_elem in newest_genre_elems:
-        newest_genres.append(genre_elem.text)
+    track_elems = []
+    track_elems.extend(soup.select("div.track-hero"))
+    track_elems.extend(soup.select("div.track-collection-item"))
     
-    link_elems = newest_top_track_elems[0].findChildren("a", {"class": "artwork"})
-    link = link_elems[0]["href"]
-
-    time_elems = newest_top_track_elems[0].findChildren("time", {"class": "pub-date"})
-    date_published = datetime.strptime(time_elems[0]["datetime"], "%Y-%m-%dT%H:%M:%S").date()
-
-    tracks.append(Track(newest_artists, newest_track_name, newest_genres, link, date_published))
-    if newest_only is True:
-        return tracks
-
     for track_elem in track_elems:
 
-        artists = []
-        artist_list_elems = track_elem.findChildren("ul", {"class": "artist-list"})
-        artist_elems = artist_list_elems[0].findChildren("li")
-        for elem in artist_elems:
-            artists.append(elem.text)
-        # artists = sorted(artists)
+        title_elem = track_elem.select("h2.track-collection-item__title")
+        if title_elem:
+            track_name = sanitize_track_name(title_elem[0].text)
+        else:
+            title_elem = track_elem.select("h2.title")
+            track_name = sanitize_track_name(title_elem[0].text) if title_elem else None
 
-        track_name_elems = track_elem.findChildren(
-            "h2", {"class": "track-collection-item__title"}
+        artist_elems = track_elem.select("ul.artist-list li")
+        artists = sorted([artist_elem.text for artist_elem in artist_elems])
+
+        genre_elems = track_elem.select("li.genre-list__item a")
+        genres = [genre_elem.text for genre_elem in genre_elems]
+
+        link_elem = track_elem.select("a.track-collection-item__track-link")
+        if link_elem:
+            link = link_elem[0]["href"]
+        else:
+            link_elem = track_elem.select("a.artwork")
+            link = link_elem[0]["href"] if link_elem else None
+
+        time_published_elem = track_elem.select("time.pub-date")
+        date_published = datetime.strptime(time_published_elem[0]["datetime"], "%Y-%m-%dT%H:%M:%S").date() if time_published_elem else None
+
+        tracks.append(
+            Track(
+                track_name=track_name,
+                artists=artists, 
+                genres=genres, 
+                link=link, 
+                date_published=date_published
+            )
         )
-        track_name = track_name_elems[0].text
-        track_name = sanitize_track_name(track_name)
-
-        genres = []
-        genre_elems = track_elem.findChildren("li", {"class": "genre-list__item"})
-        for genre_elem in genre_elems:
-            genres.append(genre_elem.text)
-
-        link_elems = track_elem.findChildren("a", {"class": "track-collection-item__track-link"})
-        link = link_elems[0]["href"]
-
-        time_elems = track_elem.findChildren("time", {"class": "pub-date"})
-        date_published = datetime.strptime(time_elems[0]["datetime"], "%Y-%m-%dT%H:%M:%S").date()
-
-        tracks.append(Track(artists, track_name, genres, link, date_published))
 
     return tracks

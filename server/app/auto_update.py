@@ -15,7 +15,7 @@ GENERIC_SPOTIFY_CONFIG_FILE = "tekore.cfg"
 
 def check_for_and_add_new_recommended_track():
     html = get_pitchfork_top_tracks_html(1)
-    new_track = parse_top_tracks_html(html, newest_only=True)[0]
+    new_track = parse_top_tracks_html(html)[0]
     new_track_id = save_new_track_to_db(new_track, "Pitchfork")
     if not new_track_id:
         return None

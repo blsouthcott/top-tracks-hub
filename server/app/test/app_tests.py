@@ -34,7 +34,7 @@ class AppTester(unittest.TestCase):
     def test_parse_tracks(self):
         for i in range(10):
             html = get_pitchfork_top_tracks_html(int(i) + 1)
-            tracks = parse_top_tracks_html(html, newest_only=False)
+            tracks = parse_top_tracks_html(html)
             print(tracks)
             self.assertTrue(tracks)
 
@@ -52,7 +52,7 @@ class AppTester(unittest.TestCase):
         spotify = tk.Spotify(token)
 
         html = get_pitchfork_top_tracks_html(1)
-        tracks = parse_top_tracks_html(html, newest_only=False)
+        tracks = parse_top_tracks_html(html)
         for track in tracks:
             track_id = search_spotify_track_id(spotify, track)
             self.assertTrue(track_id is not None)
