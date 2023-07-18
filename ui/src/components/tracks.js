@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import 'bulma/css/bulma.min.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { backendUrl } from "../config";
 import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
+import { getAccessToken } from "./getAccessToken";
 
 
-export default function Tracks () {
+export default function Tracks ({ setIsAuthenticated }) {
 
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [tracks, setTracks] = useState([]);
   const [displayedTracks, setDisplayedTracks] = useState([]);
-  const [sortedBy, setSortedBy] = useState("name");
-  const [orderedBy, setOrderedBy] = useState('asc');
+  const [sortedBy, setSortedBy] = useState("date_published");
+  const [orderedBy, setOrderedBy] = useState("asc");
   const [selectedTrackIds, setSelectedTrackIds] = useState([]);
 
   const fetchTracks = async () => {
@@ -46,7 +48,11 @@ export default function Tracks () {
     };
     // tracksData = tracksData.filter(track => track.spotify_track_id !== null);
     tracksData = mapKeysToTracks(tracksData);
-    console.log("tracks data: ", tracksData);
+    tracksData.sort((a, b) => {
+      if (a["date_published"] > b["date_published"]) { return -1; };
+      if (a["date_published"] < b["date_published"]) { return 1; };
+      return 0;
+    });
     setTracks(tracksData);
     setDisplayedTracks(tracksData);
     setIsLoading(false);
@@ -54,13 +60,13 @@ export default function Tracks () {
 
   const addTracksToPlaylist = async () => {
     setIsLoading(true);
-    const access_token = localStorage.getItem("access_token");
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/playlist-tracks`, {
       method: "POST",
       body: JSON.stringify({spotify_track_ids: selectedTrackIds}),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${access_token}`,
+        "Authorization": `Bearer ${accessToken}`,
       }
     })
     setIsLoading(false);
@@ -108,31 +114,33 @@ export default function Tracks () {
     setSelectedTrackIds([]);
   }
 
-  function sortTracksTable(attr) {
+  const sortTracksTable = (attr) => {
+    // attr can be any column header value in tableHeaders.js
     console.log('sorting data...');
     const tracksCopy = [...displayedTracks];
-    if ((sortedBy !== attr) || (sortedBy === attr && orderedBy === "desc")) {
+    console.log(`sorting ${tracksCopy.length} tracks....`)
+    if ((sortedBy !== attr) || (sortedBy === attr && orderedBy === "asc")) {
         tracksCopy.sort((a, b) => {
             if (a[attr] < b[attr]) {
                 return -1;
             }
             if (a[attr] > b[attr]) {
                 return 1;
-            }
-            return 0;
-        });
-        setOrderedBy("asc");
-    } else if (sortedBy === attr && orderedBy === "asc") {
-        tracksCopy.sort((a, b) => {
-            if (a[attr] < b[attr]) {
-                return 1;
-            }
-            if (a[attr] > b[attr]) {
-                return -1;
             }
             return 0;
         });
         setOrderedBy("desc");
+    } else if (sortedBy === attr && orderedBy === "desc") {
+        tracksCopy.sort((a, b) => {
+            if (a[attr] < b[attr]) {
+                return 1;
+            }
+            if (a[attr] > b[attr]) {
+                return -1;
+            }
+            return 0;
+        });
+        setOrderedBy("asc");
     };
     setSortedBy(attr);
     setDisplayedTracks(tracksCopy);
@@ -154,23 +162,42 @@ export default function Tracks () {
       setDisplayedTracks(filteredTracks);
     }
   }
+
+  const updateTopTracksDb = async () => {
+    setIsLoading(true);
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
+    const resp = await fetch(`${backendUrl}/pitchfork-tracks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({max_page_num: 25}),
+    });
+    setIsLoading(false);
+    if (resp.status === 200) {
+      const data = await resp.json();
+      loadTracks();
+      window.alert(`${data.num_new_tracks} new track added to database!`);
+    } else {
+      window.alert("Error upadting database");
+    };
+  }
   
   useEffect(() => {
     loadTracks();
+    getAccessToken(navigate, setIsAuthenticated);
   }, [])
 
   return (
     <>
       {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
         <div className="section">
-          <div className="columns is-centered">
-            <div className="is-half">
-              <h1 className="title">Pitchfork Top Tracks</h1>
-            </div>
+          <div className="is-flex is-justify-content-center">
+            <h1 className="title">Pitchfork Top Tracks</h1>
           </div>
-            <div className="section p-2">
-                <div className="columns is-centered m-2 ml-6 mr-6">
-                  <div className="column is-one-third">
+            <div className="section p-2 mt-4">
+                <div className="is-flex is-justify-content-space-evenly">
                     <button
                       className="button is-primary"
                       disabled={selectedTrackIds.length === 0}
@@ -178,25 +205,22 @@ export default function Tracks () {
                     >
                         Add to Spotify Playlist
                     </button>
-                  </div>
-                  <div className="column is-one-third">
                     <input
                       type="search"
-                      className="input m-1 search"
+                      className="input search"
+                      style={{maxWidth: "400px"}}
                       placeholder="Filter table..."
                       onChange={filterTracksTable}
                     />
-                  </div>
-                  <div className="column is-one-third ">
-                    {/* <button
-                      className="button is-primary p-0"
-                      onClick={() => console.log("click")}
-                    >Add Tracks to Spotify Playlist</button> */}
-                  </div>
+                    <button
+                        className="button is-primary"
+                        onClick={updateTopTracksDb}
+                    >
+                      Update Top Tracks Database
+                    </button>
                 </div>
-              <div className="container is-scrollable">
+              <div className="container is-scrollable mt-4">
                 <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
-                  {/* <caption className="title">Pitchfork Top Tracks</caption> */}
                   <thead className="sticky-header">
                     <tr id='table-header-row'>
                       <th className="has-background-primary has-text-white">

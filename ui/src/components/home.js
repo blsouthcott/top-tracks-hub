@@ -2,20 +2,22 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Login from "./login";
 import { backendUrl } from "../config";
+import { getAccessToken } from "./getAccessToken";
 
 
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
+
   const navigate = useNavigate();
   const [spotifyAccountIsAuthorized, setSpotifyAccountIsAuthorized] = useState(false);
-
+  
   const authorizeAccount = async (e) => {
     e.preventDefault();
-    const access_token = localStorage.getItem("access_token");
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/authorize`, {
       method: "POST",
       body: JSON.stringify({}),
       headers: {
-        "Authorization": `Bearer ${access_token}`,
+        "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       }
     })
@@ -29,12 +31,12 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const unauthorizeAccount = async (e) => {
     e.preventDefault();
-    const access_token = localStorage.getItem("access_token");
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/unauthorize`, {
       method: "POST",
       body: JSON.stringify({}),
       headers: {
-        "Authorization": `Bearer ${access_token}`,
+        "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       }
     })
@@ -46,40 +48,31 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     window.alert("There was a problem removing your Spotify Account")
   }
 
-  const getSpotifyAccountAuthorizationStatus = async () => {
-    const access_token = localStorage.getItem("access_token");
-    const resp = await fetch(`${backendUrl}/account-is-authorized`, {
-      headers: {
-        "Authorization": `Bearer ${access_token}`,
-      }
-    })
-    const respData = await resp.json();
-    if (!respData.authorized) {
-      setSpotifyAccountIsAuthorized(false);
-    } else {
-      setSpotifyAccountIsAuthorized(true);
-    };
-  }
-
   const goToTracks = async (e) => {
     e.preventDefault();
     navigate("/tracks");
   }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      getSpotifyAccountAuthorizationStatus();
+  const setSpotifyAccountAuthorizationStatus = async () => {
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
+    if (accessToken) {
+      const resp = await fetch(`${backendUrl}/account-is-authorized`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+        }
+      })
+      const respData = await resp.json();
+      if (!respData.authorized) {
+        setSpotifyAccountIsAuthorized(false);
+      } else {
+        setSpotifyAccountIsAuthorized(true);
+      };
     };
-  }, [isAuthenticated])
+  }
 
   useEffect(() => {
-    const access_token = localStorage.getItem("access_token");
-    if (access_token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    };
-  }, [])
+    setSpotifyAccountAuthorizationStatus();
+  }, [isAuthenticated])
 
   return (
     <>

@@ -5,9 +5,10 @@ import { backendUrl } from "../config";
 import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
+import { getAccessToken } from "./getAccessToken";
 
 
-export default function AddSpotifyTrackId () {
+export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
 
   const navigate = useNavigate();
   const { trackId } = useParams();
@@ -29,10 +30,10 @@ export default function AddSpotifyTrackId () {
   }
 
   const loadSearchResults = async (track) => {
-    const access_token = localStorage.getItem("access_token");
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/spotify-tracks?song-name=${track.name}&artists=${track.artists.join(", ")}`, {
       headers: {
-        "Authorization": `Bearer ${access_token}`,
+        "Authorization": `Bearer ${accessToken}`,
       }
     })
     if (resp.status !== 200) {
@@ -56,7 +57,7 @@ export default function AddSpotifyTrackId () {
 
   const addTrackId = async () => {
     setIsLoading(true);
-    const access_token = localStorage.getItem("access_token");
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/spotify-track-id`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -65,7 +66,7 @@ export default function AddSpotifyTrackId () {
       }),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${access_token}`,
+        "Authorization": `Bearer ${accessToken}`,
       }
     });
     if (resp.status !== 204) {

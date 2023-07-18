@@ -22,7 +22,9 @@ export default function Login ({ setIsAuthenticated }) {
     } else {
       const respData = await resp.json();
       const jwt = respData.access_token;
-      localStorage.setItem("access_token", jwt);
+      const expiration = respData.expiration;
+      localStorage.setItem("accessToken", jwt);
+      localStorage.setItem("accessTokenExpiration", expiration);
       setIsAuthenticated(true);
     };
   }
