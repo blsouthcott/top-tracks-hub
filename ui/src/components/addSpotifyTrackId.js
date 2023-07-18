@@ -49,12 +49,6 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
     setSearchResults(data);
   }
 
-  const loadSongAndSearchResults = async () => {
-    const loadedTrack = await loadSongInfo();
-    await loadSearchResults(loadedTrack);
-    setIsLoading(false);
-  }
-
   const addTrackId = async () => {
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
@@ -78,7 +72,11 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
   }
   
   useEffect(() => {
-    loadSongAndSearchResults();
+    loadSongInfo().then(loadedTrack => {
+      loadSearchResults(loadedTrack).then(() => {
+        setIsLoading(false);
+      })
+    })
   }, [])
 
   return (
