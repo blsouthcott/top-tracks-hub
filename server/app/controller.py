@@ -1,4 +1,5 @@
 import logging
+from multiprocessing.dummy import Pool
 
 from .models import db, Song, Site, Artist, Genre
 from .scrape_top_tracks import (
@@ -114,19 +115,21 @@ def get_song_by_name_and_artist(song_name: str, song_artist: str) -> Song:
     return songs[0]
 
 
-def fill_pitchfork_top_tracks_db():
+def update_pitchfork_top_tracks_db(max_page_num=255):
+    """ 
+    updates the db with Pitchfork recommended tracks
+    by default, it tries to get everything that's available
+    it appears that Pitchfork only stores published recommendations for about 255 pages worth of recommendations
+    """
     save_new_recommendations_site("Pitchfork")
-    page = 1
-    html = get_pitchfork_top_tracks_html(page)
-    while html:
-        tracks = parse_top_tracks_html(html, newest_only=False)
-        for track in tracks:
-            save_new_track_to_db(track, "Pitchfork")
-        page += 1
-        html = get_pitchfork_top_tracks_html(page)
-
-
-def update_song_spotify_track_id(song: Song, track_id: str):
-    song.spotify_track_id = track_id
-    db.session.commit()
-    return True
+    pool = Pool()
+    html_results = pool.map(get_pitchfork_top_tracks_html, [page_num for page_num in range(1, max_page_num+1)])
+    num_new_tracks_added = 0
+    for html in html_results:
+        if html:
+            tracks = parse_top_tracks_html(html)
+            for track in tracks:
+                song_id = save_new_track_to_db(track, "Pitchfork")
+                if song_id:
+                    num_new_tracks_added += 1
+    return num_new_tracks_added

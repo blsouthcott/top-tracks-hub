@@ -41,7 +41,6 @@ def update_spotify_playlists(config_dir):
         return
 
     for file in os.listdir(config_dir):
-        # if we're authenticating through other music streaming services, we may want to
         if file != GENERIC_SPOTIFY_CONFIG_FILE:
             spotify_obj = get_spotify_obj(file)
             spotify_playlist_id = get_spotify_playlist_id(

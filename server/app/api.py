@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask import request, jsonify
 from flask_restful import Resource
@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import tekore as tk
 
 from .models import db, Song, User
-from .controller import get_songs_by_str_val, get_songs_by_list_vals
+from .controller import update_pitchfork_top_tracks_db, get_songs_by_str_val, get_songs_by_list_vals
 from .api_utils import row_to_dict
 from .spotify import get_spotify_obj, get_spotify_playlist_id, add_track_to_playlist
 
@@ -43,8 +43,12 @@ class Signup(Resource):
         db.session.add(new_user)
         db.session.commit()
 
+        expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
         access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
-        return {"access_token": access_token}, 200
+        return {
+            "access_token": access_token,
+            "expiration": expiration
+        }, 200
     
 
 class Login(Resource):
@@ -62,8 +66,12 @@ class Login(Resource):
             logging.info("wrong password")
             return "incorrect password", 400
 
-        access_token = create_access_token(identity=user.get_id())
-        return {"access_token": access_token}, 200
+        expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
+        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
+        return {
+            "access_token": access_token,
+            "expiration": expiration
+        }, 200
 
 
 class Authorize(Resource):
@@ -131,6 +139,7 @@ class AccountIsAuthorized(Resource):
     @jwt_required()
     def get(self):
         email = get_jwt_identity()
+        logging.debug(f"checking authorization status for {email}")
         for fi in os.listdir(CONFIG_DIR):
             if email in fi:
                 return {"authorized": True}, 200
@@ -236,3 +245,15 @@ class SearchSpotifyTracks(Resource):
         search_results = spotify_obj.search(f"{song_name} artist:{artists.split(',')[0]}")[0].items
         track_results = [spotify_obj.track(search_result.id) for search_result in search_results]
         return jsonify(track_results)
+    
+
+class PitchforkTracks(Resource):
+
+    @jwt_required()
+    def post(self):
+        body = request.get_json()
+        if not (max_page_num := body.get("max_page_num")):
+            max_page_num = 25
+        num_new_tracks = update_pitchfork_top_tracks_db(max_page_num=max_page_num)
+        return {"num_new_tracks": num_new_tracks}, 200
+        

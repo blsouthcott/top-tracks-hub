@@ -23,7 +23,8 @@ from .api import (
     Tracks,
     PlaylistTracks,
     SpotifyTrackId,
-    SearchSpotifyTracks
+    SearchSpotifyTracks,
+    PitchforkTracks
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -70,3 +71,4 @@ api.add_resource(Tracks, "/tracks")
 api.add_resource(PlaylistTracks, "/playlist-tracks")
 api.add_resource(SearchSpotifyTracks, "/spotify-tracks")
 api.add_resource(SpotifyTrackId, "/spotify-track-id")
+api.add_resource(PitchforkTracks, "/pitchfork-tracks")
