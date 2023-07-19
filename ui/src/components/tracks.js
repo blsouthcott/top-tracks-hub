@@ -178,9 +178,9 @@ export default function Tracks ({ setIsAuthenticated }) {
     if (resp.status === 200) {
       const data = await resp.json();
       loadTracks();
-      window.alert(`${data.num_new_tracks} new track added to database!`);
+      window.alert(`${data.num_new_tracks} new ${data.num_new_tracks == 1 ? "track" : "tracks"} added to database!`);
     } else {
-      window.alert("Error upadting database");
+      window.alert("Error updating database");
     };
   }
   

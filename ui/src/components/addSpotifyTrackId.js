@@ -42,7 +42,7 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
     };
     const data = await resp.json();
     if (data.length === 0) {
-      console.log("No search results");
+      window.alert(`No search results for ${track.name}`)
       navigate("/tracks");
     }
     console.log("search results: ", data);
