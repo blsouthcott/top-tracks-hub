@@ -75,29 +75,33 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
     return None
 
 
-def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
-    """this returns the"""
+def get_user_spotify_playlists(user_email: str, filter_keyword="Pitchfork") -> list[dict]:
+    """
+    returns the name and id for each playlist in the user's account filtered by keyword
+    """
+    spotify_obj = get_spotify_obj(f"{user_email}.cfg")
+    spotify_playlists = spotify_obj.playlists(spotify_obj.current_user().id)
+    return [{"name": playlist.name, "id": playlist.id} for playlist in spotify_playlists.items if filter_keyword.lower() in playlist.name.lower()]
 
-    if user.playlist_id:
-        return user.playlist_id
 
-    # the user doesn't have a playlist ID saved in the db, make a new playlist for them and save the ID
-    curr_user_id = spotify.current_user().id
+def create_spotify_playlist(spotify: tk.Spotify, user: User, playlist_name="Pitchfork Top Tracks") -> None:
+    """
+    create a new playlist in the user's Spotify account
+    """
     new_playlist = spotify.playlist_create(
-        curr_user_id,
-        "Pitchfork Top Tracks",
+        spotify.current_user().id,
+        playlist_name,
         public=False,
         description="Playlist containing Pitchfork recommended tracks",
     )
     user.playlist_id = new_playlist.id
     db.session.commit()
-    return new_playlist.id
 
 
-def add_track_to_playlist(spotify: tk.Spotify, user: User, new_track_id: str):
+def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_id: str):
     """TODO: implement a more efficient version of this function"""
 
-    top_tracks_playlist = spotify.playlist(user.playlist_id)
+    top_tracks_playlist = spotify_obj.playlist(playlist_id)
     top_tracks_playlist_tracks = top_tracks_playlist.tracks
 
     # Spotify does allow duplicate tracks in a playlist
@@ -107,6 +111,6 @@ def add_track_to_playlist(spotify: tk.Spotify, user: User, new_track_id: str):
             logging.debug(f"skipped adding duplicate track with id {new_track_id} to playlist")
             return False
 
-    added = spotify.playlist_add(user.playlist_id, [spotify.track(new_track_id).uri])
+    added = spotify_obj.playlist_add(playlist_id, [spotify_obj.track(new_track_id).uri])
     logging.debug(f"playlist_add returned: {added}")
     return added

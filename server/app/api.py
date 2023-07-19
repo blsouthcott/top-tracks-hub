@@ -13,7 +13,7 @@ import tekore as tk
 from .models import db, Song, User
 from .controller import update_pitchfork_top_tracks_db, get_songs_by_str_val, get_songs_by_list_vals
 from .api_utils import row_to_dict
-from .spotify import get_spotify_obj, get_spotify_playlist_id, add_track_to_playlist
+from .spotify import get_spotify_obj, create_spotify_playlist, add_track_to_playlist, get_user_spotify_playlists
 
 logging.basicConfig(level=logging.INFO)
 
@@ -114,7 +114,7 @@ class AuthCallback(Resource):
 
         spotify_obj = get_spotify_obj(f"{email}.cfg")
         user = User.query.filter_by(email=email).first()
-        get_spotify_playlist_id(spotify_obj, user)
+        create_spotify_playlist(spotify_obj, user)
 
         return "Your account has been authorized and playlist created in your Spotify account. You can now close this window.", 200
 
@@ -209,7 +209,18 @@ class SpotifyTrackId(Resource):
             f"The Spotify Track ID for {track.name} with Song ID: {track.id} has been updated.",
             204,
         )
-    
+
+
+class Playlists(Resource):
+
+    @jwt_required()
+    def get(self):
+        email = get_jwt_identity()
+        playlists = get_user_spotify_playlists(email)
+        if not playlists:
+            return "no playlists found", 400
+        return jsonify(playlists)
+
 
 class PlaylistTracks(Resource):
 
@@ -222,12 +233,12 @@ class PlaylistTracks(Resource):
     def post(self):
         body = request.get_json()
         email = get_jwt_identity()
-        user = User.query.filter_by(email=email).first()
         spotify_obj = get_spotify_obj(f"{email}.cfg")
-        track_ids = body.get("spotify_track_ids")
+        track_ids = body.get("spotify-track-ids")
+        playlist_id = body.get("spotify-playlist-id")
         results = []
         for track_id in track_ids:
-            added = add_track_to_playlist(spotify_obj, user, track_id)
+            added = add_track_to_playlist(spotify_obj, playlist_id, track_id)
             results.append({track_id: "success" if added else "error"})
         return results, 200
     

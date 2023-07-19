@@ -1,6 +1,7 @@
-""" tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
-    Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
-    Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
+"""
+tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
+Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
+Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
 """
 
 import os
@@ -19,15 +20,16 @@ from .api import (
     Authorize,
     Unauthorize,
     AccountIsAuthorized,
-    AuthCallback, 
+    AuthCallback,
     Tracks,
+    Playlists,
     PlaylistTracks,
     SpotifyTrackId,
     SearchSpotifyTracks,
     PitchforkTracks
 )
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def create_app():
@@ -68,6 +70,7 @@ api.add_resource(Unauthorize, "/unauthorize")
 api.add_resource(AccountIsAuthorized, "/account-is-authorized")
 api.add_resource(AuthCallback, "/callback")
 api.add_resource(Tracks, "/tracks")
+api.add_resource(Playlists, "/playlists")
 api.add_resource(PlaylistTracks, "/playlist-tracks")
 api.add_resource(SearchSpotifyTracks, "/spotify-tracks")
 api.add_resource(SpotifyTrackId, "/spotify-track-id")

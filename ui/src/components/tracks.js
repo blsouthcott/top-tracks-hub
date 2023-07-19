@@ -17,6 +17,28 @@ export default function Tracks ({ setIsAuthenticated }) {
   const [sortedBy, setSortedBy] = useState("date_published");
   const [orderedBy, setOrderedBy] = useState("asc");
   const [selectedTrackIds, setSelectedTrackIds] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+
+  const handlePlaylistChange = (e) => {
+    setSelectedPlaylistId(e.target.value);
+  };
+
+  const loadPlaylists = async () => {
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
+    const resp = await fetch(`${backendUrl}/playlists`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      }
+    });
+    if (resp.status === 200) {
+      const data = await resp.json();
+      setPlaylists(data);
+    } else {
+      window.alert("Failed to load user playlists");
+    }
+  }
 
   const fetchTracks = async () => {
     const resp = await fetch(`${backendUrl}/tracks`);
@@ -63,7 +85,10 @@ export default function Tracks ({ setIsAuthenticated }) {
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/playlist-tracks`, {
       method: "POST",
-      body: JSON.stringify({spotify_track_ids: selectedTrackIds}),
+      body: JSON.stringify({
+        "spotify-track-ids": selectedTrackIds,
+        "spotify-playlist-id": selectedPlaylistId,
+      }),
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${accessToken}`,
@@ -185,8 +210,9 @@ export default function Tracks ({ setIsAuthenticated }) {
   }
   
   useEffect(() => {
-    loadTracks();
     getAccessToken(navigate, setIsAuthenticated);
+    loadTracks();
+    loadPlaylists();
   }, [])
 
   return (
@@ -198,13 +224,24 @@ export default function Tracks ({ setIsAuthenticated }) {
           </div>
             <div className="section p-2 mt-4">
                 <div className="is-flex is-justify-content-space-evenly">
+                  <div className="is-flex">
+                    <div className="select mr-2">
+                      <select
+                        value={selectedPlaylistId} 
+                        onChange={handlePlaylistChange}>
+                        {playlists.map((playlist, i) => 
+                          <option key={i} value={playlist.id}>{playlist.name}</option>
+                        )}
+                      </select>
+                    </div>
                     <button
                       className="button is-primary"
-                      disabled={selectedTrackIds.length === 0}
+                      disabled={selectedTrackIds.length === 0 || playlists.length < 1}
                       onClick={addTracksToPlaylist}
                     >
                         Add to Spotify Playlist
                     </button>
+                  </div>
                     <input
                       type="search"
                       className="input search"
