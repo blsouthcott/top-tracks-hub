@@ -2,7 +2,7 @@ import logging
 from multiprocessing.dummy import Pool
 
 from .models import db, Song, Site, Artist, Genre
-from .spotify import get_spotify_obj, add_spotify_track_id_to_song
+from .spotify import get_spotify_obj, search_spotify_track_id
 from .scrape_top_tracks import (
     Track,
     get_pitchfork_top_tracks_html,
@@ -136,3 +136,13 @@ def update_pitchfork_top_tracks_db(max_page_num=255):
                     num_new_tracks_added += 1
                     add_spotify_track_id_to_song(song_id, spotify_obj, db)
     return num_new_tracks_added
+
+
+def add_spotify_track_id_to_song(song_id, spotify_obj, db):
+    song = Song.query.get(song_id)
+    spotify_track_id = search_spotify_track_id(spotify_obj, song)
+    if not spotify_track_id:
+        return False
+    song.spotify_track_id = spotify_track_id
+    db.session.commit()
+    return True

@@ -75,16 +75,6 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
     return None
 
 
-def add_spotify_track_id_to_song(song_id, spotify_obj, db):
-    song = Song.query.get(song_id)
-    spotify_track_id = search_spotify_track_id(spotify_obj, song)
-    if not spotify_track_id:
-        return False
-    song.spotify_track_id = spotify_track_id
-    db.session.commit()
-    return True
-
-
 def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
     """this returns the"""
 
