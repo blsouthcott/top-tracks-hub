@@ -15,7 +15,7 @@ PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 def get_spotify_obj(config_file=None):
     if config_file is None:
-        config_file = os.listdir(CONFIG_DIR)[0]
+        config_file = [file for file in os.listdir(CONFIG_DIR) if "placeholder" not in file][0]
         fi_conf = tk.config_from_file(
             os.path.join(CONFIG_DIR, config_file), return_refresh=True
         )
@@ -73,6 +73,16 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
 
     # we couldn't find a match
     return None
+
+
+def add_spotify_track_id_to_song(song_id, spotify_obj, db):
+    song = Song.query.get(song_id)
+    spotify_track_id = search_spotify_track_id(spotify_obj, song)
+    if not spotify_track_id:
+        return False
+    song.spotify_track_id = spotify_track_id
+    db.session.commit()
+    return True
 
 
 def get_spotify_playlist_id(spotify: tk.Spotify, user: User) -> str:
