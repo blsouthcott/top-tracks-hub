@@ -29,7 +29,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
           className={`navbar-burger burger ${isActive ? 'is-active' : ''}`}
           aria-label="menu"
           aria-expanded="false"
-          data-target="navbarBasicExample"
+          data-target="navbar"
           onClick={toggleBurger}
         >
           <span aria-hidden="true"></span>
@@ -39,7 +39,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
       </div>
 
       <div
-        id="navbarBasicExample"
+        id="navbar"
         className={`navbar-menu ${isActive ? 'is-active' : ''}`}
       >
         <div className="navbar-start">
@@ -50,6 +50,11 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
           <Link className="navbar-item" to="/about">
             About
           </Link>
+
+          {isAuthenticated && 
+          <Link className="navbar-item" to="/tracks">
+            Tracks
+          </Link>}
 
           <div className="navbar-item has-dropdown is-hoverable">
             <Link className="navbar-link" to="#">
