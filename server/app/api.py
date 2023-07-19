@@ -15,7 +15,7 @@ from .controller import update_pitchfork_top_tracks_db, get_songs_by_str_val, ge
 from .api_utils import row_to_dict
 from .spotify import get_spotify_obj, get_spotify_playlist_id, add_track_to_playlist
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 
