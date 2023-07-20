@@ -114,7 +114,9 @@ class AuthCallback(Resource):
 
         spotify_obj = get_spotify_obj(f"{email}.cfg")
         user = User.query.filter_by(email=email).first()
-        create_spotify_playlist(spotify_obj, user)
+        playlists = get_user_spotify_playlists(email)
+        if not playlists:
+            create_spotify_playlist(spotify_obj, user)
 
         return "Your account has been authorized and playlist created in your Spotify account. You can now close this window.", 200
 
