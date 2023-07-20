@@ -12,22 +12,10 @@ from flask_login import LoginManager
 from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
+from flask_mail import Mail
 
 from .models import db, User
-from .api import (
-    Signup, 
-    Login, 
-    Authorize,
-    Unauthorize,
-    AccountIsAuthorized,
-    AuthCallback,
-    Tracks,
-    Playlists,
-    PlaylistTracks,
-    SpotifyTrackId,
-    SearchSpotifyTracks,
-    PitchforkTracks
-)
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,12 +26,15 @@ def create_app():
     CORS(app, origins="http://localhost:3000")
     JWTManager(app)
 
+    # secrets config
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
+    # spotify auth files config
     app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
     logging.debug(app.config["CONFIG_DIR"])
 
+    # db config
     app.config[
         "SQLALCHEMY_DATABASE_URI"
     ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
@@ -57,21 +48,18 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_email):
         return User.query.get(user_email)
+    
+    # email sending config
+    app.config["MAIL_SERVER"] = 'smtp.gmail.com'
+    app.config["MAIL_PORT"] = 465
+    app.config["MAIL_USE_TLS"] = False
+    app.config["MAIL_USE_SSL"] = True
+    app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 
     return app
 
 
 app = create_app()
 api = Api(app)
-api.add_resource(Signup, "/signup")
-api.add_resource(Login, "/login")
-api.add_resource(Authorize, "/authorize")
-api.add_resource(Unauthorize, "/unauthorize")
-api.add_resource(AccountIsAuthorized, "/account-is-authorized")
-api.add_resource(AuthCallback, "/callback")
-api.add_resource(Tracks, "/tracks")
-api.add_resource(Playlists, "/playlists")
-api.add_resource(PlaylistTracks, "/playlist-tracks")
-api.add_resource(SearchSpotifyTracks, "/spotify-tracks")
-api.add_resource(SpotifyTrackId, "/spotify-track-id")
-api.add_resource(PitchforkTracks, "/pitchfork-tracks")
+mail = Mail(app)

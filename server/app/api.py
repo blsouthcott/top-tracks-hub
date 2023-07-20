@@ -10,6 +10,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import tekore as tk
 
+from .app import api, mail
 from .models import db, Song, User
 from .controller import update_pitchfork_top_tracks_db, get_songs_by_str_val, get_songs_by_list_vals
 from .api_utils import row_to_dict
@@ -269,4 +270,17 @@ class PitchforkTracks(Resource):
             max_page_num = 25
         num_new_tracks = update_pitchfork_top_tracks_db(max_page_num=max_page_num)
         return {"num_new_tracks": num_new_tracks}, 200
-        
+
+
+api.add_resource(Signup, "/signup")
+api.add_resource(Login, "/login")
+api.add_resource(Authorize, "/authorize")
+api.add_resource(Unauthorize, "/unauthorize")
+api.add_resource(AccountIsAuthorized, "/account-is-authorized")
+api.add_resource(AuthCallback, "/callback")
+api.add_resource(Tracks, "/tracks")
+api.add_resource(Playlists, "/playlists")
+api.add_resource(PlaylistTracks, "/playlist-tracks")
+api.add_resource(SearchSpotifyTracks, "/spotify-tracks")
+api.add_resource(SpotifyTrackId, "/spotify-track-id")
+api.add_resource(PitchforkTracks, "/pitchfork-tracks")

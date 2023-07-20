@@ -13,7 +13,7 @@ CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 
-def get_spotify_obj(config_file=None):
+def get_spotify_obj(config_file: str = None) -> tk.Spotify:
     if config_file is None:
         config_file = [file for file in os.listdir(CONFIG_DIR) if "placeholder" not in file][0]
         fi_conf = tk.config_from_file(
@@ -98,7 +98,7 @@ def create_spotify_playlist(spotify: tk.Spotify, user: User, playlist_name="Pitc
     db.session.commit()
 
 
-def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_id: str):
+def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_id: str) -> bool:
     """TODO: implement a more efficient version of this function"""
 
     top_tracks_playlist = spotify_obj.playlist(playlist_id)
