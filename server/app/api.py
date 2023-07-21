@@ -1,13 +1,15 @@
 import logging
 import os
+from random import randint
 from datetime import datetime, timedelta
+from dataclasses import dataclass
 
 from flask import request, jsonify
 from flask_restful import Resource
 
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
-
+from flask_mail import Message
 import tekore as tk
 
 from .app import api, mail
@@ -21,31 +23,80 @@ logging.basicConfig(level=logging.INFO)
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 
 auths = {}
+account_verifications = {}
+
+
+def clear_expired_verification_codes():
+    for key, val in account_verifications.items():
+        if val.expires < datetime.now().timestamp():
+            account_verifications.pop(key)
+
+
+@dataclass
+class AccountVerification:
+    verification_code: str
+    expires: float
+    user: User
 
 
 class Signup(Resource):
 
     def post(self):
         body = request.get_json()
-        email = body.get("email")
-        name = body.get("name")
-        password = body.get("password")
+        email = body["email"]
+        name = body["name"]
+        password = body["password"]
 
         user = User.query.filter_by(email=email).first()
         if user:
             return "email address already exists in the database", 400
-
-        new_user = User(
-            email=email,
-            name=name,
-            password=generate_password_hash(password, method="sha256"),
+        
+        verification_code = "".join([str(randint(0,9)) for _ in range(6)])
+        account_verifications[email] = AccountVerification(
+            verification_code=verification_code,
+            expires=(datetime.now() + timedelta(minutes=30.0)).timestamp(),
+            user=User(
+                email=email,
+                name=name,
+                password=password,
+            )
         )
+        clear_expired_verification_codes()
 
-        db.session.add(new_user)
+        msg = Message("Verify Top Tracks Account", recipients=[email])
+        msg.html = f"<p>Please use the following code to verify your account. This code is valid for 30 minutes.</p><p>{verification_code}</p>"
+        mail.send(msg)
+        return "email sent successfully", 200
+    
+
+class VerifyAccount(Resource):
+
+    def post(self):
+        """
+        """
+        body = request.get_json()
+        email = body["email"]
+        verification_code = body["verification_code"]
+
+        if email not in account_verifications:
+            clear_expired_verification_codes()
+            return "Invalid email", 400
+        
+        account_verification = account_verifications[email]
+        
+        if account_verification.expires < datetime.now().timestamp():
+            clear_expired_verification_codes()
+            return "Verification code already expired", 400
+        
+        if account_verification.verification_code != verification_code:
+            clear_expired_verification_codes()
+            return "Invalid verification code", 400
+
+        db.session.add(account_verification.user)
         db.session.commit()
 
         expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
-        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
+        access_token = create_access_token(identity=email, expires_delta=timedelta(hours=3.0))
         return {
             "access_token": access_token,
             "expiration": expiration
@@ -56,8 +107,8 @@ class Login(Resource):
 
     def post(self):
         body = request.get_json()
-        email = body.get("email")
-        password = body.get("password")
+        email = body["email"]
+        password = body["password"]
 
         user = User.query.filter_by(email=email).first()
         if not user:
@@ -94,8 +145,8 @@ class Authorize(Resource):
 class AuthCallback(Resource):
 
     def get(self):
-        code = request.args.get("code")
-        state = request.args.get("state")
+        code = request.args["code"]
+        state = request.args["state"]
         if state not in auths:
             return "Invalid state", 400
         
@@ -273,6 +324,7 @@ class PitchforkTracks(Resource):
 
 
 api.add_resource(Signup, "/signup")
+api.add_resource(VerifyAccount, "/verify-account")
 api.add_resource(Login, "/login")
 api.add_resource(Authorize, "/authorize")
 api.add_resource(Unauthorize, "/unauthorize")

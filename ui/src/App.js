@@ -8,8 +8,9 @@ import About from './components/about';
 import Contact from './components/contact';
 import ReportAnIssue from './components/reportAnIssue';
 import AddSpotifyTrackId from './components/addSpotifyTrackId';
-import { backendUrl } from './config';
-import { getAccessToken } from './components/getAccessToken';
+import Signup from './components/signUp';
+import VerifyAccount from './components/verifyAccount';
+
 
 function App () {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,6 +25,8 @@ function App () {
                 setIsAuthenticated={setIsAuthenticated}
               />
             }/>
+            <Route path="/signup" exact element={<Signup />}></Route>
+            <Route path="/verify-account" exact element={<VerifyAccount />}></Route>
             <Route path="/tracks" exact element={<Tracks setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/add-spotify-track-id/:trackId" exact element={<AddSpotifyTrackId setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/about" exact element={<About />} />

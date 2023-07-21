@@ -11,6 +11,7 @@ export const getAccessToken = (navigate, setIsAuthenticated) => {
   expiration = new Date(parseFloat(expiration));
   const currentTime = new Date();
   if (currentTime > expiration) {
+    localStorage.clear();
     window.alert("Your current login session has expired.");
     setIsAuthenticated(false);
     navigate("/");

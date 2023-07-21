@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { backendUrl } from "../config";
 
 export default function Login ({ setIsAuthenticated }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -29,8 +31,8 @@ export default function Login ({ setIsAuthenticated }) {
     };
   }
 
-  const signUp = async (e) => {
-    e.preventDefault();
+  const goToSignupPage = () => {
+    navigate("/signup");
   }
 
   return (
@@ -39,52 +41,53 @@ export default function Login ({ setIsAuthenticated }) {
         <div className="box">
           <h1 className="title has-text-centered">Login</h1>
           <form onSubmit={login}>
-            <label className="label">
-              Email
-              <br />
-              <input
-                className="input"
-                type="text"
-                placeholder="Enter username..."
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
-            </label>
-            <br />
-            <label className="label">
-              Password
-              <br />
-              <input
-                className="input"
-                type="password"
-                placeholder="Enter password..."
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
-            </label>
-            <br />
-            <button 
-              type="submit"
-              className="button is-primary is-fullwidth"
-            >
-              Login
-            </button>
-          </form>
-          <div className="section p-5">
-          <form>
-            
-              <div className="content">  
-                <p className="has-text-centered">Or click here to sign up</p>
-                <button
-                  type="submit"
-                  className="button is-primary is-outlined is-fullwidth"
-                  onClick={signUp}
-                >
-                  Sign up
-                </button>
+            <label className="label">Email</label>
+              <div className="control">
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Enter username..."
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
               </div>
             
+            <br />
+            <label className="label">Password</label>
+              <div className="control">
+                <input
+                  className="input"
+                  type="password"
+                  placeholder="Enter password..."
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+              </div>
+            <br />
+            <div className="control">
+              <button 
+                type="submit"
+                className="button is-primary is-fullwidth"
+              >
+                Login
+              </button>
+            </div>
           </form>
+          <div className="section p-5">
+            <form>
+              <div className="content">  
+                <p className="has-text-centered">Or click here to sign up</p>
+                <div className="control">
+                  <button
+                    type="submit"
+                    className="button is-primary is-outlined is-fullwidth"
+                    onClick={goToSignupPage}
+                  >
+                    Sign up
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
