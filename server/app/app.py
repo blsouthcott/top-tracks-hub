@@ -8,7 +8,6 @@ import os
 import logging
 
 from flask import Flask
-from flask_login import LoginManager
 from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
@@ -23,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 def create_app():
 
     app = Flask(__name__)
-    CORS(app, origins="http://localhost:3000")
+    CORS(app, origins=os.environ["ALLOWED_ORIGINS"])
     JWTManager(app)
 
     # secrets config
@@ -40,22 +39,15 @@ def create_app():
     ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
 
     db.init_app(app)
-
-    login_manager = LoginManager()
-    login_manager.login_view = "login"
-    login_manager.init_app(app)
-
-    @login_manager.user_loader
-    def load_user(user_email):
-        return User.query.get(user_email)
     
     # email sending config
-    app.config["MAIL_SERVER"] = 'smtp.gmail.com'
+    app.config["MAIL_SERVER"] = "smtp.gmail.com"
     app.config["MAIL_PORT"] = 465
     app.config["MAIL_USE_TLS"] = False
     app.config["MAIL_USE_SSL"] = True
     app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
     app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+    app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME")
 
     return app
 
