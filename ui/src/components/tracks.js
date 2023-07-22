@@ -81,6 +81,10 @@ export default function Tracks ({ setIsAuthenticated }) {
   }
 
   const addTracksToPlaylist = async () => {
+    if (!selectedPlaylistId) {
+      window.alert("Please select a playlist and try again!");
+      return;
+    };
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch(`${backendUrl}/playlist-tracks`, {
@@ -229,6 +233,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                       <select
                         value={selectedPlaylistId} 
                         onChange={handlePlaylistChange}>
+                        <option></option>
                         {playlists.map((playlist, i) => 
                           <option key={i} value={playlist.id}>{playlist.name}</option>
                         )}
