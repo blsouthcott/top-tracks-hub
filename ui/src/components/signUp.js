@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { backendUrl } from "../config"
 import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
 
@@ -15,7 +14,7 @@ export default function Signup () {
   const signup = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const resp = await fetch(`${backendUrl}/signup`, {
+    const resp = await fetch("/api/signup", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

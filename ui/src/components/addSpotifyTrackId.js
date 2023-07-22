@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate, useParams } from "react-router-dom";
-import { backendUrl } from "../config";
 import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
@@ -18,7 +17,7 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
   const [spotifyTrackId, setSpotifyTrackId] = useState("");
 
   const loadSongInfo = async () => {
-    const resp = await fetch(`${backendUrl}/tracks?song-id=${trackId}`);
+    const resp = await fetch(`/api/tracks?song-id=${trackId}`);
     if (resp.status !== 200) {
       window.alert(`Unable to load information for track with id: ${trackId}`)
       navigate("/tracks");
@@ -31,7 +30,7 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
 
   const loadSearchResults = async (track) => {
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch(`${backendUrl}/spotify-tracks?song-name=${track.name}&artists=${track.artists.join(", ")}`, {
+    const resp = await fetch(`/api/spotify-tracks?song-name=${track.name}&artists=${track.artists.join(", ")}`, {
       headers: {
         "Authorization": `Bearer ${accessToken}`,
       }
@@ -52,7 +51,7 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
   const addTrackId = async () => {
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch(`${backendUrl}/spotify-track-id`, {
+    const resp = await fetch("/api/spotify-track-id", {
       method: "PATCH",
       body: JSON.stringify({
         "song-id": trackId,

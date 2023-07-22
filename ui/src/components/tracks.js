@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import 'bulma/css/bulma.min.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { backendUrl } from "../config";
 import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
 import { getAccessToken } from "./getAccessToken";
@@ -26,7 +25,7 @@ export default function Tracks ({ setIsAuthenticated }) {
 
   const loadPlaylists = async () => {
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch(`${backendUrl}/playlists`, {
+    const resp = await fetch("/api/playlists", {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${accessToken}`,
@@ -41,7 +40,7 @@ export default function Tracks ({ setIsAuthenticated }) {
   }
 
   const fetchTracks = async () => {
-    const resp = await fetch(`${backendUrl}/tracks`);
+    const resp = await fetch("/api/tracks");
     if (resp.status !== 200) {
       return;
     };
@@ -87,7 +86,7 @@ export default function Tracks ({ setIsAuthenticated }) {
     };
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch(`${backendUrl}/playlist-tracks`, {
+    const resp = await fetch("/api/playlist-tracks", {
       method: "POST",
       body: JSON.stringify({
         "spotify-track-ids": selectedTrackIds,
@@ -125,11 +124,9 @@ export default function Tracks ({ setIsAuthenticated }) {
           setSelectedTrackIds(selectedTrackIdsCopy);
         };
         setTracks(tracksCopy);
-        // console.log("selected Track IDs: ", selectedTrackIds);
         return;
       };
-    }
-    
+    };
   }
 
   const unselectAllTracks = () => {
@@ -195,7 +192,7 @@ export default function Tracks ({ setIsAuthenticated }) {
   const updateTopTracksDb = async () => {
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch(`${backendUrl}/pitchfork-tracks`, {
+    const resp = await fetch("/api/pitchfork-tracks", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

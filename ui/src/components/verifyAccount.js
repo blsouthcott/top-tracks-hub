@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
-import { backendUrl } from '../config';
 
 
 export default function VerifyAccount() {
@@ -11,7 +10,7 @@ export default function VerifyAccount() {
 
   const verifyAccount = async (e) => {
     e.preventDefault();
-    const resp = await fetch(`${backendUrl}/verify-account`, {
+    const resp = await fetch("/api/verify-account", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

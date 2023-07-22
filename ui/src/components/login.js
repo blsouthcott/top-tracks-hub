@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { backendUrl } from "../config";
+
 
 export default function Login ({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function Login ({ setIsAuthenticated }) {
 
   const login = async (e) => {
     e.preventDefault();
-    const resp = await fetch(`${backendUrl}/login`, {
+    const resp = await fetch("/api/login", {
       method: "POST",
       body: JSON.stringify({
         email: email,

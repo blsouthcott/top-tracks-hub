@@ -7,7 +7,7 @@ Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/
 import os
 import logging
 
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 
 def create_app():
 
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")))
     CORS(app, origins=os.environ["ALLOWED_ORIGINS"])
     JWTManager(app)
 
@@ -55,3 +55,19 @@ def create_app():
 app = create_app()
 api = Api(app)
 mail = Mail(app)
+
+
+@app.route("/")
+def serve():
+    logging.info("Serving React app...")
+    index_file_path = os.path.join(app.static_folder, "index.html")
+    logging.info(f"Trying to serve {index_file_path}")
+    return send_from_directory(app.static_folder, "index.html")
+
+
+@app.route("/<path:path>")
+def static_proxy(path):
+    if os.path.exists(f"{app.static_folder}/{path}"):
+        return app.send_static_file(path)
+    else:
+        return serve()
