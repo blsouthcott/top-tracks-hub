@@ -122,7 +122,8 @@ class Login(Resource):
         access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
         return {
             "access_token": access_token,
-            "expiration": expiration
+            "expiration": expiration,
+            "name": user.name
         }, 200
 
 

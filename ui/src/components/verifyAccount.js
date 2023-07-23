@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
-
+import { alert } from "./alert";
 
 export default function VerifyAccount() {
   const navigate = useNavigate();
@@ -31,18 +31,18 @@ export default function VerifyAccount() {
       navigate("/");
     } else {
       const errMsg = await resp.text();
-      window.alert(errMsg);
+      alert.fire(errMsg);
     };
   };
 
   useEffect(() => {
     if(!location.state?.email) {
-      window.alert("We were unable to determine the email used to sign up.");
+      alert.fire("We were unable to determine the email used to sign up.");
       navigate("/");
     } else {
       setEmail(location.state.email);
     };
-  })
+  }, [])
 
   return (
     <div className="columns is-flex-direction-column is-align-items-center">

@@ -1,9 +1,3 @@
-"""
-tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
-Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
-Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
-"""
-
 import os
 import logging
 
@@ -67,6 +61,7 @@ def serve():
 
 @app.route("/<path:path>")
 def static_proxy(path):
+    logging.info(f"handling request for /{path}...")
     if os.path.exists(f"{app.static_folder}/{path}"):
         return app.send_static_file(path)
     else:

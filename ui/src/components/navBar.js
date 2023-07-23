@@ -76,7 +76,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
           <div className="navbar-item">
             <div className="buttons">
               {!isAuthenticated && 
-                <Link className="button is-primary" to="/">
+                <Link className="button is-primary" to="/signup">
                   <strong>Sign up</strong>
                 </Link>}
               {isAuthenticated ?

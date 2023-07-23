@@ -1,3 +1,4 @@
+import { alert } from "./alert";
 
 export const getAccessToken = (navigate, setIsAuthenticated) => {
   // returns the access token from local storage only if it has not yet expired
@@ -12,7 +13,7 @@ export const getAccessToken = (navigate, setIsAuthenticated) => {
   const currentTime = new Date();
   if (currentTime > expiration) {
     localStorage.clear();
-    window.alert("Your current login session has expired.");
+    alert.fire("Your current login session has expired.");
     setIsAuthenticated(false);
     navigate("/");
     return;

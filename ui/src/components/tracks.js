@@ -5,6 +5,7 @@ import { ClipLoader } from 'react-spinners';
 import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
 import { getAccessToken } from "./getAccessToken";
+import { alert } from "./alert";
 
 
 export default function Tracks ({ setIsAuthenticated }) {
@@ -35,7 +36,7 @@ export default function Tracks ({ setIsAuthenticated }) {
       const data = await resp.json();
       setPlaylists(data);
     } else {
-      window.alert("Failed to load user playlists");
+      alert.fire("Failed to load user playlists");
     }
   }
 
@@ -64,7 +65,7 @@ export default function Tracks ({ setIsAuthenticated }) {
     let tracksData = await fetchTracks();
     if (!tracksData) {
       setIsLoading(false);
-      window.alert("unable to load tracks data");
+      alert.fire("unable to load tracks data");
       return;
     };
     // tracksData = tracksData.filter(track => track.spotify_track_id !== null);
@@ -81,7 +82,7 @@ export default function Tracks ({ setIsAuthenticated }) {
 
   const addTracksToPlaylist = async () => {
     if (!selectedPlaylistId) {
-      window.alert("Please select a playlist and try again!");
+      alert.fire("Please select a playlist and try again!");
       return;
     };
     setIsLoading(true);
@@ -99,9 +100,9 @@ export default function Tracks ({ setIsAuthenticated }) {
     })
     setIsLoading(false);
     if (resp.status === 200) {
-      window.alert("Tracks successfully added to playlist")
+      alert.fire("Tracks successfully added to playlist")
     } else {
-      window.alert("Error adding tracks to playlist")
+      alert.fire("Error adding tracks to playlist")
     };
   }
 
@@ -204,9 +205,9 @@ export default function Tracks ({ setIsAuthenticated }) {
     if (resp.status === 200) {
       const data = await resp.json();
       loadTracks();
-      window.alert(`${data.num_new_tracks} new ${data.num_new_tracks == 1 ? "track" : "tracks"} added to database!`);
+      alert.fire(`${data.num_new_tracks} new ${data.num_new_tracks == 1 ? "track" : "tracks"} added to database!`);
     } else {
-      window.alert("Error updating database");
+      alert.fire("Error updating database");
     };
   }
   

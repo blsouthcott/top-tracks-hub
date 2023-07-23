@@ -5,7 +5,10 @@ import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
 import { getAccessToken } from "./getAccessToken";
-
+import { alert } from "./alert";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faClipboard } from "@fortawesome/free-solid-svg-icons";
 
 export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
 
@@ -15,11 +18,12 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
   const [track, setTrack] = useState({});
   const [searchResults, setSearchResults] = useState([]);
   const [spotifyTrackId, setSpotifyTrackId] = useState("");
+  const [copiedIds, setCopiedIds] = useState({});
 
   const loadSongInfo = async () => {
     const resp = await fetch(`/api/tracks?song-id=${trackId}`);
     if (resp.status !== 200) {
-      window.alert(`Unable to load information for track with id: ${trackId}`)
+      alert.fire(`Unable to load information for track with id: ${trackId}`)
       navigate("/tracks");
     };
     const trackData = await resp.json();
@@ -36,12 +40,12 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
       }
     })
     if (resp.status !== 200) {
-      window.alert(`Unable to load information for Spotify Tracks search for track with id: ${trackId}`)
+      alert.fire(`Unable to load information for Spotify Tracks search for track with id: ${trackId}`)
       navigate("/tracks");
     };
     const data = await resp.json();
     if (data.length === 0) {
-      window.alert(`No search results for ${track.name}`)
+      alert.fire(`No search results for ${track.name}`)
       navigate("/tracks");
     }
     console.log("search results: ", data);
@@ -63,9 +67,9 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
       }
     });
     if (resp.status !== 204) {
-      window.alert("Unable to update Spotify Track ID");
+      alert.fire("Unable to update Spotify Track ID");
     } else {
-      window.alert("Spotify Track ID successfully updated!");
+      alert.fire("Spotify Track ID successfully updated!");
     };
     navigate("/tracks");
   }
@@ -146,8 +150,17 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
                 <td>{result.album.name}</td>
                 <td>{result.album.artists.map(artist => artist.name).join(", ")}</td>
                 <td><Link to={result.external_urls.spotify} target="_blank">Spotify</Link></td>
-                {/* // TODO: allow copying id to clipboard */}
-                <td>{result.id}</td>
+                <td>
+                  <CopyToClipboard 
+                    text={result.id}
+                    onCopy={() => setCopiedIds({ ...copiedIds, [result.id]: true })}>
+                    <p 
+                      style={{cursor: "pointer"}}
+                      className={copiedIds[result.id] ? "flash" : ""}>
+                        {result.id} <FontAwesomeIcon className={copiedIds[result.id] ? "flash" : ""} icon={faClipboard} />
+                    </p>
+                  </CopyToClipboard>
+                </td>
               </tr>
             )
           })}

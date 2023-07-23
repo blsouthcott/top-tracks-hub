@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Login from "./login";
 import { getAccessToken } from "./getAccessToken";
+import { alert } from "./alert";
 
 
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
@@ -21,7 +22,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
       }
     })
     if (resp.status !== 307) {
-      window.alert("unable to authorize account");
+      alert.fire("unable to authorize account");
       return;
     }
     const respData = await resp.json();
@@ -40,11 +41,11 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
       }
     })
     if (resp.status === 200) {
-      window.alert("Your Spotify account has been removed");
+      alert.fire("Your Spotify account has been removed");
       setSpotifyAccountIsAuthorized(false);
       return;
     }
-    window.alert("There was a problem removing your Spotify Account")
+    alert.fire("There was a problem removing your Spotify Account")
   }
 
   const goToTracks = async (e) => {

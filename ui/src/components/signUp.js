@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
+import { alert } from "./alert";
 
 export default function Signup () {
   
@@ -29,7 +30,7 @@ export default function Signup () {
     if (resp.status === 200) {
       navigate('/verify-account', { state: { email: email } });
     } else {
-      window.alert("Unable to complete sign up");
+      alert.fire("Unable to complete sign up");
       navigate("/");
     }
   };

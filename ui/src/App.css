@@ -40,3 +40,13 @@
   /* margin: auto; */
   border-bottom: 1px solid rgba(220,220,220,0.5);
 }
+
+@keyframes flash {
+  0% { color: black; }
+  50% { color: lime; }
+  100% { color: black; }
+}
+
+.flash {
+  animation: flash 2s linear;
+}

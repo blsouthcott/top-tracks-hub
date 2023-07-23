@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { alert } from "./alert";
 
 export default function Login ({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function Login ({ setIsAuthenticated }) {
       },
     })
     if (resp.status !== 200) {
-      window.alert("unable to login");
+      alert.fire("unable to login");
     } else {
       const respData = await resp.json();
       const jwt = respData.access_token;
@@ -28,6 +28,7 @@ export default function Login ({ setIsAuthenticated }) {
       localStorage.setItem("accessToken", jwt);
       localStorage.setItem("accessTokenExpiration", expiration);
       setIsAuthenticated(true);
+      alert.fire(`Welcome, ${respData.name}!`);
     };
   }
 
