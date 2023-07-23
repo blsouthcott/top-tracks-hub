@@ -23,3 +23,29 @@ PORT=5000
 ```
 
 If you change PORT you'll also need to change it in the client side code.
+
+## Frontend
+From the root directory run
+```
+cd ui
+npm install
+npm start
+```
+
+## Backend
+From the root directory run
+```
+pyenv virtualenv install <python version> <virtual env name>
+pyenv local <virtual env name>
+pyenv activate <virtual env name>
+cd server
+pip install -r requirements.txt
+flask run
+```
+
+# Dependency Documentation
+tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
+
+Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
+
+Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
