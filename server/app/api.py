@@ -14,9 +14,19 @@ import tekore as tk
 
 from .app import api, mail
 from .models import db, Song, User
-from .controller import update_pitchfork_top_tracks_db, get_songs_by_str_val, get_songs_by_list_vals
 from .api_utils import row_to_dict
-from .spotify import get_spotify_obj, create_spotify_playlist, add_track_to_playlist, get_user_spotify_playlists
+from .controller import (
+    update_pitchfork_top_tracks_db, 
+    get_songs_by_str_val, 
+    get_songs_by_list_vals
+)
+from .spotify import (
+    get_spotify_obj,
+    create_spotify_playlist,
+    add_track_to_playlist,
+    get_user_spotify_playlists,
+    search_spotify_tracks
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -256,12 +266,21 @@ class SpotifyTrackId(Resource):
     @jwt_required()
     def patch(self):
         body = request.get_json()
-        logging.info(f"body for patch request {body}")
-        track = Song.query.get(body.get("song-id"))
-        track.spotify_track_id = body.get("spotify-track-id")
+        logging.info(f"body for patch request: {body}")
+        if not (track_id := body.get("song-id")):
+            return "song-id is a required parameter", 400
+        song = Song.query.get(track_id)
+        if not (spotify_track_id := body.get("spotify-track-id")):
+            return "spotify-track-id is a required parameter"
+        spotify_obj = get_spotify_obj()
+        tracks = search_spotify_tracks(spotify_obj, song.name, song.artists[0].name)
+        if spotify_track_id not in [track.id for track in tracks]:
+            logging.info("spotify-track-id did not match track id in search results")
+            return "invalid spotify track ID", 400
+        song.spotify_track_id = spotify_track_id
         db.session.commit()
         return (
-            f"The Spotify Track ID for {track.name} with Song ID: {track.id} has been updated.",
+            f"The Spotify Track ID for {song.name} with Song ID: {song.id} has been updated.",
             204,
         )
 
@@ -308,9 +327,8 @@ class SearchSpotifyTracks(Resource):
             return "song-name and artists are required query params", 400
         logging.debug(f"song name: {song_name}, artists: {artists}")
         spotify_obj = get_spotify_obj()
-        search_results = spotify_obj.search(f"{song_name} artist:{artists.split(',')[0]}")[0].items
-        track_results = [spotify_obj.track(search_result.id) for search_result in search_results]
-        return jsonify(track_results)
+        tracks = search_spotify_tracks(spotify_obj, song_name, artists.split(',')[0])
+        return jsonify(tracks)
     
 
 class PitchforkTracks(Resource):

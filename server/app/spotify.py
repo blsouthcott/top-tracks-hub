@@ -30,7 +30,7 @@ def get_spotify_obj(config_file: str = None) -> tk.Spotify:
     return tk.Spotify(token)
 
 
-def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
+def search_spotify_track_id(spotify_obj: tk.Spotify, song: Song) -> str or None:
     """searches for the song through the Spotify API based on the song name and first artist
     if both the song name matches and the number of artists match and the artists' names match it,
     it returns the track ID, otherwise we can't find an exact match and it returns None
@@ -38,10 +38,10 @@ def search_spotify_track_id(spotify: tk.Spotify, song: Song) -> str or None:
 
     logging.debug(f"Track info: {song.name}, {song.artists}")
 
-    search = spotify.search(f"{song.name} artist:{song.artists[0].name}")
+    search = spotify_obj.search(f"{song.name} artist:{song.artists[0].name}")
     logging.debug(f"Searched for: '{song.name} artist:{song.artists[0].name}'")
     for search_result in search[0].items:
-        spotify_track_info = spotify.track(search_result.id)
+        spotify_track_info = spotify_obj.track(search_result.id)
         # TODO: these are a pain to log because of the object structure, maybe make a logging function?
         spotify_track_name = sanitize_track_name(spotify_track_info.name)
         logging.debug(f"Search result track name: {spotify_track_name}")
@@ -84,12 +84,12 @@ def get_user_spotify_playlists(user_email: str, filter_keyword="Pitchfork") -> l
     return [{"name": playlist.name, "id": playlist.id} for playlist in spotify_playlists.items if filter_keyword.lower() in playlist.name.lower()]
 
 
-def create_spotify_playlist(spotify: tk.Spotify, user: User, playlist_name="Pitchfork Top Tracks") -> None:
+def create_spotify_playlist(spotify_obj: tk.Spotify, user: User, playlist_name="Pitchfork Top Tracks") -> None:
     """
     create a new playlist in the user's Spotify account
     """
-    new_playlist = spotify.playlist_create(
-        spotify.current_user().id,
+    new_playlist = spotify_obj.playlist_create(
+        spotify_obj.current_user().id,
         playlist_name,
         public=False,
         description="Playlist containing Pitchfork recommended tracks",
@@ -114,3 +114,8 @@ def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_i
     added = spotify_obj.playlist_add(playlist_id, [spotify_obj.track(new_track_id).uri])
     logging.debug(f"playlist_add returned: {added}")
     return added
+
+
+def search_spotify_tracks(spotify_obj: tk.Spotify, song_name: str, artist: str) -> list[tk.model.FullTrack]:
+    search_results = spotify_obj.search(f"{song_name} artist:{artist}")[0].items
+    return [spotify_obj.track(search_result.id) for search_result in search_results]
