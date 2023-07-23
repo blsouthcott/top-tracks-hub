@@ -22,7 +22,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
       }
     })
     if (resp.status !== 307) {
-      alert.fire("unable to authorize account");
+      alert.fire("Unable to authorize account");
       return;
     }
     const respData = await resp.json();

@@ -37,7 +37,7 @@ export default function VerifyAccount() {
 
   useEffect(() => {
     if(!location.state?.email) {
-      alert.fire("We were unable to determine the email used to sign up.");
+      alert.fire("We were unable to determine the email used to sign up");
       navigate("/");
     } else {
       setEmail(location.state.email);

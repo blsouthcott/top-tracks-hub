@@ -65,7 +65,7 @@ export default function Tracks ({ setIsAuthenticated }) {
     let tracksData = await fetchTracks();
     if (!tracksData) {
       setIsLoading(false);
-      alert.fire("unable to load tracks data");
+      alert.fire("Unable to load tracks data");
       return;
     };
     // tracksData = tracksData.filter(track => track.spotify_track_id !== null);
@@ -100,7 +100,7 @@ export default function Tracks ({ setIsAuthenticated }) {
     })
     setIsLoading(false);
     if (resp.status === 200) {
-      alert.fire("Tracks successfully added to playlist")
+      alert.fire("Tracks successfully added to playlist!")
     } else {
       alert.fire("Error adding tracks to playlist")
     };

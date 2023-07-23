@@ -20,7 +20,7 @@ export default function Login ({ setIsAuthenticated }) {
       },
     })
     if (resp.status !== 200) {
-      alert.fire("unable to login");
+      alert.fire("Unable to login");
     } else {
       const respData = await resp.json();
       const jwt = respData.access_token;
