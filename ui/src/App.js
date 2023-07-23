@@ -29,9 +29,9 @@ function App () {
             <Route path="/verify-account" exact element={<VerifyAccount />}></Route>
             <Route path="/tracks" exact element={<Tracks setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/add-spotify-track-id/:trackId" exact element={<AddSpotifyTrackId setIsAuthenticated={setIsAuthenticated} />} />
-            <Route path="/about" exact element={<About />} />
-            <Route path="/contact" exact element={<Contact />} />
-            <Route path="/report-an-issue" exact element={<ReportAnIssue />} />
+            <Route path="/about" exact element={<About setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/contact" exact element={<Contact setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/report-an-issue" exact element={<ReportAnIssue setIsAuthenticated={setIsAuthenticated} />} />
           </Routes>
         </Router>
       </>

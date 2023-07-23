@@ -1,7 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { getAccessToken } from "./getAccessToken";
 
-export default function About () {
+export default function About ({ setIsAuthenticated }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    getAccessToken(navigate, setIsAuthenticated);
+  });
   return (
     <div className="section">
       <h1 className="title">About Us</h1>

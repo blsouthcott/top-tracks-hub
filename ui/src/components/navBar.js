@@ -65,7 +65,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
               <Link className="navbar-item" to="/contact">
                 Contact
               </Link>
-              <Link className="navbar-item" to="/report-issue">
+              <Link className="navbar-item" to="/report-an-issue">
                 Report an issue
               </Link>
             </div>
