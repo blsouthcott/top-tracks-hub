@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from flask import request, jsonify
 from flask_restful import Resource
-
+from marshmallow import Schema, fields, validate, ValidationError
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_mail import Message
@@ -49,56 +49,70 @@ class AccountVerification:
     user: User
 
 
+class SignupSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Str(required=True, validate=validate.Length(min=6, max=35))
+    name = fields.Str(required=True)
+
+
 class Signup(Resource):
 
     def post(self):
-        body = request.get_json()
-        email = body["email"]
-        name = body["name"]
-        password = body["password"]
+        schema = SignupSchema()
+        try:
+            req = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=req["email"]).first()
         if user:
             return "email address already exists in the database", 400
         
         verification_code = "".join([str(randint(0,9)) for _ in range(6)])
-        account_verifications[email] = AccountVerification(
+        account_verifications[req["email"]] = AccountVerification(
             verification_code=verification_code,
             expires=(datetime.now() + timedelta(minutes=30.0)).timestamp(),
             user=User(
-                email=email,
-                name=name,
-                password=password,
+                email=req["email"],
+                name=req["name"],
+                password=generate_password_hash(req["password"]),
             )
         )
         clear_expired_verification_codes()
 
-        msg = Message("Verify Top Tracks Account", recipients=[email])
+        msg = Message("Verify Top Tracks Account", recipients=[req["email"]])
         msg.html = f"<p>Please use the following code to verify your account. This code is valid for 30 minutes.</p><p>{verification_code}</p>"
         mail.send(msg)
         return "email sent successfully", 200
-    
+
+
+class VerifyAccountSchema(Schema):
+    email = fields.Email(required=True)
+    verification_code = fields.Str(required=True, validate=validate.Length(equal=6))
+
 
 class VerifyAccount(Resource):
 
     def post(self):
         """
         """
-        body = request.get_json()
-        email = body["email"]
-        verification_code = body["verification_code"]
+        schema = VerifyAccountSchema()
+        try:
+            req = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
 
-        if email not in account_verifications:
+        if req["email"] not in account_verifications:
             clear_expired_verification_codes()
             return "Invalid email", 400
         
-        account_verification = account_verifications[email]
+        account_verification = account_verifications[req["email"]]
         
         if account_verification.expires < datetime.now().timestamp():
             clear_expired_verification_codes()
             return "Verification code already expired", 400
         
-        if account_verification.verification_code != verification_code:
+        if account_verification.verification_code != req["verification_code"]:
             clear_expired_verification_codes()
             return "Invalid verification code", 400
 
@@ -106,25 +120,32 @@ class VerifyAccount(Resource):
         db.session.commit()
 
         expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
-        access_token = create_access_token(identity=email, expires_delta=timedelta(hours=3.0))
+        access_token = create_access_token(identity=req["email"], expires_delta=timedelta(hours=3.0))
         return {
             "access_token": access_token,
             "expiration": expiration
         }, 200
-    
+
+
+class LoginSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Str(required=True)
+
 
 class Login(Resource):
 
     def post(self):
-        body = request.get_json()
-        email = body["email"]
-        password = body["password"]
+        schema = LoginSchema()
+        try:
+            req = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=req["email"]).first()
         if not user:
             logging.info("user not found")
             return "user not found", 400
-        elif not check_password_hash(user.password, password):
+        elif not check_password_hash(user.password, req["password"]):
             logging.info("wrong password")
             return "incorrect password", 400
 
@@ -137,7 +158,7 @@ class Login(Resource):
         }, 200
 
 
-class Authorize(Resource):
+class AuthorizeAccount(Resource):
 
     @jwt_required()
     def post(self):
@@ -209,75 +230,82 @@ class AccountIsAuthorized(Resource):
             if email in fi:
                 return {"authorized": True}, 200
         return {"authorized": False}, 200
-        
+
+
+class TracksSchema(Schema):
+    song_id = fields.Str(data_key="song-id")
+    site_name = fields.Str(data_key="site-name")
+    song_name = fields.Str(data_key="song-name")
+    artists = fields.Str()
+    genres = fields.Str()
+
 
 class Tracks(Resource):
     
     def get(self):
-        args = request.args
-        logging.debug(args)
+        schema = TracksSchema()
+        try:
+            args = schema.load(request.args)
+        except ValidationError as err:
+            return err.messages, 400
+        
+        logging.debug(f"received request to /tracks with params: {args}")
         query = None
 
-        song_id = args.get("song-id")
-        if song_id:
+        if (song_id := args.get("song_id")):
             song = Song.query.get(song_id)
             if not song:
                 return jsonify([])
             return jsonify(row_to_dict(song))
 
-        site_name = args.get("site-name")
-        if site_name:
+        if (site_name := args.get("site_name")):
             query = get_songs_by_str_val("site_name", site_name)
             if not query:
                 return jsonify([])
 
-        song_name = args.get("song-name")
-        if song_name:
+        if (song_name := args.get("song_name")):
             query = get_songs_by_str_val("name", song_name, query=query)
             if not query:
                 return jsonify([])
 
-        artists = args.get("artists")
-        if artists:
+        if (artists := args.get("artists")):
             query = get_songs_by_list_vals("artists", artists, query=query)
             if not query:
                 return jsonify([])
 
-        genres = args.get("genres")
-        if genres:
+        if (genres := args.get("genres")):
             query = get_songs_by_list_vals("genres", genres, query=query)
             if not query:
                 return jsonify([])
 
-        songs_info = []
         if not query:
-            songs = Song.query.all()
-            for song in songs:
-                songs_info.append(row_to_dict(song))
+            return [row_to_dict(song) for song in Song.query.all()], 200
         else:
-            for song in query.all():
-                songs_info.append(row_to_dict(song))
+            return [row_to_dict(song) for song in query.all()], 200
 
-        return songs_info, 200
+
+class SpotifyTrackIdSchema(Schema):
+    song_id = fields.Str(required=True, data_key="song-id")
+    spotify_track_id = fields.Str(required=True, data_key="spotify-track-id")
 
 
 class SpotifyTrackId(Resource):
 
     @jwt_required()
     def patch(self):
-        body = request.get_json()
-        logging.info(f"body for patch request: {body}")
-        if not (track_id := body.get("song-id")):
-            return "song-id is a required parameter", 400
-        song = Song.query.get(track_id)
-        if not (spotify_track_id := body.get("spotify-track-id")):
-            return "spotify-track-id is a required parameter"
+        schema = SpotifyTrackIdSchema()
+        try:
+            req = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
+        logging.info(f"request body for patch request: {req}")
+        song = Song.query.get(req["song_id"])
         spotify_obj = get_spotify_obj()
         tracks = search_spotify_tracks(spotify_obj, song.name, song.artists[0].name)
-        if spotify_track_id not in [track.id for track in tracks]:
+        if req["spotify_track_id"] not in [track.id for track in tracks]:
             logging.info("spotify-track-id did not match track id in search results")
             return "invalid spotify track ID", 400
-        song.spotify_track_id = spotify_track_id
+        song.spotify_track_id = req["spotify_track_id"]
         db.session.commit()
         return (
             f"The Spotify Track ID for {song.name} with Song ID: {song.id} has been updated.",
@@ -296,47 +324,66 @@ class Playlists(Resource):
         return jsonify(playlists)
 
 
+class PlaylistTracksSchema(Schema):
+    spotify_track_ids = fields.List(fields.Str, required=True, data_key="spotify-track-ids")
+    spotify_playlist_id = fields.Str(required=True, data_key="spotify-playlist-id")
+
+
 class PlaylistTracks(Resource):
 
     @jwt_required()
     def get(self):
         """ return all the track Ids in the playlist passed up in the request query """
-        pass
 
     @jwt_required()
     def post(self):
-        body = request.get_json()
+        schema = PlaylistTracksSchema()
+        try:
+            req = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
         email = get_jwt_identity()
         spotify_obj = get_spotify_obj(f"{email}.cfg")
-        track_ids = body.get("spotify-track-ids")
-        playlist_id = body.get("spotify-playlist-id")
         results = []
-        for track_id in track_ids:
-            added = add_track_to_playlist(spotify_obj, playlist_id, track_id)
+        for track_id in req["spotify_track_ids"]:
+            added = add_track_to_playlist(spotify_obj, req["spotify_playlist_id"], track_id)
             results.append({track_id: "success" if added else "error"})
         return results, 200
-    
+
+
+class SearchSpotifyTracksSchema(Schema):
+    song_name = fields.Str(required=True, data_key="song-name")
+    artists = fields.Str(required=True)
+
 
 class SearchSpotifyTracks(Resource):
 
     @jwt_required()
     def get(self):
-        song_name = request.args.get("song-name")
-        artists = request.args.get("artists")
-        if not song_name or not artists:
-            return "song-name and artists are required query params", 400
-        logging.debug(f"song name: {song_name}, artists: {artists}")
+        schema = SearchSpotifyTracksSchema()
+        try:
+            req = schema.load(request.args)
+        except ValidationError as err:
+            return err.messages, 400
+        logging.debug(f"song name: {req['song_name']}, artists: {req['artists']}")
         spotify_obj = get_spotify_obj()
-        tracks = search_spotify_tracks(spotify_obj, song_name, artists.split(',')[0])
+        tracks = search_spotify_tracks(spotify_obj, req["song_name"], req["artists"].split(',')[0])
         return jsonify(tracks)
-    
+
+
+class PitchforkTracksSchema(Schema):
+    max_page_num = fields.Int(validate=validate.Range(min=1, max=257))
 
 class PitchforkTracks(Resource):
 
     @jwt_required()
     def post(self):
-        body = request.get_json()
-        if not (max_page_num := body.get("max_page_num")):
+        schema = PitchforkTracksSchema()
+        try:
+            req = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.message, 400
+        if not (max_page_num := req.get("max_page_num")):
             max_page_num = 25
         num_new_tracks = update_pitchfork_top_tracks_db(max_page_num=max_page_num)
         return {"num_new_tracks": num_new_tracks}, 200
@@ -345,7 +392,7 @@ class PitchforkTracks(Resource):
 api.add_resource(Signup, "/api/signup")
 api.add_resource(VerifyAccount, "/api/verify-account")
 api.add_resource(Login, "/api/login")
-api.add_resource(Authorize, "/api/authorize")
+api.add_resource(AuthorizeAccount, "/api/authorize")
 api.add_resource(Unauthorize, "/api/unauthorize")
 api.add_resource(AccountIsAuthorized, "/api/account-is-authorized")
 api.add_resource(AuthCallback, "/api/callback")
