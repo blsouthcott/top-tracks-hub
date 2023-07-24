@@ -6,7 +6,7 @@ import { getAccessToken } from "./getAccessToken";
 export default function About ({ setIsAuthenticated }) {
   const navigate = useNavigate();
   useEffect(() => {
-    getAccessToken(navigate, setIsAuthenticated);
+    getAccessToken(navigate, setIsAuthenticated, false);
   });
   return (
     <div className="section">

@@ -1,12 +1,12 @@
 import { alert } from "./alert";
 
-export const getAccessToken = (navigate, setIsAuthenticated) => {
+export const getAccessToken = (navigate, setIsAuthenticated, redirect=true) => {
   // returns the access token from local storage only if it has not yet expired
   const accessToken = localStorage.getItem("accessToken");
   let expiration = localStorage.getItem("accessTokenExpiration");
   if (!accessToken || !expiration) {
     setIsAuthenticated(false);
-    navigate("/");
+    redirect && navigate("/");
     return;
   };
   expiration = new Date(parseFloat(expiration));
@@ -15,7 +15,7 @@ export const getAccessToken = (navigate, setIsAuthenticated) => {
     localStorage.clear();
     alert.fire("Your current login session has expired.");
     setIsAuthenticated(false);
-    navigate("/");
+    redirect && navigate("/");
     return;
   };
   setIsAuthenticated(true);

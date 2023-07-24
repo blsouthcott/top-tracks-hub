@@ -6,14 +6,14 @@ import { getAccessToken } from "./getAccessToken";
 export default function ReportAnIssue ({ setIsAuthenticated }) {
   const navigate = useNavigate();
   useEffect(() => {
-    getAccessToken(navigate, setIsAuthenticated);
+    getAccessToken(navigate, setIsAuthenticated, false);
   });
   return (
     <div className="section">
       <h1 className="title">
         Report an Issue
       </h1>
-      <p>To report an issue please create a new issue here <Link to="https://github.com/blsouthcott/scrape-top-tracks/issues" target="_blank">GitHub Issues</Link>.</p>
+      <p>To report an issue, please create a new issue here: <Link to="https://github.com/blsouthcott/scrape-top-tracks/issues" target="_blank">GitHub Issues</Link>.</p>
     </div>
   )
 }
