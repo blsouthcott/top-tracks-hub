@@ -28,6 +28,7 @@ export default function Signup () {
     });
     setIsLoading(false);
     if (resp.status === 200) {
+      alert.fire("Please check your email for your verification code. This verification code is only good for 30 minutes.");
       navigate('/verify-account', { state: { email: email } });
     } else {
       alert.fire("Unable to complete sign up");

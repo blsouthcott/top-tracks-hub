@@ -22,12 +22,13 @@ export default function VerifyAccount() {
     });
 
     if (resp.status === 200) {
+      console.log("account verification successful...");
       const respData = await resp.json();
       const jwt = respData.access_token;
       const expiration = respData.expiration;
       localStorage.setItem("accessToken", jwt);
       localStorage.setItem("accessTokenExpiration", expiration);
-      alert("Account verification successful!");
+      alert.fire("Account verification successful!");
       navigate("/");
     } else {
       const errMsg = await resp.text();
