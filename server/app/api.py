@@ -4,7 +4,7 @@ from random import randint
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
-from flask import request, jsonify
+from flask import request, jsonify, send_from_directory
 from flask_restful import Resource
 from marshmallow import Schema, fields, validate, ValidationError
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -12,7 +12,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flask_mail import Message
 import tekore as tk
 
-from .app import api, mail
+from .app import mail
 from .models import db, Song, User
 from .api_utils import row_to_dict
 from .controller import (
@@ -54,8 +54,10 @@ class SignupSchema(Schema):
     password = fields.Str(required=True, validate=validate.Length(min=6, max=35))
     name = fields.Str(required=True)
 
-
 class Signup(Resource):
+
+    def get(self):
+        pass
 
     def post(self):
         schema = SignupSchema()
@@ -89,7 +91,6 @@ class Signup(Resource):
 class VerifyAccountSchema(Schema):
     email = fields.Email(required=True)
     verification_code = fields.Str(required=True, validate=validate.Length(equal=6))
-
 
 class VerifyAccount(Resource):
 
@@ -131,8 +132,10 @@ class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
 
-
 class Login(Resource):
+
+    def get(self):
+        pass
 
     def post(self):
         schema = LoginSchema()
@@ -239,7 +242,6 @@ class TracksSchema(Schema):
     artists = fields.Str()
     genres = fields.Str()
 
-
 class Tracks(Resource):
     
     def get(self):
@@ -288,7 +290,6 @@ class SpotifyTrackIdSchema(Schema):
     song_id = fields.Str(required=True, data_key="song-id")
     spotify_track_id = fields.Str(required=True, data_key="spotify-track-id")
 
-
 class SpotifyTrackId(Resource):
 
     @jwt_required()
@@ -328,7 +329,6 @@ class PlaylistTracksSchema(Schema):
     spotify_track_ids = fields.List(fields.Str, required=True, data_key="spotify-track-ids")
     spotify_playlist_id = fields.Str(required=True, data_key="spotify-playlist-id")
 
-
 class PlaylistTracks(Resource):
 
     @jwt_required()
@@ -354,7 +354,6 @@ class PlaylistTracks(Resource):
 class SearchSpotifyTracksSchema(Schema):
     song_name = fields.Str(required=True, data_key="song-name")
     artists = fields.Str(required=True)
-
 
 class SearchSpotifyTracks(Resource):
 
@@ -389,16 +388,23 @@ class PitchforkTracks(Resource):
         return {"num_new_tracks": num_new_tracks}, 200
 
 
-api.add_resource(Signup, "/api/signup")
-api.add_resource(VerifyAccount, "/api/verify-account")
-api.add_resource(Login, "/api/login")
-api.add_resource(AuthorizeAccount, "/api/authorize")
-api.add_resource(Unauthorize, "/api/unauthorize")
-api.add_resource(AccountIsAuthorized, "/api/account-is-authorized")
-api.add_resource(AuthCallback, "/api/callback")
-api.add_resource(Tracks, "/api/tracks")
-api.add_resource(Playlists, "/api/playlists")
-api.add_resource(PlaylistTracks, "/api/playlist-tracks")
-api.add_resource(SearchSpotifyTracks, "/api/spotify-tracks")
-api.add_resource(SpotifyTrackId, "/api/spotify-track-id")
-api.add_resource(PitchforkTracks, "/api/pitchfork-tracks")
+class PersonalizationSchema(Schema):
+    personalization_type = fields.Str(required=True, validate=validate.OneOf(["tracks", "artists"]), data_key="personalization-type")
+    time_period = fields.Str(required=True, validate=validate.OneOf(["short_term", "medium_term", "long_term"]), data_key="time-period")
+
+class Personalization(Resource):
+
+    @jwt_required()
+    def get(self):
+        schema = PersonalizationSchema()
+        try:
+            req = schema.load(request.args)
+        except ValidationError as err:
+            return err.messages, 400
+        email = get_jwt_identity()
+        spotify_obj = get_spotify_obj(f"{email}.cfg")
+        limit = 50
+        if req["personalization_type"] == "tracks":
+            return jsonify(spotify_obj.current_user_top_tracks(req["time_period"], limit=limit).items)
+        else:
+            return jsonify(spotify_obj.current_user_top_artists(req["time_period"], limit=limit).items)

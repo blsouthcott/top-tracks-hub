@@ -3,7 +3,7 @@ import logging
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from flask_restful import Api
+from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 
@@ -12,11 +12,12 @@ from .models import db, User
 
 logging.basicConfig(level=logging.INFO)
 
+mail = Mail()
 
 def create_app():
 
     app = Flask(__name__, static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")))
-    CORS(app, origins=os.environ["ALLOWED_ORIGINS"])
+    CORS(app, origins="*", methods=["GET", "POST", "PATCH"])
     JWTManager(app)
 
     # secrets config
@@ -43,26 +44,6 @@ def create_app():
     app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
     app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME")
 
+    mail.init_app(app)
+
     return app
-
-
-app = create_app()
-api = Api(app)
-mail = Mail(app)
-
-
-@app.route("/")
-def serve():
-    logging.info("Serving React app...")
-    index_file_path = os.path.join(app.static_folder, "index.html")
-    logging.info(f"Trying to serve {index_file_path}")
-    return send_from_directory(app.static_folder, "index.html")
-
-
-@app.route("/<path:path>")
-def static_proxy(path):
-    logging.info(f"handling request for /{path}...")
-    if os.path.exists(f"{app.static_folder}/{path}"):
-        return app.send_static_file(path)
-    else:
-        return serve()
