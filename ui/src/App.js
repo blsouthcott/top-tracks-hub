@@ -10,6 +10,7 @@ import ReportAnIssue from './components/reportAnIssue';
 import AddSpotifyTrackId from './components/addSpotifyTrackId';
 import Signup from './components/signUp';
 import VerifyAccount from './components/verifyAccount';
+import UserTopContent from './components/userTopContent';
 
 
 function App () {
@@ -29,6 +30,7 @@ function App () {
             <Route path="/verify-account" exact element={<VerifyAccount />}></Route>
             <Route path="/tracks" exact element={<Tracks setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/add-spotify-track-id/:trackId" exact element={<AddSpotifyTrackId setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/personalization" exact element={<UserTopContent setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/about" exact element={<About setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/contact" exact element={<Contact setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/report-an-issue" exact element={<ReportAnIssue setIsAuthenticated={setIsAuthenticated} />} />

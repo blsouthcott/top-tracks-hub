@@ -47,13 +47,14 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
             Home
           </Link>
 
-          <Link className="navbar-item" to="/about">
-            About
-          </Link>
+          {isAuthenticated && 
+          <Link className="navbar-item" to="/personalization">
+            Your Top Spotify Content
+          </Link>}
 
           {isAuthenticated && 
           <Link className="navbar-item" to="/tracks">
-            Tracks
+            Add Pitchfork Tracks
           </Link>}
 
           <div className="navbar-item has-dropdown is-hoverable">
@@ -67,6 +68,9 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
               </Link>
               <Link className="navbar-item" to="/report-an-issue">
                 Report an issue
+              </Link>
+              <Link className="navbar-item" to="/about">
+                About
               </Link>
             </div>
           </div>
