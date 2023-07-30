@@ -12,8 +12,8 @@ import { alert } from "./alert";
 
 const ArtistCard = ({ artist, num }) => (
   <div className="card m-6">
-    <div className="card-header is-primary has-background-info-light">
-      <p className="card-header-title is-size-2 pl-4">
+    <div className="card-header is-primary has-background-primary">
+      <p className="card-header-title is-size-4 p-1 pl-4 has-text-white">
         {num+1}. {artist.name}
       </p>
     </div>
@@ -35,8 +35,8 @@ const ArtistCard = ({ artist, num }) => (
 
 const TrackCard = ({ track, num }) => (
   <div className="card m-6">
-    <header className="card-header has-background-info-light">
-      <h2 className="card-header-title is-size-2 pl-4">
+    <header className="card-header has-background-primary">
+      <h2 className="card-header-title is-size-4 p-1 pl-4 has-text-white">
       {num+1}. {track.name}
       </h2>
     </header>
@@ -94,13 +94,12 @@ export default function UserTopContent ({ setIsAuthenticated }) {
   }, [personalizationType, timePeriod])
 
   return (
-    <>
-      {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-      <section className="hero is-fullheight">
-        <div className="hero-body">
-          <div className="container">
-            <div className="section">
-              <p className="title is-size-1 has-text-centered">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</p>
+    <section className="hero is-fullheight">
+      <div className="hero-body">
+        <div className="container">
+          {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
+            <div className="section m-6 p-2">
+              <h1 className="title is-size-1 has-text-centered">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</h1>
               <div className="is-flex is-justify-content-center">
                 <div className="select mr-3">
                   <select value={personalizationType} onChange={e => setPersonalizationType(e.target.value)}>
@@ -119,16 +118,15 @@ export default function UserTopContent ({ setIsAuthenticated }) {
               {personalizationType === "artists" ?
                 artists.map((artist, cnt) => (
                   <ArtistCard key={artist.id} artist={artist} num={cnt} />
-                )) 
+                ))
               :
                 tracks.map((track, cnt) => (
                   <TrackCard key={track.id} track={track} num={cnt} />
                 ))
               }
-            </div>
-          </div>
+            </div>}
         </div>
-      </section>}
-    </>
+      </div>
+    </section>
   )
 }
