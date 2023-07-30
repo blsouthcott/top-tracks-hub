@@ -23,8 +23,11 @@ const AudioPlayer = ({ src }) => {
 
   return (
     <div>
-      <audio ref={audioRef} src={src} onEnded={handleSongEnd} />
-      {playing ? <FontAwesomeIcon className="fa-lg" icon={faPause} onClick={togglePlayPause} /> : <FontAwesomeIcon className="fa-lg" icon={faPlay} onClick={togglePlayPause} /> }
+      {/* <audio ref={audioRef} src={src} onEnded={handleSongEnd} controls /> */}
+      <audio controls>
+        <source src={src} type="audio/mpeg" />
+      </audio>
+      {/* {playing ? <FontAwesomeIcon className="fa-lg" icon={faPause} onClick={togglePlayPause} /> : <FontAwesomeIcon className="fa-lg" icon={faPlay} onClick={togglePlayPause} /> } */}
     </div>
   );
 };

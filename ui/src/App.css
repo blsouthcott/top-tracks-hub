@@ -35,7 +35,7 @@
 
 .is-scrollable {
   overflow-y: auto;
-  max-height: 500px;
+  max-height: 700px;
   /* width: 100%; */
   /* margin: auto; */
   border-bottom: 1px solid rgba(220,220,220,0.5);
@@ -43,10 +43,25 @@
 
 @keyframes flash {
   0% { color: black; }
-  50% { color: lime; }
+  50% { color: #00d1b2; }
   100% { color: black; }
 }
 
 .flash {
-  animation: flash 2s linear;
+  animation: flash 0.5s linear;
+}
+
+.fa-play:hover, .fa-pause:hover {
+  color: #00d1b2;
+  cursor: pointer;
+}
+
+.highlighted-row {
+  animation-name: highlight-row;
+  animation-duration: 5s;
+}
+
+@keyframes highlight-row {
+  from {background-color: #FFFF88;}
+  to {background-color: white;}
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import 'bulma/css/bulma.min.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
@@ -11,6 +11,7 @@ import { alert } from "./alert";
 export default function Tracks ({ setIsAuthenticated }) {
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [tracks, setTracks] = useState([]);
   const [displayedTracks, setDisplayedTracks] = useState([]);
@@ -19,6 +20,7 @@ export default function Tracks ({ setIsAuthenticated }) {
   const [selectedTrackIds, setSelectedTrackIds] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+  const [trackId, setTrackId] = useState(location.state?.trackId);
 
   const handlePlaylistChange = (e) => {
     setSelectedPlaylistId(e.target.value);
@@ -85,6 +87,8 @@ export default function Tracks ({ setIsAuthenticated }) {
       alert.fire("Please select a playlist and try again!");
       return;
     };
+    const scrollPos = window.scrollY;
+    console.log("current scroll position: ", scrollPos);
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch("/api/playlist-tracks", {
@@ -104,6 +108,7 @@ export default function Tracks ({ setIsAuthenticated }) {
     } else {
       alert.fire("Error adding tracks to playlist")
     };
+    window.scrollTo(0, scrollPos);
   }
 
   const handleCheckboxChange = (e) => {
@@ -213,108 +218,115 @@ export default function Tracks ({ setIsAuthenticated }) {
   
   useEffect(() => {
     getAccessToken(navigate, setIsAuthenticated);
-    loadTracks();
     loadPlaylists();
+    loadTracks().then(() => {
+      if (trackId) {
+        console.log("scrolling element into view: ", `track-${trackId}`)
+        document.getElementById(`track-${trackId}`).scrollIntoView({ block: "center"});
+        navigate(".", { state: { ...location.state, trackId: undefined }});
+      };
+    })
   }, [])
 
   return (
-    <>
-      {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-        <div className="section">
-          <div className="is-flex is-justify-content-center">
-            <h1 className="title">Pitchfork Top Tracks</h1>
-          </div>
-            <div className="section p-2 mt-4">
-                <div className="is-flex is-justify-content-space-evenly">
-                  <div className="is-flex">
-                    <div className="select mr-2">
-                      <select
-                        value={selectedPlaylistId} 
-                        onChange={handlePlaylistChange}>
-                        <option></option>
-                        {playlists.map((playlist, i) => 
-                          <option key={i} value={playlist.id}>{playlist.name}</option>
-                        )}
-                      </select>
-                    </div>
-                    <button
-                      className="button is-primary"
-                      disabled={selectedTrackIds.length === 0 || playlists.length < 1}
-                      onClick={addTracksToPlaylist}
-                    >
-                        Add to Spotify Playlist
-                    </button>
-                  </div>
-                    <input
-                      type="search"
-                      className="input search"
-                      style={{maxWidth: "400px"}}
-                      placeholder="Filter table..."
-                      onChange={filterTracksTable}
-                    />
-                    <button
-                        className="button is-primary"
-                        onClick={updateTopTracksDb}
-                    >
-                      Update Top Tracks Database
-                    </button>
-                </div>
-              <div className="container is-scrollable mt-4">
-                <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
-                  <thead className="sticky-header">
-                    <tr id='table-header-row'>
-                      <th className="has-background-primary has-text-white">
+    <section className="hero is-fullheight">
+      <div className="hero-body">
+        <div className="container">
+          {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
+            <div className="section m-6 p-2">
+              {/* <div className="is-flex is-justify-content-center"> */}
+                <h1 className="title is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
+              {/* </div> */}
+                {/* <div className="section p-2 mt-4"> */}
+                    <div className="is-flex is-justify-content-space-evenly">
+                      <div className="is-flex">
+                        <div className="select mr-2">
+                          <select
+                            value={selectedPlaylistId} 
+                            onChange={handlePlaylistChange}>
+                            <option></option>
+                            {playlists.map((playlist, i) => 
+                              <option key={i} value={playlist.id}>{playlist.name}</option>
+                            )}
+                          </select>
+                        </div>
+                        <button
+                          className="button is-primary"
+                          disabled={selectedTrackIds.length === 0 || playlists.length < 1}
+                          onClick={addTracksToPlaylist}>
+                            Add to Spotify Playlist
+                        </button>
+                      </div>
                         <input
-                          type="checkbox"
-                          checked={selectedTrackIds.length > 0}
-                          onChange={unselectAllTracks}
-                        />
-                      </th>
-                      {tableHeaders.map((header, i) => {
-                        return (
-                          <th
-                            className="has-background-primary has-text-white table-header"
-                            onClick={() => sortTracksTable(header.value)} 
-                            key={i}>
-                              {header.display}
-                              &nbsp;
-                              {header.value === sortedBy ? orderedBy === "asc" ? <span>&darr;</span> : <span>&uarr;</span> : ""}
-                          </th>
-                        )
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedTracks.map((track, i) => {
-                      return (
-                        <tr key={i} >
-                          <td>
+                          type="search"
+                          className="input search"
+                          style={{maxWidth: "400px"}}
+                          placeholder="Filter table..."
+                          onChange={filterTracksTable}/>
+                        <button
+                            className="button is-primary"
+                            onClick={updateTopTracksDb}>
+                          Update Top Tracks Database
+                        </button>
+                    </div>
+                  <div className="container is-scrollable mt-4">
+                    <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
+                      <thead className="sticky-header">
+                        <tr id='table-header-row'>
+                          <th className="has-background-primary has-text-white">
                             <input
                               type="checkbox"
-                              value={track.key}
-                              checked={track.checked}
-                              onChange={handleCheckboxChange}
+                              checked={selectedTrackIds.length > 0}
+                              onChange={unselectAllTracks}
                             />
-                          </td>
-                          <td>{track.name}</td>
-                          <td>{track.artists.join(", ")}</td>
-                          <td>{track.genres.join(", ")}</td>
-                          <td>{track.date_published}</td>
-                          <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
-                          <td>{track.site_name}</td>
-                          <td>{track.spotify_track_id ? 
-                              track.spotify_track_id
-                              : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
-                          </td>
+                          </th>
+                          {tableHeaders.map((header, i) => {
+                            return (
+                              <th
+                                className="has-background-primary has-text-white table-header"
+                                onClick={() => sortTracksTable(header.value)} 
+                                key={i}>
+                                  {header.display}
+                                  &nbsp;
+                                  {header.value === sortedBy ? orderedBy === "asc" ? <span>&darr;</span> : <span>&uarr;</span> : ""}
+                              </th>
+                            )
+                          })}
                         </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-      }
-    </>
+                      </thead>
+                      <tbody>
+                        {displayedTracks.map((track, i) => {
+                          return (
+                            <tr key={i} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"}>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  value={track.key}
+                                  checked={track.checked}
+                                  onChange={handleCheckboxChange}
+                                />
+                              </td>
+                              <td>{track.name}</td>
+                              <td>{track.artists.join(", ")}</td>
+                              <td>{track.genres.join(", ")}</td>
+                              <td>{track.date_published}</td>
+                              <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
+                              <td>{track.site_name}</td>
+                              <td>{track.spotify_track_id ? 
+                                  track.spotify_track_id
+                                  : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              // </div>
+            }
+        </div>
+      </div>
+    </section>
   )
 }

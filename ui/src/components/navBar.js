@@ -54,7 +54,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
           {isAuthenticated && 
           <Link className="navbar-item" to="/tracks">
-            Add Pitchfork Tracks
+            Pitchfork Tracks
           </Link>}
 
           <div className="navbar-item has-dropdown is-hoverable">

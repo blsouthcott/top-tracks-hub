@@ -71,7 +71,7 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
     } else {
       alert.fire("Spotify Track ID successfully updated!");
     };
-    navigate("/tracks");
+    navigate("/tracks", { state: { trackId: trackId } });
   }
   
   useEffect(() => {
