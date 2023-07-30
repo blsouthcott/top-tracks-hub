@@ -81,7 +81,7 @@ export default function Login ({ setIsAuthenticated }) {
                 <div className="control">
                   <button
                     type="submit"
-                    className="button is-primary is-outlined is-fullwidth"
+                    className="button is-primary is-fullwidth"
                     onClick={goToSignupPage}
                   >
                     Sign up

@@ -18,7 +18,7 @@ export const tableHeaders = [
     },
     {
       value: "link",
-      display: "Link"
+      display: "Link to Review"
     },
     {
       value: "site",

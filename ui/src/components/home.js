@@ -82,51 +82,27 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
           <div className="columns is-centered">
             <div className="column is-one-third">
               <div className="box">
-                  <h2 className="title">Welcome!</h2>
+                  <h2 className="title has-text-centered">Welcome!</h2>
                   {!spotifyAccountIsAuthorized &&
-                  <div className="block">
-                    <form onSubmit={authorizeAccount}>
-                      <label className="label">
-                        Cick here to authorize your Spotify account.&nbsp;
-                        <br />
-                        <button 
-                          type="submit"
-                          className="button is-primary is-outlined"
-                        >
-                          Authorize
-                        </button>
-                      </label>
-                    </form>
-                  </div>}
-                  <div className="block">
-                    <form onSubmit={goToTracks}>
-                      <label className="label">
-                        Click here to view all Pitchfork-recommended tracks and add them to your Spotify playlist.&nbsp;
-                        <br />
-                        <button 
-                          type="submit"
-                          className="button is-primary is-outlined"
-                        >
-                          View Tracks
-                        </button>
-                      </label>
-                    </form>
-                  </div>
+                    <div className="block has-text-centered">
+                      <p>Click here to authorize your Spotify account.</p>
+                      <div className="is-flex is-justify-content-center">  
+                        <button className="button is-primary m-2" onClick={authorizeAccount}>Authorize</button>
+                      </div>
+                    </div>}
+                    <div className="block has-text-centered">
+                      <p>Click here to view all tracks recommended by Pitchfork and add them to your Spotify playlist.&nbsp;</p>
+                      <div className="is-flex is-justify-content-center">
+                        <button className="button is-primary m-2" onClick={goToTracks}>View Tracks</button>
+                      </div>
+                    </div>
                   {spotifyAccountIsAuthorized &&
-                  <div className="block">
-                    <form onSubmit={unauthorizeAccount}>
-                      <label className="label">
-                        Cick here to remove your Spotify account authorization.&nbsp;
-                        <br />
-                        <button 
-                          type="submit"
-                          className="button is-primary is-outlined"
-                        >
-                          Unauthorize
-                        </button>
-                      </label>
-                    </form>
-                  </div>}
+                    <div className="block has-text-centered">
+                      <p>Cick here to remove your Spotify account authorization.&nbsp;</p>
+                      <div className="is-flex is-justify-content-center">
+                        <button className="button is-primary m-2" onClick={unauthorizeAccount}>Unauthorize</button>
+                      </div>
+                    </div>} 
               </div>
             </div>
           </div>}
