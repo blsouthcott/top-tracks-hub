@@ -233,42 +233,39 @@ export default function Tracks ({ setIsAuthenticated }) {
       <div className="hero-body">
         <div className="container">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-            <div className="section m-6 p-2">
-              {/* <div className="is-flex is-justify-content-center"> */}
-                <h1 className="title is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
-              {/* </div> */}
-                {/* <div className="section p-2 mt-4"> */}
-                    <div className="is-flex is-justify-content-space-evenly">
-                      <div className="is-flex">
-                        <div className="select mr-2">
-                          <select
-                            value={selectedPlaylistId} 
-                            onChange={handlePlaylistChange}>
-                            <option></option>
-                            {playlists.map((playlist, i) => 
-                              <option key={i} value={playlist.id}>{playlist.name}</option>
-                            )}
-                          </select>
-                        </div>
-                        <button
-                          className="button is-primary"
-                          disabled={selectedTrackIds.length === 0 || playlists.length < 1}
-                          onClick={addTracksToPlaylist}>
-                            Add to Spotify Playlist
-                        </button>
-                      </div>
-                        <input
-                          type="search"
-                          className="input search"
-                          style={{maxWidth: "400px"}}
-                          placeholder="Filter table..."
-                          onChange={filterTracksTable}/>
-                        <button
-                            className="button is-primary"
-                            onClick={updateTopTracksDb}>
-                          Update Top Tracks Database
-                        </button>
+          <div className="section m-6 p-2">
+            <h1 className="title is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
+              <div className="is-flex is-justify-content-space-evenly">
+                <div className="is-flex">
+                  <div className="select mr-2">
+                    <select
+                      value={selectedPlaylistId} 
+                      onChange={handlePlaylistChange}>
+                      <option></option>
+                      {playlists.map((playlist, i) => 
+                        <option key={i} value={playlist.id}>{playlist.name}</option>
+                      )}
+                    </select>
                     </div>
+                      <button
+                        className="button is-primary"
+                        disabled={selectedTrackIds.length === 0 || playlists.length < 1}
+                        onClick={addTracksToPlaylist}>
+                          Add to Spotify Playlist
+                      </button>
+                    </div>
+                    <input
+                      type="search"
+                      className="input search"
+                      style={{maxWidth: "400px"}}
+                      placeholder="Filter table..."
+                      onChange={filterTracksTable}/>
+                    <button
+                        className="button is-primary"
+                        onClick={updateTopTracksDb}>
+                      Update Top Tracks Database
+                    </button>
+                  </div>
                   <div className="container is-scrollable mt-4">
                     <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
                       <thead className="sticky-header">
@@ -323,8 +320,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                     </table>
                   </div>
                 </div>
-              // </div>
-            }
+          }
         </div>
       </div>
     </section>

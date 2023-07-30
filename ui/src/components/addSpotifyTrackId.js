@@ -41,12 +41,12 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
     })
     if (resp.status !== 200) {
       alert.fire(`Unable to load information for Spotify Tracks search for track with id: ${trackId}`)
-      navigate("/tracks");
+      navigate("/tracks", { state: { trackId: trackId } });
     };
     const data = await resp.json();
     if (data.length === 0) {
       alert.fire(`No search results for ${track.name}`)
-      navigate("/tracks");
+      navigate("/tracks", { state: { trackId: trackId } });
     }
     console.log("search results: ", data);
     setSearchResults(data);
