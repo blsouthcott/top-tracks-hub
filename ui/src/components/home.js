@@ -75,59 +75,63 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   }, [isAuthenticated])
 
   return (
-    <>
-      {!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> :
-      <div className="columns is-centered">
-        <div className="column is-one-third">
-          <div className="box">
-              <h2 className="title">Welcome!</h2>
-              {!spotifyAccountIsAuthorized &&
-              <div className="block">
-                <form onSubmit={authorizeAccount}>
-                  <label className="label">
-                    Cick here to authorize your Spotify account.&nbsp;
-                    <br />
-                    <button 
-                      type="submit"
-                      className="button is-primary is-outlined"
-                    >
-                      Authorize
-                    </button>
-                  </label>
-                </form>
-              </div>}
-              <div className="block">
-                <form onSubmit={goToTracks}>
-                  <label className="label">
-                    Click here to view all Pitchfork-recommended tracks and add them to your Spotify playlist.&nbsp;
-                    <br />
-                    <button 
-                      type="submit"
-                      className="button is-primary is-outlined"
-                    >
-                      View Tracks
-                    </button>
-                  </label>
-                </form>
+    <section className="hero is-fullheight">
+      <div className="hero-body">
+        <div className="container">
+          {!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> :
+          <div className="columns is-centered">
+            <div className="column is-one-third">
+              <div className="box">
+                  <h2 className="title">Welcome!</h2>
+                  {!spotifyAccountIsAuthorized &&
+                  <div className="block">
+                    <form onSubmit={authorizeAccount}>
+                      <label className="label">
+                        Cick here to authorize your Spotify account.&nbsp;
+                        <br />
+                        <button 
+                          type="submit"
+                          className="button is-primary is-outlined"
+                        >
+                          Authorize
+                        </button>
+                      </label>
+                    </form>
+                  </div>}
+                  <div className="block">
+                    <form onSubmit={goToTracks}>
+                      <label className="label">
+                        Click here to view all Pitchfork-recommended tracks and add them to your Spotify playlist.&nbsp;
+                        <br />
+                        <button 
+                          type="submit"
+                          className="button is-primary is-outlined"
+                        >
+                          View Tracks
+                        </button>
+                      </label>
+                    </form>
+                  </div>
+                  {spotifyAccountIsAuthorized &&
+                  <div className="block">
+                    <form onSubmit={unauthorizeAccount}>
+                      <label className="label">
+                        Cick here to remove your Spotify account authorization.&nbsp;
+                        <br />
+                        <button 
+                          type="submit"
+                          className="button is-primary is-outlined"
+                        >
+                          Unauthorize
+                        </button>
+                      </label>
+                    </form>
+                  </div>}
               </div>
-              {spotifyAccountIsAuthorized &&
-              <div className="block">
-                <form onSubmit={unauthorizeAccount}>
-                  <label className="label">
-                    Cick here to remove your Spotify account authorization.&nbsp;
-                    <br />
-                    <button 
-                      type="submit"
-                      className="button is-primary is-outlined"
-                    >
-                      Unauthorize
-                    </button>
-                  </label>
-                </form>
-              </div>}
-          </div>
+            </div>
+          </div>}
         </div>
-      </div>}
-    </>
+      </div>
+    </section>
   )
 }
