@@ -313,6 +313,7 @@ class SpotifyTrackId(Resource):
             logging.info("spotify-track-id did not match track id in search results")
             return "invalid spotify track ID", 400
         song.spotify_track_id = req["spotify_track_id"]
+        song.preview_url = [track for track in tracks if track.id == req["spotify_track_id"]][0].preview_url
         db.session.commit()
         return (
             f"The Spotify Track ID for {song.name} with Song ID: {song.id} has been updated.",
@@ -362,6 +363,7 @@ class SearchSpotifyTracksSchema(Schema):
     song_name = fields.Str(required=True, data_key="song-name")
     artists = fields.Str(required=True)
 
+
 class SearchSpotifyTracks(Resource):
 
     @jwt_required()
@@ -379,6 +381,7 @@ class SearchSpotifyTracks(Resource):
 
 class PitchforkTracksSchema(Schema):
     max_page_num = fields.Int(validate=validate.Range(min=1, max=257))
+
 
 class PitchforkTracks(Resource):
 
@@ -398,6 +401,7 @@ class PitchforkTracks(Resource):
 class PersonalizationSchema(Schema):
     personalization_type = fields.Str(required=True, validate=validate.OneOf(["tracks", "artists"]), data_key="personalization-type")
     time_period = fields.Str(required=True, validate=validate.OneOf(["short_term", "medium_term", "long_term"]), data_key="time-period")
+
 
 class Personalization(Resource):
 

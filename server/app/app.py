@@ -1,13 +1,12 @@
 import os
 import logging
 
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask_cors import CORS
-from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 
-from .models import db, User
+from .models import db
 
 
 logging.basicConfig(level=logging.INFO)

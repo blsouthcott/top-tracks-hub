@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "server"
+version = "0.1.0"
+description = ""
+authors = ["Ben Southcott <benjamin.southcott@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+beautifulsoup4 = "^4.12.2"
+Flask = "^2.3.2"
+Flask-Cors = "^4.0.0"
+Flask-JWT-Extended = "^4.5.2"
+Flask-RESTful = "^0.3.9"
+Flask-SQLAlchemy = "^3.0.5"
+marshmallow = "^3.20.1"
+Flask-Mail = "^0.9.1"
+tekore = "^4.3.0"
+requests = "^2.31.0"
+flask-login = "^0.6.2"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
