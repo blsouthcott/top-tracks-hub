@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
 
 export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isActive, setIsActive] = useState(false);
+  const [dropDownIsOpen, setDropDownIsOpen] = useState(false);
 
   const toggleBurger = () => {
     setIsActive(!isActive);
@@ -17,6 +19,13 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
     setIsAuthenticated(false);
     navigate("/");
   }
+
+  const handleMouseOver = () => setDropDownIsOpen(true);
+  const handleMouseOut = () => setDropDownIsOpen(false);
+
+  useEffect(() => {
+    setDropDownIsOpen(false);
+  }, [location])
 
   return (
     <nav className="navbar" role="navigation" aria-label="main navigation">
@@ -57,7 +66,9 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
             Pitchfork Tracks
           </Link>}
 
-          <div className="navbar-item has-dropdown is-hoverable">
+          <div className={`navbar-item has-dropdown ${dropDownIsOpen ? "is-active" : ""}`}
+            onMouseOver={handleMouseOver}
+            onMouseOut={handleMouseOut}>
             <Link className="navbar-link" to="#">
               More
             </Link>
