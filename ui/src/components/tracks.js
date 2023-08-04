@@ -88,8 +88,6 @@ export default function Tracks ({ setIsAuthenticated }) {
       alert.fire("Please select a playlist and try again!");
       return;
     };
-    const scrollPos = window.scrollY;
-    console.log("current scroll position: ", scrollPos);
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const resp = await fetch("/api/playlist-tracks", {
@@ -109,7 +107,6 @@ export default function Tracks ({ setIsAuthenticated }) {
     } else {
       alert.fire("Error adding tracks to playlist")
     };
-    window.scrollTo(0, scrollPos);
   }
 
   const handleCheckboxChange = (e) => {
