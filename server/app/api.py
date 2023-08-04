@@ -54,6 +54,7 @@ class SignupSchema(Schema):
     password = fields.Str(required=True, validate=validate.Length(min=6, max=35))
     name = fields.Str(required=True)
 
+
 class Signup(Resource):
 
     def get(self):
@@ -92,10 +93,12 @@ class VerifyAccountSchema(Schema):
     email = fields.Email(required=True)
     verification_code = fields.Str(required=True, validate=validate.Length(equal=6))
 
+
 class VerifyAccount(Resource):
 
     def post(self):
         """
+        verify the verification code is correct and then commit the new User to the db
         """
         schema = VerifyAccountSchema()
         try:
@@ -131,6 +134,7 @@ class VerifyAccount(Resource):
 class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
+
 
 class Login(Resource):
 
@@ -242,6 +246,7 @@ class TracksSchema(Schema):
     artists = fields.Str()
     genres = fields.Str()
 
+
 class Tracks(Resource):
     
     def get(self):
@@ -290,6 +295,7 @@ class SpotifyTrackIdSchema(Schema):
     song_id = fields.Str(required=True, data_key="song-id")
     spotify_track_id = fields.Str(required=True, data_key="spotify-track-id")
 
+
 class SpotifyTrackId(Resource):
 
     @jwt_required()
@@ -328,6 +334,7 @@ class Playlists(Resource):
 class PlaylistTracksSchema(Schema):
     spotify_track_ids = fields.List(fields.Str, required=True, data_key="spotify-track-ids")
     spotify_playlist_id = fields.Str(required=True, data_key="spotify-playlist-id")
+
 
 class PlaylistTracks(Resource):
 

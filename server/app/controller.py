@@ -38,7 +38,8 @@ def save_new_genre(genre):
 
 
 def save_new_track_to_db(track: Track, site: str):
-    """track should be a Track object, site should be a string of the name of the recommendations site
+    """
+    track should be a Track object, site should be a string of the name of the recommendations site
     new recommendation site names should be added to the DB before calling this function
     """
     query = Song.query.filter(Song.name == track.track_name)
@@ -134,15 +135,21 @@ def update_pitchfork_top_tracks_db(max_page_num=255):
                 song_id = save_new_track_to_db(track, "Pitchfork")
                 if song_id:
                     num_new_tracks_added += 1
-                    add_spotify_track_id_to_song(song_id, spotify_obj, db)
+                    add_spotify_track_id_and_preview_url(song_id, spotify_obj, db)
     return num_new_tracks_added
 
 
-def add_spotify_track_id_to_song(song_id, spotify_obj, db):
+def add_spotify_track_id_and_preview_url(song_id, spotify_obj, db):
+    """
+    searches for a spotify track ID for the given song
+    if there's a match, adds the spotify track ID and the preview URL to the database
+    """
     song = Song.query.get(song_id)
     spotify_track_id = search_spotify_track_id(spotify_obj, song)
     if not spotify_track_id:
         return False
     song.spotify_track_id = spotify_track_id
+    track = spotify_obj.track(spotify_track_id)
+    song.preview_url = track.preview_url
     db.session.commit()
     return True
