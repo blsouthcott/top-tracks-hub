@@ -6,6 +6,7 @@ import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
 import { getAccessToken } from "./getAccessToken";
 import { alert } from "./alert";
+import AudioPlayer from "./audioPlayer";
 
 
 export default function Tracks ({ setIsAuthenticated }) {
@@ -294,7 +295,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                       <tbody>
                         {displayedTracks.map((track, i) => {
                           return (
-                            <tr key={i} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"}>
+                            <tr key={track.id} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"}>
                               <td>
                                 <input
                                   type="checkbox"
@@ -312,6 +313,9 @@ export default function Tracks ({ setIsAuthenticated }) {
                               <td>{track.spotify_track_id ? 
                                   track.spotify_track_id
                                   : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
+                              </td>
+                              <td>
+                                {track.spotify_track_id && track.preview_url && <AudioPlayer src={track.preview_url} displayControls={false} />}
                               </td>
                             </tr>
                           )

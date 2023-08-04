@@ -27,6 +27,10 @@ export const tableHeaders = [
     {
       value: "spotify_track_id",
       display: "Spotify Track ID"
+    },
+    {
+      value: "track_preview_url",
+      display: ""
     }
   ];
   

@@ -7,9 +7,6 @@ import { getAccessToken } from "./getAccessToken";
 import { alert } from "./alert";
 
 
-// const displayArtistGenres = ()
-
-
 const ArtistCard = ({ artist, num }) => (
   <div className="card m-6">
     <div className="card-header is-primary has-background-primary">

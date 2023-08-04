@@ -31,11 +31,11 @@ def get_spotify_obj(config_file: str = None) -> tk.Spotify:
 
 
 def search_spotify_track_id(spotify_obj: tk.Spotify, song: Song) -> str or None:
-    """searches for the song through the Spotify API based on the song name and first artist
+    """
+    searches for the song through the Spotify API based on the song name and first artist
     if both the song name matches and the number of artists match and the artists' names match it,
     it returns the track ID, otherwise we can't find an exact match and it returns None
     """
-
     logging.debug(f"Track info: {song.name}, {song.artists}")
 
     search = spotify_obj.search(f"{song.name} artist:{song.artists[0].name}")
@@ -99,8 +99,9 @@ def create_spotify_playlist(spotify_obj: tk.Spotify, user: User, playlist_name="
 
 
 def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_id: str) -> bool:
-    """TODO: implement a more efficient version of this function"""
-
+    """
+    TODO: implement a more efficient version of this function
+    """
     top_tracks_playlist = spotify_obj.playlist(playlist_id)
     top_tracks_playlist_tracks = top_tracks_playlist.tracks
 

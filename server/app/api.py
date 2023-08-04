@@ -4,7 +4,7 @@ from random import randint
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
-from flask import request, jsonify, send_from_directory
+from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import Schema, fields, validate, ValidationError
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required

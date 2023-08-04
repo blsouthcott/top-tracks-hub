@@ -52,6 +52,7 @@ class Song(db.Model):
     link = db.Column(db.String(80))
     date_published = db.Column(db.Date)
     spotify_track_id = db.Column(db.String(100))
+    preview_url = db.Column(db.String)
 
 
 class Genre(db.Model):
