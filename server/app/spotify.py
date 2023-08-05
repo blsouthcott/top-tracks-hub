@@ -42,7 +42,6 @@ def search_spotify_track_id(spotify_obj: tk.Spotify, song: Song) -> str or None:
     logging.debug(f"Searched for: '{song.name} artist:{song.artists[0].name}'")
     for search_result in search[0].items:
         spotify_track_info = spotify_obj.track(search_result.id)
-        # TODO: these are a pain to log because of the object structure, maybe make a logging function?
         spotify_track_name = sanitize_track_name(spotify_track_info.name)
         logging.debug(f"Search result track name: {spotify_track_name}")
 

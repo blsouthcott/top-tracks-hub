@@ -14,7 +14,6 @@ SPOTIFY_REDIRECT_URI={get from your spotify developer dashboard}
 FLASK_APP=run.py
 FLASK_ENV=development
 FLASK_DEBUG=1
-NAMESPACE=local
 
 SECRET_KEY={change this}
 JWT_SECRET_KEY={change this}

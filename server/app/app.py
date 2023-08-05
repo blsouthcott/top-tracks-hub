@@ -16,7 +16,7 @@ mail = Mail()
 def create_app():
 
     app = Flask(__name__, static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")))
-    CORS(app, origins="*", methods=["GET", "POST", "PATCH"])
+    CORS(app, origins=os.getenv("ALLOWED_ORIGINS"))
     JWTManager(app)
 
     # secrets config
@@ -25,7 +25,6 @@ def create_app():
 
     # spotify auth files config
     app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
-    logging.debug(app.config["CONFIG_DIR"])
 
     # db config
     app.config[
