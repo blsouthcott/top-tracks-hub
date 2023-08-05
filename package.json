@@ -1,8 +1,11 @@
 {
+  "engines": {
+    "node": "20.2.0"
+  },
   "cacheDirectories": [
     "ui/node_modules"
   ],
   "scripts": {
-    "heroku-postbuild": "cd ui && npm install && npm run build"
+    "heroku-postbuild": "cd ui && npm install --only=dev && npm install && npm run build"
   }
 }
