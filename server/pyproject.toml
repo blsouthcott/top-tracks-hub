@@ -18,10 +18,11 @@ Flask-Mail = "^0.9.1"
 tekore = "^4.3.0"
 requests = "^2.31.0"
 flask-login = "^0.6.2"
-python-dotenv = "^1.0.0"
+gunicorn = "^21.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
