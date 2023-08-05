@@ -1,4 +1,7 @@
 {
+  "cacheDirectories": [
+    "ui/node_modules"
+  ],
   "scripts": {
     "heroku-postbuild": "cd ui && npm install && npm run build"
   }
