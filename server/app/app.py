@@ -16,7 +16,8 @@ mail = Mail()
 def create_app():
 
     app = Flask(__name__, static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")))
-    CORS(app, origins=os.getenv("ALLOWED_ORIGINS"))
+    if allowed_origins := os.getenv("ALLOWED_ORIGINS"):
+        CORS(app, origins=allowed_origins)
     JWTManager(app)
 
     # secrets config
