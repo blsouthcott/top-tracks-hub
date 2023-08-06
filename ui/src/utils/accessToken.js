@@ -1,4 +1,4 @@
-import { alert } from "./alert";
+import { alert } from "../components/alert";
 
 export const getAccessToken = (navigate, setIsAuthenticated, redirect=true) => {
   // returns the access token from local storage only if it has not yet expired

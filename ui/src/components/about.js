@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { getAccessToken } from "./getAccessToken";
+import { getAccessToken } from "../utils/accessToken";
 import Footer from "./footer";
 
 export default function About ({ setIsAuthenticated }) {

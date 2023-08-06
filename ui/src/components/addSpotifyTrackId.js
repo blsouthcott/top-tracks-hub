@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
-import { getAccessToken } from "./getAccessToken";
+import { getAccessToken } from "../utils/accessToken";
 import { alert } from "./alert";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
-import { getAccessToken } from "./getAccessToken";
+import { getAccessToken } from "../utils/accessToken";
 import { alert } from "./alert";
 import AudioPlayer from "./audioPlayer";
 import Footer from "./footer";

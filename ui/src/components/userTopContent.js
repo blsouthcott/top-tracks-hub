@@ -3,9 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import AudioPlayer from "./audioPlayer";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
-import { getAccessToken } from "./getAccessToken";
+import { getAccessToken } from "../utils/accessToken";
 import { alert } from "./alert";
 import Footer from "./footer";
+import { accountIsAuthorized } from "../utils/accountAuth";
 
 
 const ArtistCard = ({ artist, num }) => (
@@ -70,6 +71,11 @@ export default function UserTopContent ({ setIsAuthenticated }) {
   const loadContent = async () => {
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
+    const authorized = await accountIsAuthorized(accessToken);
+    if (!authorized) {
+      alert.fire("To view your Top Spotify Content please authorize your account 🙂");
+      navigate("/");
+    };
     const resp = await fetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`, {
       headers: {
         "Content-Type": "application/json",

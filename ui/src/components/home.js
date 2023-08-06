@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Login from "./login";
-import { getAccessToken } from "./getAccessToken";
+import { getAccessToken } from "../utils/accessToken";
 import { alert } from "./alert";
 import Footer from "./footer";
+import { accountIsAuthorized } from "../utils/accountAuth";
 
 
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
@@ -57,19 +58,8 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const setSpotifyAccountAuthorizationStatus = async () => {
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    if (accessToken) {
-      const resp = await fetch("/api/account-is-authorized", {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-        }
-      })
-      const respData = await resp.json();
-      if (!respData.authorized) {
-        setSpotifyAccountIsAuthorized(false);
-      } else {
-        setSpotifyAccountIsAuthorized(true);
-      };
-    };
+    const authorized = await accountIsAuthorized(accessToken);
+    setSpotifyAccountIsAuthorized(authorized);
   }
 
   useEffect(() => {
