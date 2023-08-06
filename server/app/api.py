@@ -148,7 +148,7 @@ class Login(Resource):
         except ValidationError as err:
             return err.messages, 400
 
-        user = User.query.filter_by(email=req["email"]).first()
+        user = User.query.get(req["email"].lower())
         if not user:
             logging.info("user not found")
             return "user not found", 400
