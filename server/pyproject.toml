@@ -19,6 +19,7 @@ tekore = "^4.3.0"
 requests = "^2.31.0"
 flask-login = "^0.6.2"
 gunicorn = "^21.2.0"
+psycopg2-binary = "^2.9.7"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
