@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Login from "./login";
 import { getAccessToken } from "./getAccessToken";
 import { alert } from "./alert";
+import Footer from "./footer";
 
 
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
@@ -85,30 +86,31 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
               <div className="box">
                   <h2 className="title has-text-centered">Welcome!</h2>
                   {!spotifyAccountIsAuthorized &&
-                    <div className="block has-text-centered">
-                      <p>Click here to authorize your Spotify account.</p>
-                      <div className="is-flex is-justify-content-center">  
-                        <button className="button is-primary m-2" onClick={authorizeAccount}>Authorize</button>
-                      </div>
-                    </div>}
-                    <div className="block has-text-centered">
-                      <p>Click here to view all tracks recommended by Pitchfork and add them to your Spotify playlist.&nbsp;</p>
-                      <div className="is-flex is-justify-content-center">
-                        <button className="button is-primary m-2" onClick={goToTracks}>View Tracks</button>
-                      </div>
+                  <div className="block has-text-centered">
+                    <p>Click here to authorize your Spotify account.</p>
+                    <div className="is-flex is-justify-content-center">  
+                      <button className="button is-primary m-2" onClick={authorizeAccount}>Authorize</button>
                     </div>
+                  </div>}
+                  <div className="block has-text-centered">
+                    <p>Click here to view all tracks recommended by Pitchfork and add them to your Spotify playlist.&nbsp;</p>
+                    <div className="is-flex is-justify-content-center">
+                      <button className="button is-primary m-2" onClick={goToTracks}>View Tracks</button>
+                    </div>
+                  </div>
                   {spotifyAccountIsAuthorized &&
-                    <div className="block has-text-centered">
-                      <p>Cick here to remove your Spotify account authorization.&nbsp;</p>
-                      <div className="is-flex is-justify-content-center">
-                        <button className="button is-primary m-2" onClick={unauthorizeAccount}>Unauthorize</button>
-                      </div>
-                    </div>} 
+                  <div className="block has-text-centered">
+                    <p>Cick here to remove your Spotify account authorization.&nbsp;</p>
+                    <div className="is-flex is-justify-content-center">
+                      <button className="button is-primary m-2" onClick={unauthorizeAccount}>Unauthorize</button>
+                    </div>
+                  </div>} 
               </div>
             </div>
           </div>}
         </div>
       </div>
+      <Footer />
     </section>
   )
 }

@@ -11,6 +11,7 @@ import AddSpotifyTrackId from './components/addSpotifyTrackId';
 import Signup from './components/signUp';
 import VerifyAccount from './components/verifyAccount';
 import UserTopContent from './components/userTopContent';
+import Footer from './components/footer';
 
 
 function App () {

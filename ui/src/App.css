@@ -35,7 +35,7 @@
 
 .is-scrollable {
   overflow-y: auto;
-  max-height: 700px;
+  max-height: 600px;
   /* width: 100%; */
   /* margin: auto; */
   border-bottom: 1px solid rgba(220,220,220,0.5);
@@ -64,4 +64,9 @@
 @keyframes highlight-row {
   from {background-color: #FFFF88;}
   to {background-color: white;}
+}
+
+footer {
+  position: sticky;
+  padding: 0.5rem 1.5rem;
 }

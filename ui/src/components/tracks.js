@@ -7,6 +7,7 @@ import { spinnerStyle } from "./spinnerStyle";
 import { getAccessToken } from "./getAccessToken";
 import { alert } from "./alert";
 import AudioPlayer from "./audioPlayer";
+import Footer from "./footer";
 
 
 export default function Tracks ({ setIsAuthenticated }) {
@@ -324,6 +325,7 @@ export default function Tracks ({ setIsAuthenticated }) {
           }
         </div>
       </div>
+      <Footer />
     </section>
   )
 }

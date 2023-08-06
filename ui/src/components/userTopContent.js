@@ -5,6 +5,7 @@ import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
 import { getAccessToken } from "./getAccessToken";
 import { alert } from "./alert";
+import Footer from "./footer";
 
 
 const ArtistCard = ({ artist, num }) => (
@@ -123,6 +124,7 @@ export default function UserTopContent ({ setIsAuthenticated }) {
             </div>}
         </div>
       </div>
+      <Footer />
     </section>
   )
 }
