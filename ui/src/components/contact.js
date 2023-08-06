@@ -9,7 +9,7 @@ export default function Contact ({ setIsAuthenticated }) {
     getAccessToken(navigate, setIsAuthenticated, false);
   });
   return (
-    <div className="section">
+    <div className="section m-4">
       <h1 className="title">
         Contact Us
       </h1>

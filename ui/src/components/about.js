@@ -9,7 +9,7 @@ export default function About ({ setIsAuthenticated }) {
     getAccessToken(navigate, setIsAuthenticated, false);
   });
   return (
-    <div className="section">
+    <div className="section m-4">
       <h1 className="title">About Us</h1>
       <div className="content">
         <ul>

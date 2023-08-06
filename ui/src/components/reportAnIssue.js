@@ -9,7 +9,7 @@ export default function ReportAnIssue ({ setIsAuthenticated }) {
     getAccessToken(navigate, setIsAuthenticated, false);
   });
   return (
-    <div className="section">
+    <div className="section m-4">
       <h1 className="title">
         Report an Issue
       </h1>
