@@ -6,19 +6,19 @@ db = SQLAlchemy()
 
 track_artists_table = db.Table(
     "track_artists_table",
-    db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
+    db.Column("song_id", db.Integer, db.ForeignKey("song.id")),
     db.Column("artist_name", db.String(80), db.ForeignKey("artist.name")),
 )
 
 track_genres_table = db.Table(
     "track_genres_table",
-    db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
+    db.Column("song_id", db.Integer, db.ForeignKey("song.id")),
     db.Column("genre_name", db.String(80), db.ForeignKey("genre.name")),
 )
 
 sites_table = db.Table(
     "sites_table",
-    db.Column("song_id", db.String(80), db.ForeignKey("song.id")),
+    db.Column("song_id", db.Integer, db.ForeignKey("song.id")),
     db.Column("site_name", db.String(80), db.ForeignKey("site.name")),
 )
 
