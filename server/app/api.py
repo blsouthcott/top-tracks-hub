@@ -173,11 +173,13 @@ class AuthorizeAccount(Resource):
         user = User.query.get(email)
         if user.config_file:
             return "account already authorized", 400
-        conf = tk.config_from_environment(return_refresh=True)
+        conf = tk.config_from_environment()
         cred = tk.RefreshingCredentials(*conf)
         scope = tk.scope.user_read_currently_playing
         auth = tk.UserAuth(cred, scope)
         auths[auth.state] = (auth, email)
+        logging.info(f"auth state: {auth.state}")
+        logging.info(f"auth in auths: {auth.state in auths}")
         return {"redirect_url": auth.url}, 307
     
 
