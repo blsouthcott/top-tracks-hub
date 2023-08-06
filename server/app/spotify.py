@@ -1,5 +1,6 @@
 import os
 import logging
+import tempfile
 
 import tekore as tk
 
@@ -13,19 +14,20 @@ CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 
-def get_spotify_obj(config_file: str = None) -> tk.Spotify:
-    if config_file is None:
-        config_file = [file for file in os.listdir(CONFIG_DIR) if "placeholder" not in file][0]
-        fi_conf = tk.config_from_file(
-            os.path.join(CONFIG_DIR, config_file), return_refresh=True
+def get_spotify_obj(user: User = None) -> tk.Spotify:
+    if user is None:
+        user = User.query.all()[0]
+
+    with tempfile.NamedTemporaryFile() as temp_config_file:
+        temp_config_file.write(user.config_file)
+        temp_config_file.seek(0)
+        config = tk.config_from_file(
+            temp_config_file.name, return_refresh=True
         )
-    else:
-        fi_conf = tk.config_from_file(
-            os.path.join(CONFIG_DIR, config_file), return_refresh=True
-        )
+
     token = tk.refresh_user_token(
-        *fi_conf[:2],
-        fi_conf[3],
+        *config[:2],
+        config[3],
     )
     return tk.Spotify(token)
 
@@ -74,19 +76,20 @@ def search_spotify_track_id(spotify_obj: tk.Spotify, song: Song) -> str or None:
     return None
 
 
-def get_user_spotify_playlists(user_email: str, filter_keyword="Pitchfork") -> list[dict]:
+def get_user_spotify_playlists(user: User, filter_keyword="Pitchfork") -> list[dict]:
     """
     returns the name and id for each playlist in the user's account filtered by keyword
     """
-    spotify_obj = get_spotify_obj(f"{user_email}.cfg")
+    spotify_obj = get_spotify_obj(user)
     spotify_playlists = spotify_obj.playlists(spotify_obj.current_user().id)
     return [{"name": playlist.name, "id": playlist.id} for playlist in spotify_playlists.items if filter_keyword.lower() in playlist.name.lower()]
 
 
-def create_spotify_playlist(spotify_obj: tk.Spotify, user: User, playlist_name="Pitchfork Top Tracks") -> None:
+def create_spotify_playlist(user: User, playlist_name="Pitchfork Top Tracks") -> None:
     """
     create a new playlist in the user's Spotify account
     """
+    spotify_obj = get_spotify_obj(user)
     new_playlist = spotify_obj.playlist_create(
         spotify_obj.current_user().id,
         playlist_name,

@@ -3,6 +3,7 @@ import os
 from random import randint
 from datetime import datetime, timedelta
 from dataclasses import dataclass
+import tempfile
 
 from flask import request, jsonify
 from flask_restful import Resource
@@ -30,7 +31,6 @@ from .spotify import (
 
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 
 auths = {}
 account_verifications = {}
@@ -170,9 +170,9 @@ class AuthorizeAccount(Resource):
     @jwt_required()
     def post(self):
         email = get_jwt_identity()
-        for fi in os.listdir(CONFIG_DIR):
-            if email in fi:
-                return "account already authorized", 400
+        user = User.query.get(email)
+        if user.config_file:
+            return "account already authorized", 400
         conf = tk.config_from_environment(return_refresh=True)
         cred = tk.RefreshingCredentials(*conf)
         scope = tk.scope.user_read_currently_playing
@@ -198,16 +198,20 @@ class AuthCallback(Resource):
             os.getenv("SPOTIFY_REDIRECT_URI"),
         )
 
-        tk.config_to_file(
-            os.path.join(CONFIG_DIR, f"{email}.cfg"),
-            conf + (token.refresh_token,),
-        )
+        with tempfile.NamedTemporaryFile() as temp_config_file:
+            tk.config_to_file(
+                temp_config_file.name,
+                conf + (token.refresh_token,),
+            )
+            config_file_bytes = temp_config_file.read()
+          
+        user = User.query.get(email)
+        user.config_file = config_file_bytes
+        db.session.commit()
 
-        spotify_obj = get_spotify_obj(f"{email}.cfg")
-        user = User.query.filter_by(email=email).first()
-        playlists = get_user_spotify_playlists(email)
+        playlists = get_user_spotify_playlists(user)
         if not playlists:
-            create_spotify_playlist(spotify_obj, user)
+            create_spotify_playlist(user)
 
         return "Your account has been authorized and playlist created in your Spotify account. You can now close this window.", 200
 
@@ -217,14 +221,12 @@ class Unauthorize(Resource):
     @jwt_required()
     def post(self):
         email = get_jwt_identity()
-        user = User.query.filter_by(email=email).first()
-        for fi in os.listdir(CONFIG_DIR):
-            if email in fi:
-                os.remove(os.path.join(CONFIG_DIR, fi))
-                user.playlist_id = None
-                db.session.commit()
-                return 200
-        return "account authorization not found", 400
+        user = User.query.get(email)
+        if not user.config_file:
+            return "account authorization not found", 400
+        user.config_file = None
+        db.session.commit()
+        return 200
 
 
 class AccountIsAuthorized(Resource):
@@ -233,9 +235,9 @@ class AccountIsAuthorized(Resource):
     def get(self):
         email = get_jwt_identity()
         logging.debug(f"checking authorization status for {email}")
-        for fi in os.listdir(CONFIG_DIR):
-            if email in fi:
-                return {"authorized": True}, 200
+        user = User.query.get(email)
+        if user.config_file:
+            return {"authorized": True}, 200
         return {"authorized": False}, 200
 
 
@@ -326,7 +328,8 @@ class Playlists(Resource):
     @jwt_required()
     def get(self):
         email = get_jwt_identity()
-        playlists = get_user_spotify_playlists(email)
+        user = User.query.get(email)
+        playlists = get_user_spotify_playlists(user)
         if not playlists:
             return "no playlists found", 400
         return jsonify(playlists)
@@ -351,7 +354,8 @@ class PlaylistTracks(Resource):
         except ValidationError as err:
             return err.messages, 400
         email = get_jwt_identity()
-        spotify_obj = get_spotify_obj(f"{email}.cfg")
+        user = User.query.get(email)
+        spotify_obj = get_spotify_obj(user)
         results = []
         for track_id in req["spotify_track_ids"]:
             added = add_track_to_playlist(spotify_obj, req["spotify_playlist_id"], track_id)
@@ -413,7 +417,8 @@ class Personalization(Resource):
         except ValidationError as err:
             return err.messages, 400
         email = get_jwt_identity()
-        spotify_obj = get_spotify_obj(f"{email}.cfg")
+        user = User.query.get(email)
+        spotify_obj = get_spotify_obj(user)
         limit = 50
         if req["personalization_type"] == "tracks":
             return jsonify(spotify_obj.current_user_top_tracks(req["time_period"], limit=limit).items)

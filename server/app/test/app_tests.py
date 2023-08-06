@@ -1,5 +1,6 @@
 """ To run local tests, a configuration file must be saved in the test directory """
 
+# TODO: rewrite outdated tests
 
 import os
 import unittest

@@ -27,6 +27,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     }
     const respData = await resp.json();
     window.open(respData.redirect_url);
+    alert.fire("Please refresh the page to update your account authorization status.");
   }
 
   const unauthorizeAccount = async (e) => {

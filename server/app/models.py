@@ -28,6 +28,7 @@ class User(UserMixin, db.Model):
     playlist_id = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(120))
     name = db.Column(db.String(100))
+    config_file = db.Column(db.LargeBinary)
 
     def get_id(self):
         return self.email

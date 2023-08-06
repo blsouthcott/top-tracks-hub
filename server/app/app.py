@@ -8,7 +8,6 @@ from flask_mail import Mail
 
 from .models import db
 
-
 logging.basicConfig(level=logging.INFO)
 
 mail = Mail()
@@ -23,9 +22,6 @@ def create_app():
     # secrets config
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-
-    # spotify auth files config
-    app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
 
     # db config
     if os.environ["FLASK_ENV"] == "development":
