@@ -95,33 +95,33 @@ export default function UserTopContent ({ setIsAuthenticated }) {
       <div className="hero-body">
         <div className="container">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-            <div className="section m-6 p-2">
-              <h1 className="title is-size-1 has-text-centered">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</h1>
-              <div className="is-flex is-justify-content-center">
-                <div className="select mr-3">
-                  <select value={personalizationType} onChange={e => setPersonalizationType(e.target.value)}>
-                    <option value="artists">Artists</option>
-                    <option value="tracks">Tracks</option>
-                  </select>
-                </div>
-                <div className="select ml-3">
-                  <select value={timePeriod} onChange={e => setTimePeriod(e.target.value)}>
-                    <option value="short_term">Last 4 Weeks</option>
-                    <option value="medium_term">Last 6 Months</option>
-                    <option value="long_term">Last Several Years</option>
-                  </select>
-                </div>
+          <div className="section m-6 p-2">
+            <h1 className="title is-size-1 has-text-centered">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</h1>
+            <div className="is-flex is-justify-content-center">
+              <div className="select mr-3">
+                <select value={personalizationType} onChange={e => setPersonalizationType(e.target.value)}>
+                  <option value="artists">Artists</option>
+                  <option value="tracks">Tracks</option>
+                </select>
               </div>
-              {personalizationType === "artists" ?
-                artists.map((artist, cnt) => (
-                  <ArtistCard key={artist.id} artist={artist} num={cnt} />
-                ))
-              :
-                tracks.map((track, cnt) => (
-                  <TrackCard key={track.id} track={track} num={cnt} />
-                ))
-              }
-            </div>}
+              <div className="select ml-3">
+                <select value={timePeriod} onChange={e => setTimePeriod(e.target.value)}>
+                  <option value="short_term">Last 4 Weeks</option>
+                  <option value="medium_term">Last 6 Months</option>
+                  <option value="long_term">Last Several Years</option>
+                </select>
+              </div>
+            </div>
+            {personalizationType === "artists" ?
+              artists.map((artist, cnt) => (
+                <ArtistCard key={artist.id} artist={artist} num={cnt} />
+              ))
+            :
+              tracks.map((track, cnt) => (
+                <TrackCard key={track.id} track={track} num={cnt} />
+              ))
+            }
+          </div>}
         </div>
       </div>
       <Footer />
