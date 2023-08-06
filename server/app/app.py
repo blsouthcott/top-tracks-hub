@@ -28,9 +28,12 @@ def create_app():
     app.config["CONFIG_DIR"] = os.path.join(app.root_path, "config_files")
 
     # db config
-    app.config[
-        "SQLALCHEMY_DATABASE_URI"
-    ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
+    if os.environ["FLASK_ENV"] == "development":
+        app.config[
+            "SQLALCHEMY_DATABASE_URI"
+        ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["POSTGRES_CONNECTION_STRING"]
 
     db.init_app(app)
     
