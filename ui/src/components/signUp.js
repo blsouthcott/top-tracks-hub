@@ -37,59 +37,63 @@ export default function Signup () {
   };
 
   return (
-    <>
-      {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-      <div className="columns is-flex-direction-column is-align-items-center">
-        <div className="column is-one-third">
-          <div className="box">
-            <h2 className="title has-text-centered">Sign up</h2>
-            <form onSubmit={signup}>
-              <div className="field is-fullwidth">
-                <label className="label">Email</label>
-                <div className="control">
-                  <input
-                    className="input"
-                    type="email"
-                    value={email}
-                    placeholder="Enter email..."
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
+    <section className="hero is-fullheight">
+      <div className="hero-body">
+        <div className="container">
+          {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
+          <div className="columns is-flex-direction-column is-align-items-center">
+            <div className="column is-one-third">
+              <div className="box">
+                <h2 className="title has-text-centered">Sign up</h2>
+                <form onSubmit={signup}>
+                  <div className="field is-fullwidth">
+                    <label className="label">Email</label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        type="email"
+                        value={email}
+                        placeholder="Enter email..."
+                        onChange={e => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="field is-fullwidth">
+                    <label className="label">Password</label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        type="password"
+                        value={password}
+                        placeholder="Enter password..."
+                        onChange={e => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="field is-fullwidth">
+                    <label className="label">Name</label>
+                    <div className="control">
+                      <input
+                        className="input"
+                        type="text"
+                        value={name}
+                        placeholder="Enter name..."
+                        onChange={e => setName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="control">
+                    <button type="submit" className="button is-primary is-fullwidth">Sign up</button>
+                  </div>
+                </form>
               </div>
-              <div className="field is-fullwidth">
-                <label className="label">Password</label>
-                <div className="control">
-                  <input
-                    className="input"
-                    type="password"
-                    value={password}
-                    placeholder="Enter password..."
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="field is-fullwidth">
-                <label className="label">Name</label>
-                <div className="control">
-                  <input
-                    className="input"
-                    type="text"
-                    value={name}
-                    placeholder="Enter name..."
-                    onChange={e => setName(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="control">
-                <button type="submit" className="button is-primary is-fullwidth">Sign up</button>
-              </div>
-            </form>
-          </div>
+            </div>
+          </div>}
         </div>
-      </div>}
-    </>
+      </div>
+    </section>
   );
 }

@@ -28,10 +28,15 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   }, [location])
 
   return (
-    <nav className="navbar" role="navigation" aria-label="main navigation">
+    <nav 
+      className="navbar" 
+      role="navigation" 
+      aria-label="main navigation"
+      style={{ position: 'fixed', top: '0', width: '100%', zIndex: 1 }}>
+      
       <div className="navbar-brand">
         <Link className="navbar-item" to="/">
-          <FontAwesomeIcon icon={faCirclePlay} />        
+          <FontAwesomeIcon icon={faCirclePlay} />
         </Link>
 
         <button
