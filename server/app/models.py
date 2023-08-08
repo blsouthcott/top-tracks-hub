@@ -23,6 +23,20 @@ sites_table = db.Table(
 )
 
 
+class Auth(db.Model):
+    __tablename__ = "auths"
+    state = db.Column(db.String(80), primary_key=True)
+    email = db.Column(db.String(120), nullable=False)
+
+
+class AccountVerification(db.Model):
+    __tablename__ = "account_verification"
+    email = db.Column(db.String(120), primary_key=True)
+    verification_code = db.Column(db.String, nullable=False)
+    expires = db.Column(db.Float, nullable=False)
+    user_obj = db.Column(db.LargeBinary, nullable=False)
+
+
 class User(UserMixin, db.Model):
     email = db.Column(db.String(120), primary_key=True)
     playlist_id = db.Column(db.String(120), unique=True)
@@ -44,11 +58,9 @@ class Song(db.Model):
     artists = db.relationship(
         "Artist", secondary=track_artists_table, lazy="subquery", backref="song"
     )
-    # backref=db.backref("tracks", lazy=True))
     genres = db.relationship(
         "Genre", secondary=track_genres_table, lazy="subquery", backref="song"
     )
-    # backref=db.backref("tracks", lazy=True))
     site_name = db.Column(db.String(80), db.ForeignKey("site.name"), nullable=False)
     link = db.Column(db.String(80))
     date_published = db.Column(db.Date)

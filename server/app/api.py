@@ -1,10 +1,15 @@
 import logging
 import os
-from random import randint
+from random import randint, choice
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 import tempfile
+import pickle
+from string import ascii_letters, digits
+from urllib.parse import urlencode
+from base64 import b64encode
 
+import requests
 from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import Schema, fields, validate, ValidationError
@@ -14,7 +19,7 @@ from flask_mail import Message
 import tekore as tk
 
 from .app import mail
-from .models import db, Song, User
+from .models import db, Song, User, Auth, AccountVerification
 from .api_utils import row_to_dict
 from .controller import (
     update_pitchfork_top_tracks_db, 
@@ -29,24 +34,15 @@ from .spotify import (
     search_spotify_tracks
 )
 
-logging.basicConfig(level=logging.INFO)
-
-
-auths = {}
-account_verifications = {}
+logging.basicConfig(level=logging.DEBUG)
 
 
 def clear_expired_verification_codes():
-    for key, val in account_verifications.items():
-        if val.expires < datetime.now().timestamp():
-            account_verifications.pop(key)
-
-
-@dataclass
-class AccountVerification:
-    verification_code: str
-    expires: float
-    user: User
+    account_verifications = AccountVerification.query.all()
+    for account_verification in account_verifications:
+        if account_verification.expires < datetime.now().timestamp():
+            db.session.delete(account_verification)
+    db.session.commit()
 
 
 class SignupSchema(Schema):
@@ -57,9 +53,6 @@ class SignupSchema(Schema):
 
 class Signup(Resource):
 
-    def get(self):
-        pass
-
     def post(self):
         schema = SignupSchema()
         try:
@@ -67,20 +60,27 @@ class Signup(Resource):
         except ValidationError as err:
             return err.messages, 400
 
-        user = User.query.filter_by(email=req["email"]).first()
+        user = User.query.get(req["email"])
         if user:
             return "email address already exists in the database", 400
         
         verification_code = "".join([str(randint(0,9)) for _ in range(6)])
-        account_verifications[req["email"]] = AccountVerification(
+        
+        user = User(
+            email=req["email"],
+            name=req["name"],
+            password=generate_password_hash(req["password"]),
+        )
+        pickled_user = pickle.dumps(user)
+        
+        account_verification = AccountVerification(
+            email=req["email"],
             verification_code=verification_code,
             expires=(datetime.now() + timedelta(minutes=30.0)).timestamp(),
-            user=User(
-                email=req["email"],
-                name=req["name"],
-                password=generate_password_hash(req["password"]),
-            )
+            user_obj=pickled_user
         )
+        db.session.add(account_verification)
+        db.session.commit()
         clear_expired_verification_codes()
 
         msg = Message("Verify Top Tracks Account", recipients=[req["email"]])
@@ -106,11 +106,10 @@ class VerifyAccount(Resource):
         except ValidationError as err:
             return err.messages, 400
 
-        if req["email"] not in account_verifications:
+        account_verification = AccountVerification.query.get(req["email"])
+        if not account_verification:
             clear_expired_verification_codes()
             return "Invalid email", 400
-        
-        account_verification = account_verifications[req["email"]]
         
         if account_verification.expires < datetime.now().timestamp():
             clear_expired_verification_codes()
@@ -120,14 +119,15 @@ class VerifyAccount(Resource):
             clear_expired_verification_codes()
             return "Invalid verification code", 400
 
-        db.session.add(account_verification.user)
+        user = pickle.loads(account_verification.user_obj)
+        db.session.add(user)
         db.session.commit()
 
-        expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
+        jwt_expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
         access_token = create_access_token(identity=req["email"], expires_delta=timedelta(hours=3.0))
         return {
             "access_token": access_token,
-            "expiration": expiration
+            "expiration": jwt_expiration
         }, 200
 
 
@@ -169,18 +169,28 @@ class AuthorizeAccount(Resource):
 
     @jwt_required()
     def post(self):
+        logging.debug("handling request to authorize account endpoint")
         email = get_jwt_identity()
         user = User.query.get(email)
         if user.config_file:
             return "account already authorized", 400
-        conf = tk.config_from_environment()
-        cred = tk.RefreshingCredentials(*conf)
-        scope = tk.scope.user_read_currently_playing
-        auth = tk.UserAuth(cred, scope)
-        auths[auth.state] = (auth, email)
-        logging.info(f"auth state: {auth.state}")
-        logging.info(f"auth in auths: {auth.state in auths}")
-        return {"redirect_url": auth.url}, 307
+        logging.debug("user is not currently authorized")
+        config = tk.config_from_environment()
+        params = {
+            "client_id": config[0],
+            "response_type": "code",
+            "redirect_uri": config[2],
+            "state": "".join([choice(ascii_letters + digits) for _ in range(43)]),
+            "scope": str(tk.scope.user_read_currently_playing),
+            "show_dialog": True
+        }
+        logging.debug(f"using params: {params}")
+        redirect_url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
+        auth = Auth(state=params["state"], email=email)
+        db.session.add(auth)
+        db.session.commit()
+        logging.debug(f"added {auth} to database and redirecting to: {redirect_url}")
+        return {"redirect_url": redirect_url}, 307
     
 
 class AuthCallback(Resource):
@@ -188,27 +198,38 @@ class AuthCallback(Resource):
     def get(self):
         code = request.args["code"]
         state = request.args["state"]
-        if state not in auths:
+        
+        auth = Auth.query.get(state)
+        if not auth:
             return "Invalid state", 400
         
-        auth_info = auths.pop(state)
-        auth, email = auth_info
-        token = auth.request_token(code, state)
-        conf = (
-            os.getenv("SPOTIFY_CLIENT_ID"),
-            os.getenv("SPOTIFY_CLIENT_SECRET"),
-            os.getenv("SPOTIFY_REDIRECT_URI"),
-        )
+        email = auth.email
+        # token = auth_obj.request_token(code, state)
+        config = tk.config_from_environment()
+        headers = {
+            "Authorization": f"Basic {b64encode(f'{config[0]}:{config[1]}'.encode()).decode()}"
+        }
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": config[2]
+        }
+        resp = requests.post("https://accounts.spotify.com/api/token", headers=headers, data=data)
+        
+        if resp.status_code != 200:
+            return "Unable to obtain authorization token", 400
 
+        token = resp.json()
         with tempfile.NamedTemporaryFile() as temp_config_file:
             tk.config_to_file(
                 temp_config_file.name,
-                conf + (token.refresh_token,),
+                config + (token["refresh_token"],),
             )
             config_file_bytes = temp_config_file.read()
           
         user = User.query.get(email)
         user.config_file = config_file_bytes
+        db.session.delete(auth)
         db.session.commit()
 
         playlists = get_user_spotify_playlists(user)
