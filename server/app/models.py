@@ -31,8 +31,7 @@ class Auth(db.Model):
 
 class AccountVerification(db.Model):
     __tablename__ = "account_verification"
-    email = db.Column(db.String(120), primary_key=True)
-    verification_code = db.Column(db.String, nullable=False)
+    verification_code = db.Column(db.String, primary_key=True)
     expires = db.Column(db.Float, nullable=False)
     user_obj = db.Column(db.LargeBinary, nullable=False)
 

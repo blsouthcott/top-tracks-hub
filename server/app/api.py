@@ -2,7 +2,6 @@ import logging
 import os
 from random import randint, choice
 from datetime import datetime, timedelta
-from dataclasses import dataclass
 import tempfile
 import pickle
 from string import ascii_letters, digits
@@ -64,8 +63,11 @@ class Signup(Resource):
         if user:
             return "email address already exists in the database", 400
         
-        verification_code = "".join([str(randint(0,9)) for _ in range(6)])
+        if account_verification := AccountVerification.query.get(req["email"]):
+            db.session.delete(account_verification)
+            db.session.commit()
         
+        verification_code = "".join([choice(ascii_letters + digits) for _ in range(32)])
         user = User(
             email=req["email"],
             name=req["name"],
@@ -74,9 +76,8 @@ class Signup(Resource):
         pickled_user = pickle.dumps(user)
         
         account_verification = AccountVerification(
-            email=req["email"],
             verification_code=verification_code,
-            expires=(datetime.now() + timedelta(minutes=30.0)).timestamp(),
+            expires=(datetime.now() + timedelta(hours=24.0)).timestamp(),
             user_obj=pickled_user
         )
         db.session.add(account_verification)
@@ -84,51 +85,44 @@ class Signup(Resource):
         clear_expired_verification_codes()
 
         msg = Message("Verify Top Tracks Account", recipients=[req["email"]])
-        msg.html = f"<p>Please use the following code to verify your account. This code is valid for 30 minutes.</p><p>{verification_code}</p>"
+        base_url = os.getenv("BASE_URL", "http://127.0.0.1:5000")
+        verification_url = f"{base_url}/api/verify-account?code={verification_code}"
+        msg.html = f"<p>Please click the following link or copy and paste into your browser's address bar to verify your account.</p><p>If the verification code has expired, please complete the sign up process again to generate another code.</p><p>{verification_url}</p>"
         mail.send(msg)
         return "email sent successfully", 200
 
 
 class VerifyAccountSchema(Schema):
-    email = fields.Email(required=True)
-    verification_code = fields.Str(required=True, validate=validate.Length(equal=6))
+    verification_code = fields.Str(required=True, validate=validate.Length(equal=32), data_key="code")
 
 
 class VerifyAccount(Resource):
 
-    def post(self):
+    def get(self):
         """
         verify the verification code is correct and then commit the new User to the db
         """
         schema = VerifyAccountSchema()
         try:
-            req = schema.load(request.get_json())
+            args = schema.load(request.args)
         except ValidationError as err:
             return err.messages, 400
 
-        account_verification = AccountVerification.query.get(req["email"])
+        account_verification = AccountVerification.query.get(args["verification_code"])
         if not account_verification:
             clear_expired_verification_codes()
-            return "Invalid email", 400
+            return "Invalid verification code", 400
         
         if account_verification.expires < datetime.now().timestamp():
             clear_expired_verification_codes()
             return "Verification code already expired", 400
-        
-        if account_verification.verification_code != req["verification_code"]:
-            clear_expired_verification_codes()
-            return "Invalid verification code", 400
 
         user = pickle.loads(account_verification.user_obj)
         db.session.add(user)
+        db.session.delete(account_verification)
         db.session.commit()
 
-        jwt_expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
-        access_token = create_access_token(identity=req["email"], expires_delta=timedelta(hours=3.0))
-        return {
-            "access_token": access_token,
-            "expiration": jwt_expiration
-        }, 200
+        return f"Account verification successful! Please go to {os.getenv('BASE_URL', 'http://127.0.0.1:5000')} to sign in to your account.", 200
 
 
 class LoginSchema(Schema):
