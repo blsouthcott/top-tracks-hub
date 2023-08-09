@@ -61,7 +61,7 @@ class Signup(Resource):
 
         user = User.query.get(req["email"])
         if user:
-            return "email address already exists in the database", 400
+            return "email address already exists in the database", 409
         
         if account_verification := AccountVerification.query.get(req["email"]):
             db.session.delete(account_verification)

@@ -30,6 +30,8 @@ export default function Signup () {
     if (resp.status === 200) {
       alert.fire("Please check your email for a link to verify your account. This verification link is only good for 24 hours.");
       navigate('/');
+    } else if (resp.status === 409) {
+      alert.fire("Email already exists in the database. Please choose a different email and try again.");
     } else {
       alert.fire("Unable to complete sign up 🙁");
       navigate("/");
