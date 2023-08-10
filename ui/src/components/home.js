@@ -58,8 +58,10 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const setSpotifyAccountAuthorizationStatus = async () => {
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const authorized = await accountIsAuthorized(accessToken);
-    setSpotifyAccountIsAuthorized(authorized);
+    if (accessToken) {
+      const authorized = await accountIsAuthorized(accessToken);
+      setSpotifyAccountIsAuthorized(authorized);
+    };
   }
 
   useEffect(() => {
