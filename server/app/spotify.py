@@ -14,9 +14,12 @@ CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
 PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
 
 
-def get_spotify_obj(user: User = None) -> tk.Spotify:
+def get_spotify_obj(user: User = None) -> tk.Spotify | None:
     if user is None:
-        user = User.query.all()[0]
+        users = User.query.filter(User.config_file.is_not(None)).all()
+        if not users:
+            return None
+        return users[0]
 
     with tempfile.NamedTemporaryFile() as temp_config_file:
         temp_config_file.write(user.config_file)

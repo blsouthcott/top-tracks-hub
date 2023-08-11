@@ -20,10 +20,9 @@ import tekore as tk
 from .app import mail
 from .models import db, Song, User, Auth, AccountVerification
 from .api_utils import row_to_dict
+from .validator_utils import CommaDelimitedStringField
 from .controller import (
-    update_pitchfork_top_tracks_db, 
-    get_songs_by_str_val, 
-    get_songs_by_list_vals
+    update_pitchfork_top_tracks_db
 )
 from .spotify import (
     get_spotify_obj,
@@ -262,8 +261,10 @@ class TracksSchema(Schema):
     song_id = fields.Str(data_key="song-id")
     site_name = fields.Str(data_key="site-name")
     song_name = fields.Str(data_key="song-name")
-    artists = fields.Str()
-    genres = fields.Str()
+    artists = CommaDelimitedStringField()
+    genres = CommaDelimitedStringField()
+    limit = fields.Int()
+    offset = fields.Int()
 
 
 class Tracks(Resource):
@@ -275,39 +276,32 @@ class Tracks(Resource):
         except ValidationError as err:
             return err.messages, 400
         
-        logging.debug(f"received request to /tracks with params: {args}")
-        query = None
+        logging.info(f"received request to /tracks with params: {args}")
+        query = Song.query
 
-        if (song_id := args.get("song_id")):
+        if song_id := args.get("song_id"):
             song = Song.query.get(song_id)
-            if not song:
-                return jsonify([])
-            return jsonify(row_to_dict(song))
+            return jsonify(row_to_dict(song)) if song else jsonify([])
+            
+        if site_name := args.get("site_name"):
+            query = query.filter(Song.site_name == site_name)
+            
+        if song_name := args.get("song_name"):
+            query = query.filter(Song.name.icontains(song_name))
 
-        if (site_name := args.get("site_name")):
-            query = get_songs_by_str_val("site_name", site_name)
-            if not query:
-                return jsonify([])
+        if artists := args.get("artists"):
+            for artist in artists:
+                query = query.filter(Song.artists.any(name=artist))
+            
+        if genres := args.get("genres"):
+            for genre in genres:
+                query = query.filter(Song.genres.any(name=genre))
 
-        if (song_name := args.get("song_name")):
-            query = get_songs_by_str_val("name", song_name, query=query)
-            if not query:
-                return jsonify([])
-
-        if (artists := args.get("artists")):
-            query = get_songs_by_list_vals("artists", artists, query=query)
-            if not query:
-                return jsonify([])
-
-        if (genres := args.get("genres")):
-            query = get_songs_by_list_vals("genres", genres, query=query)
-            if not query:
-                return jsonify([])
-
-        if not query:
-            return [row_to_dict(song) for song in Song.query.all()], 200
-        else:
-            return [row_to_dict(song) for song in query.all()], 200
+        if limit := args.get("limit"):
+            query = query.limit(limit)
+        if offset := args.get("offset"):
+            query = query.offset(offset)
+        return [row_to_dict(song) for song in query.all()], 200
 
 
 class SpotifyTrackIdSchema(Schema):
