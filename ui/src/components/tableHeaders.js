@@ -24,10 +24,10 @@ export const tableHeaders = [
       value: "site",
       display: "Site"
     },
-    // {
-    //   value: "spotify_track_id",
-    //   display: "Spotify Track ID"
-    // },
+    {
+      value: "spotify_track_id",
+      display: "Spotify Track ID"
+    },
     {
       value: "track_preview_url",
       display: ""

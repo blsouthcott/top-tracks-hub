@@ -308,10 +308,10 @@ export default function Tracks ({ setIsAuthenticated }) {
                               <td>{track.date_published}</td>
                               <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
                               <td>{track.site_name}</td>
-                              {/* <td>{track.spotify_track_id ? 
+                              <td>{track.spotify_track_id ? 
                                   track.spotify_track_id
                                   : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
-                              </td> */}
+                              </td>
                               <td>
                                 {track.spotify_track_id && track.preview_url && <AudioPlayer src={track.preview_url} displayControls={false} />}
                               </td>
