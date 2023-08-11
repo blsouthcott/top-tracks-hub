@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import 'bulma/css/bulma.min.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
@@ -215,7 +215,7 @@ export default function Tracks ({ setIsAuthenticated }) {
     };
   }
   
-  useEffect(() => {
+  useLayoutEffect(() => {
     getAccessToken(navigate, setIsAuthenticated);
     loadPlaylists();
     loadTracks().then(() => {
