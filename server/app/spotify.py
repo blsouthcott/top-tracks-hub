@@ -19,7 +19,7 @@ def get_spotify_obj(user: User = None) -> tk.Spotify | None:
         users = User.query.filter(User.config_file.is_not(None)).all()
         if not users:
             return None
-        return users[0]
+        user = users[0]
 
     with tempfile.NamedTemporaryFile() as temp_config_file:
         temp_config_file.write(user.config_file)
