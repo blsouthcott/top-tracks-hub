@@ -24,12 +24,7 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
     # db config
-    if os.environ["FLASK_ENV"] == "development":
-        app.config[
-            "SQLALCHEMY_DATABASE_URI"
-        ] = f"sqlite:////{os.path.join(app.root_path, 'db.sqlite')}"
-    else:
-        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["POSTGRES_CONNECTION_STRING"]
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["POSTGRES_CONNECTION_STRING"]
 
     db.init_app(app)
     

@@ -219,20 +219,15 @@ export default function Tracks ({ setIsAuthenticated }) {
   useEffect(() => {
     if (highlightedRowRef.current) {
       console.log("scrolling element into view: ", `track-${trackId}`)
-      // document.getElementById(`track-${trackId}`).scrollIntoView({ block: "center"});
       highlightedRowRef.current.scrollIntoView({ block: "center"});
       navigate(".", { state: { ...location.state, trackId: undefined }});
     };
-  }, [highlightedRowRef.current])
+  }, [highlightedRowRef.current, tracks])
   
   useEffect(() => {
     getAccessToken(navigate, setIsAuthenticated);
     loadPlaylists();
-    loadTracks().then(() => {
-      // if (trackId) {
-        
-      // };
-    })
+    loadTracks();
   }, [])
 
   return (

@@ -4,6 +4,7 @@ __pycache__/
 .flaskenv
 /.idea
 *.cfg
+*.sql
 db.sqlite
 
 .DS_Store
