@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import 'bulma/css/bulma.min.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
@@ -23,6 +23,7 @@ export default function Tracks ({ setIsAuthenticated }) {
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
   const [trackId, setTrackId] = useState(location.state?.trackId);
+  const highlightedRowRef = useRef(null);
 
   const handlePlaylistChange = (e) => {
     setSelectedPlaylistId(e.target.value);
@@ -214,16 +215,23 @@ export default function Tracks ({ setIsAuthenticated }) {
       alert.fire("Error updating database");
     };
   }
+
+  useEffect(() => {
+    if (highlightedRowRef.current) {
+      console.log("scrolling element into view: ", `track-${trackId}`)
+      // document.getElementById(`track-${trackId}`).scrollIntoView({ block: "center"});
+      highlightedRowRef.current.scrollIntoView({ block: "center"});
+      navigate(".", { state: { ...location.state, trackId: undefined }});
+    };
+  }, [highlightedRowRef.current])
   
-  useLayoutEffect(() => {
+  useEffect(() => {
     getAccessToken(navigate, setIsAuthenticated);
     loadPlaylists();
     loadTracks().then(() => {
-      if (trackId) {
-        console.log("scrolling element into view: ", `track-${trackId}`)
-        document.getElementById(`track-${trackId}`).scrollIntoView({ block: "center"});
-        navigate(".", { state: { ...location.state, trackId: undefined }});
-      };
+      // if (trackId) {
+        
+      // };
     })
   }, [])
 
@@ -293,7 +301,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                       <tbody>
                         {displayedTracks.map((track, i) => {
                           return (
-                            <tr key={track.id} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"}>
+                            <tr key={track.id} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"} ref={track.id == trackId ? highlightedRowRef : null}>
                               <td>
                                 <input
                                   type="checkbox"
