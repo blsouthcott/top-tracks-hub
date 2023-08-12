@@ -174,7 +174,7 @@ class AuthorizeAccount(Resource):
             "response_type": "code",
             "redirect_uri": config[2],
             "state": "".join([choice(ascii_letters + digits) for _ in range(43)]),
-            "scope": str(tk.scope.user_read_currently_playing),
+            "scope": str(tk.scope.every),
             "show_dialog": True
         }
         logging.debug(f"using params: {params}")

@@ -1,6 +1,8 @@
 import logging
 from multiprocessing.dummy import Pool
 
+from sqlalchemy import func
+
 from .models import db, Song, Site, Artist, Genre
 from .spotify import get_spotify_obj, search_spotify_track_id
 from .scrape_top_tracks import (
@@ -22,19 +24,20 @@ def save_new_recommendations_site(site_name):
 
 
 def save_new_artist(artist):
-    if not Artist.query.get(artist):
-        db.session.add(Artist(name=artist))
-        db.session.commit()
-        return True
-    return False
-
+    if Artist.query.get(artist):
+        return False
+    db.session.add(Artist(name=artist))
+    db.session.commit()
+    return True
+    
 
 def save_new_genre(genre):
-    if not Genre.query.get(genre):
-        db.session.add(Genre(name=genre))
-        db.session.commit()
-        return True
-    return False
+    if Genre.query.get(genre):
+        return False
+    db.session.add(Genre(name=genre))
+    db.session.commit()
+    return True
+    
 
 
 def save_new_track_to_db(track: Track, site: str):
@@ -44,15 +47,11 @@ def save_new_track_to_db(track: Track, site: str):
     """
     query = Song.query.filter(Song.name == track.track_name)
 
-    cnt = 0
-    while query.all() and cnt < len(track.artists):
-        query = query.filter(Song.artists.any(name=track.artists[cnt]))
-        cnt += 1
+    for artist in track.artists:
+        query = query.filter(Song.artists.any(name=artist))
 
-    cnt = 0
-    while query.all() and cnt < len(track.genres):
-        query = query.filter(Song.genres.any(name=track.genres[cnt]))
-        cnt += 1
+    for genre in track.genres:
+        query = query.filter(Song.genres.any(name=genre))
 
     if not query.all():
 
@@ -65,7 +64,9 @@ def save_new_track_to_db(track: Track, site: str):
         song_artists = [Artist.query.get(artist) for artist in track.artists]
         song_genres = [Genre.query.get(genre) for genre in track.genres]
 
+        max_id = db.session.query(func.max(Song.id)).scalar()
         new_song = Song(
+            id=max_id+1,
             name=track.track_name,
             artists=song_artists,
             genres=song_genres,
