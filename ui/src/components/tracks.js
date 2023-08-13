@@ -15,6 +15,7 @@ export default function Tracks ({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [allowDbUpdate, setAllowDbUpdate] = useState(false);
   const [tracks, setTracks] = useState([]);
   const [displayedTracks, setDisplayedTracks] = useState([]);
   const [sortedBy, setSortedBy] = useState("date_published");
@@ -22,8 +23,24 @@ export default function Tracks ({ setIsAuthenticated }) {
   const [selectedTrackIds, setSelectedTrackIds] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
-  const [trackId, setTrackId] = useState(location.state?.trackId);
   const highlightedRowRef = useRef(null);
+  const trackId = location.state?.trackId;
+
+  const getUserIsAdmin = async () => {
+    const accessToken = getAccessToken(navigate, setIsAuthenticated);
+    const resp = await fetch("/api/account-is-authorized", {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      }
+    });
+    if (resp.status === 200) {
+      const data = await resp.json();
+      data.admin ? setAllowDbUpdate(true) : setAllowDbUpdate(false);
+    } else {
+      alert.fire("Unable to determine if user is admin");
+    };
+  }
 
   const handlePlaylistChange = (e) => {
     setSelectedPlaylistId(e.target.value);
@@ -226,6 +243,7 @@ export default function Tracks ({ setIsAuthenticated }) {
   
   useEffect(() => {
     getAccessToken(navigate, setIsAuthenticated);
+    getUserIsAdmin();
     loadPlaylists();
     loadTracks();
   }, [])
@@ -239,7 +257,7 @@ export default function Tracks ({ setIsAuthenticated }) {
             <h1 className="title is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
               <div className="is-flex is-justify-content-space-evenly">
                 <div className="is-flex">
-                  <div className="select mr-2">
+                  <div className="select mr-2" style={{"zIndex": 1}}>
                     <select
                       value={selectedPlaylistId} 
                       onChange={handlePlaylistChange}>
@@ -262,11 +280,12 @@ export default function Tracks ({ setIsAuthenticated }) {
                       style={{maxWidth: "400px"}}
                       placeholder="Filter table..."
                       onChange={filterTracksTable}/>
+                    {allowDbUpdate && 
                     <button
                         className="button is-primary"
                         onClick={updateTopTracksDb}>
                       Update Top Tracks Database
-                    </button>
+                    </button>}
                   </div>
                   <div className="container is-scrollable mt-4">
                     <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
