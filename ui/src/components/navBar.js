@@ -32,7 +32,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
       className="navbar" 
       role="navigation" 
       aria-label="main navigation"
-      style={{ position: 'fixed', top: '0', width: '100%', zIndex: 1 }}>
+      style={{ position: 'fixed', top: '0', width: '100%', zIndex: 2 }}>
       
       <div className="navbar-brand">
         <Link className="navbar-item" to="/">
@@ -40,7 +40,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
         </Link>
 
         <button
-          className={`navbar-burger burger ${isActive ? 'is-active' : ''}`}
+          className={`burger-menu navbar-burger burger ${isActive ? 'is-active' : ''}`}
           aria-label="menu"
           aria-expanded="false"
           data-target="navbar"
@@ -55,6 +55,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
       <div
         id="navbar"
         className={`navbar-menu ${isActive ? 'is-active' : ''}`}
+        style={{"zIndex": 2}}
       >
         <div className="navbar-start">
           <Link className="navbar-item" to="/">
