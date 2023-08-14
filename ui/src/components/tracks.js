@@ -63,15 +63,6 @@ export default function Tracks ({ setIsAuthenticated }) {
     }
   }
 
-  const fetchTracks = async () => {
-    const resp = await fetch("/api/tracks");
-    if (resp.status !== 200) {
-      return;
-    };
-    const respData = await resp.json();
-    return respData;
-  }
-
   const mapKeysToTracks = (tracks) => {
     const mappedTracks = tracks.map((track, i) => {
       return {
@@ -85,12 +76,13 @@ export default function Tracks ({ setIsAuthenticated }) {
 
   const loadTracks = async () => {
     setIsLoading(true);
-    let tracksData = await fetchTracks();
-    if (!tracksData) {
+    const resp = await fetch("/api/tracks");
+    if (resp.status !== 200) {
       setIsLoading(false);
       alert.fire("Unable to load tracks data");
       return;
     };
+    let tracksData = await resp.json();
     // tracksData = tracksData.filter(track => track.spotify_track_id !== null);
     tracksData = mapKeysToTracks(tracksData);
     tracksData.sort((a, b) => {
@@ -257,7 +249,6 @@ export default function Tracks ({ setIsAuthenticated }) {
       <div className="hero-body">
         <div className="container full-width">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-          // <div className="section mt-6 p-2">
             <>            
               <h1 className="title mt-6 is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
               <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
@@ -273,7 +264,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                     </select>
                   </div>
                     <button
-                      className="button is-primary"
+                      className="m-1 button is-primary"
                       disabled={selectedTrackIds.length === 0 || playlists.length < 1}
                       onClick={addTracksToPlaylist}>
                         Add to Spotify Playlist
@@ -356,8 +347,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                     </tbody>
                   </table>
                 </div>
-                {/* </div> */}
-                </>
+              </>
           }
         </div>
       </div>
