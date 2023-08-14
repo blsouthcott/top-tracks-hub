@@ -103,16 +103,17 @@ export default function UserTopContent ({ setIsAuthenticated }) {
       <div className="hero-body">
         <div className="container">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-          <div className="section m-6 p-2">
-            <h1 className="title is-size-1 has-text-centered">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</h1>
+          <>
+          {/* <div className="section"> */}
+            <h1 className="title is-size-1 has-text-centered mt-6">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</h1>
             <div className="is-flex is-justify-content-center">
-              <div className="select mr-3">
+              <div className="select mr-3" style={{"zIndex": 1}}>
                 <select value={personalizationType} onChange={e => setPersonalizationType(e.target.value)}>
                   <option value="artists">Artists</option>
                   <option value="tracks">Tracks</option>
                 </select>
               </div>
-              <div className="select ml-3">
+              <div className="select ml-3" style={{"zIndex": 1}}>
                 <select value={timePeriod} onChange={e => setTimePeriod(e.target.value)}>
                   <option value="short_term">Last 4 Weeks</option>
                   <option value="medium_term">Last 6 Months</option>
@@ -129,7 +130,8 @@ export default function UserTopContent ({ setIsAuthenticated }) {
                 <TrackCard key={track.id} track={track} num={cnt} />
               ))
             }
-          </div>}
+          {/* </div>} */}
+          </>}
         </div>
       </div>
       <Footer />

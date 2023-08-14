@@ -6,11 +6,12 @@ import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
 export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isActive, setIsActive] = useState(false);
+  const [burgerIsActive, setBurgerIsActive] = useState(false);
   const [dropDownIsOpen, setDropDownIsOpen] = useState(false);
 
+
   const toggleBurger = () => {
-    setIsActive(!isActive);
+    setBurgerIsActive(!burgerIsActive);
   };
 
   const logout = () => {
@@ -25,6 +26,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
   useEffect(() => {
     setDropDownIsOpen(false);
+    setBurgerIsActive(false);
   }, [location])
 
   return (
@@ -40,7 +42,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
         </Link>
 
         <button
-          className={`burger-menu navbar-burger burger ${isActive ? 'is-active' : ''}`}
+          className={`burger-menu navbar-burger burger ${burgerIsActive ? 'is-active' : ''}`}
           aria-label="menu"
           aria-expanded="false"
           data-target="navbar"
@@ -54,7 +56,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
       <div
         id="navbar"
-        className={`navbar-menu ${isActive ? 'is-active' : ''}`}
+        className={`navbar-menu ${burgerIsActive ? 'is-active' : ''}`}
         style={{"zIndex": 2}}
       >
         <div className="navbar-start">

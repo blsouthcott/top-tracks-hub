@@ -70,3 +70,56 @@ footer {
   position: sticky;
   padding: 0.5rem 1.5rem;
 }
+
+.audio-player {
+  max-width: 100%;
+}
+
+
+
+@media (max-width: 768px) {
+  td, th {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+  /* Hide table headers */
+  .sticky-header, th {
+    display: none;
+  }
+  /* Make table rows behave like blocks */
+  tr {
+    /* border: 1px solid #ccc; */
+    margin-bottom: 0.625rem;
+    display: block;
+    min-height: 1.25rem;
+
+  }
+  tr:not(:last-child):after {
+    content: "";
+    display: block;
+    height: 1px;
+    background-color: #00d1b2;
+    margin: 0.625rem 0;
+  }
+  /* Stack table cells vertically */
+  td {
+    display: block;
+    /* Add space between cells */
+    margin-bottom: 0.3rem;
+    /* Right-align text */
+    text-align: right !important;
+  }
+  /* Add pseudo-element to display data labels */
+  td:before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+  }
+  .is-scrollable {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .is-scrollable::-webkit-scrollbar {
+    display: none;
+  }
+}

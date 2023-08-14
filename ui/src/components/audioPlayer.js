@@ -50,7 +50,7 @@ export default function AudioPlayer ({ src, displayControls=true }) {
       {isLoading ? <ClipLoader /> :
         <>
         {displayControls ? 
-          <audio controls>
+          <audio className="audio-player" controls>
             <source src={src} type="audio/mpeg" />
           </audio>
         : <>

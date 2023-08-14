@@ -13,6 +13,7 @@ import Footer from "./footer";
 export default function Tracks ({ setIsAuthenticated }) {
 
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 769);
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [allowDbUpdate, setAllowDbUpdate] = useState(false);
@@ -246,18 +247,22 @@ export default function Tracks ({ setIsAuthenticated }) {
     getUserIsAdmin();
     loadPlaylists();
     loadTracks();
+    const handleDeviceChange = () => setIsMobile(window.innerWidth < 769);
+    window.addEventListener("resize", handleDeviceChange);
+    return () => window.removeEventListener("resize", handleDeviceChange);
   }, [])
 
   return (
     <section className="hero is-fullheight">
       <div className="hero-body">
-        <div className="container">
+        <div className="container full-width">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
-          <div className="section m-6 p-2">
-            <h1 className="title is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
-              <div className="is-flex is-justify-content-space-evenly">
-                <div className="is-flex">
-                  <div className="select mr-2" style={{"zIndex": 1}}>
+          // <div className="section mt-6 p-2">
+            <>            
+              <h1 className="title mt-6 is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
+              <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
+                <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
+                  <div className="select m-1" style={{"zIndex": 1}}>
                     <select
                       value={selectedPlaylistId} 
                       onChange={handlePlaylistChange}>
@@ -266,84 +271,93 @@ export default function Tracks ({ setIsAuthenticated }) {
                         <option key={i} value={playlist.id}>{playlist.name}</option>
                       )}
                     </select>
-                    </div>
-                      <button
-                        className="button is-primary"
-                        disabled={selectedTrackIds.length === 0 || playlists.length < 1}
-                        onClick={addTracksToPlaylist}>
-                          Add to Spotify Playlist
-                      </button>
-                    </div>
+                  </div>
+                    <button
+                      className="button is-primary"
+                      disabled={selectedTrackIds.length === 0 || playlists.length < 1}
+                      onClick={addTracksToPlaylist}>
+                        Add to Spotify Playlist
+                    </button>
+                  </div>
                     <input
                       type="search"
-                      className="input search"
+                      className="m-1 input search"
                       style={{maxWidth: "400px"}}
                       placeholder="Filter table..."
                       onChange={filterTracksTable}/>
                     {allowDbUpdate && 
                     <button
-                        className="button is-primary"
+                        className="m-1 button is-primary"
                         onClick={updateTopTracksDb}>
                       Update Top Tracks Database
                     </button>}
-                  </div>
-                  <div className="container is-scrollable mt-4">
-                    <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
-                      <thead className="sticky-header">
-                        <tr id='table-header-row'>
-                          <th className="has-background-primary has-text-white">
-                            <input
-                              type="checkbox"
-                              checked={selectedTrackIds.length > 0}
-                              onChange={unselectAllTracks}
-                            />
-                          </th>
-                          {tableHeaders.map((header, i) => {
-                            return (
-                              <th
-                                className="has-background-primary has-text-white table-header"
-                                onClick={() => sortTracksTable(header.value)} 
-                                key={i}>
-                                  {header.display}
-                                  &nbsp;
-                                  {header.value === sortedBy ? orderedBy === "asc" ? <span>&darr;</span> : <span>&uarr;</span> : ""}
-                              </th>
-                            )
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {displayedTracks.map((track, i) => {
+                </div>
+                <div className="is-scrollable mt-4">
+                  <table className="table full-width is-bordered is-hoverable is-striped is-narrow">
+                    <thead className="sticky-header">
+                      <tr id='table-header-row'>
+                        <th className="has-background-primary has-text-white">
+                          <input
+                            type="checkbox"
+                            checked={selectedTrackIds.length > 0}
+                            onChange={unselectAllTracks}
+                          />
+                        </th>
+                        {tableHeaders.map((header, i) => {
                           return (
-                            <tr key={track.id} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"} ref={track.id == trackId ? highlightedRowRef : null}>
-                              <td>
-                                <input
-                                  type="checkbox"
-                                  value={track.key}
-                                  checked={track.checked}
-                                  onChange={handleCheckboxChange}
-                                />
-                              </td>
-                              <td>{track.name}</td>
-                              <td>{track.artists.join(", ")}</td>
-                              <td>{track.genres.join(", ")}</td>
-                              <td>{track.date_published}</td>
-                              <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
-                              <td>{track.site_name}</td>
-                              <td>{track.spotify_track_id ? 
-                                  track.spotify_track_id
-                                  : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
-                              </td>
-                              <td>
-                                {track.spotify_track_id && track.preview_url && <AudioPlayer src={track.preview_url} displayControls={false} />}
-                              </td>
-                            </tr>
+                            <th
+                              className="has-background-primary has-text-white table-header"
+                              onClick={() => sortTracksTable(header.value)} 
+                              key={i}>
+                                {header.display}
+                                &nbsp;
+                                {header.value === sortedBy ? orderedBy === "asc" ? <span>&darr;</span> : <span>&uarr;</span> : ""}
+                            </th>
                           )
                         })}
-                      </tbody>
-                    </table>
-                  </div>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayedTracks.map((track, i) => {
+                        return (
+                          <tr key={track.id} id={`track-${track.id}`} className={track.id == trackId && "highlighted-row"} ref={track.id == trackId ? highlightedRowRef : null}>
+                            {!isMobile && <td data-label="Add to Playlist">
+                              <input
+                                type="checkbox"
+                                value={track.key}
+                                checked={track.checked}
+                                onChange={handleCheckboxChange}
+                              />
+                            </td>}
+                            <td data-label="Song Name">{track.name}</td>
+                            <td data-label="Artists">{track.artists.join(", ")}</td>
+                            <td data-label="Genres">{track.genres.join(", ")}</td>
+                            <td data-label="Date Published">{track.date_published}</td>
+                            <td data-label="Link to Review"><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
+                            <td data-label="Site">{track.site_name}</td>
+                            <td data-label="Spotify Track ID">{track.spotify_track_id ? 
+                                track.spotify_track_id
+                                : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
+                            </td>
+                            <td data-label="Preview Track">
+                              {track.spotify_track_id && track.preview_url ? <AudioPlayer src={track.preview_url} displayControls={false} /> : "Unavailable" }
+                            </td>
+                            {isMobile && <td data-label="Add to Playlist">
+                              <input
+                                type="checkbox"
+                                value={track.key}
+                                checked={track.checked}
+                                onChange={handleCheckboxChange}
+                              />
+                            </td>}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
+                {/* </div> */}
+                </>
           }
         </div>
       </div>
