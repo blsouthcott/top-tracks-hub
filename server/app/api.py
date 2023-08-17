@@ -417,7 +417,7 @@ class PitchforkTracks(Resource):
 
 
 class PersonalizationSchema(Schema):
-    personalization_type = fields.Str(required=True, validate=validate.OneOf(["tracks", "artists"]), data_key="personalization-type")
+    personalization_type = fields.Str(required=True, validate=validate.OneOf(["tracks", "artists", "liked_tracks"]), data_key="personalization-type")
     time_period = fields.Str(required=True, validate=validate.OneOf(["short_term", "medium_term", "long_term"]), data_key="time-period")
 
 
@@ -436,5 +436,13 @@ class Personalization(Resource):
         limit = 50
         if req["personalization_type"] == "tracks":
             return jsonify(spotify_obj.current_user_top_tracks(req["time_period"], limit=limit).items)
-        else:
+        elif req["personalization_type"] == "artists":
             return jsonify(spotify_obj.current_user_top_artists(req["time_period"], limit=limit).items)
+        elif req["personalization_type"] == "liked_tracks":
+            # TODO: finish implementing this
+            # documentation for this endpoint, which tekore does not seem to implement
+            # https://developer.spotify.com/documentation/web-api/reference/get-users-saved-tracks
+            resp = requests.get("https://api.spotify.com/v1/me/tracks", headers={"Authorization": f"Bearer {spotify_obj.token.access_token}"})
+        # TODO: also return user's recently played
+        # I believe it's in the Tracks API in tekore
+        

@@ -7,7 +7,7 @@ export default function Login ({ setIsAuthenticated }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const login = async (e) => {
+  const login = async () => {
     e.preventDefault();
     const resp = await fetch("/api/login", {
       method: "POST",
