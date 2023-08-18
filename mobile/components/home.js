@@ -10,7 +10,6 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   return (
     <View>
-      <Text>Welcome!</Text>
       {!isAuthenticated && <Login isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated}/>}
     </View>
   )

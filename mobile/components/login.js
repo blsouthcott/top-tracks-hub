@@ -48,27 +48,24 @@ export default function Login ({ setIsAuthenticated }) {
 
   return (
     <View style={styles.container}>
-      <Text h3={true}>Login</Text>
-      <Text>Email</Text>
+      <Text h3={true} style={styles.title}>Login</Text>
       <Input
         placeholder="Enter username..."
         value={email}
         onChangeText={setEmail}/>
-              
-      <Text>Password</Text>
       <Input
         placeholder="Enter password..."
         value={password}
         onChangeText={setPassword}/>
       <Button
-        style={styles.button}
+        containerStyle={styles.button}
         title="Login"
         onPress={login}/>
       
       <View style={styles.signupContainer}>  
         <Text>Or click here to sign up</Text> 
         <Button
-          type="clear"
+          containerStyle={{...styles.button, width: 200}}
           title="Sign up"
           onPress={goToSignupPage}/>
         </View>
@@ -79,13 +76,18 @@ export default function Login ({ setIsAuthenticated }) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 30,
+    alignItems: "center",
   },
   button: {
     marginVertical: 10,
+    width: 250,
   },
   signupContainer: {
     alignItems: "center",
     marginTop: 20,
+  },
+  title: {
+    marginVertical: 10,
   },
 })
