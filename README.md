@@ -1,6 +1,14 @@
 # scrape-top-tracks
 Scrapes recommended tracks from music review sites, currently just Pitchfork, and adds them to your Spotify playlist. 
 
+## Visit the app [here](https://top-tracks-a3b9b29d489d.herokuapp.com/)!
+If you'd rather not sign up but still want to see the app's functionality, you can login in with the following credentials:
+
+- email: test_user@test.com
+- password: testing123
+
+This user should be authorized with a free Spotify account, but you can authorize your own to see your top content and then unauthorize  your account afterward.
+
 ## Demo
 Click [here](https://youtu.be/DSUNz7GJ_nQa) to see a demo of this project!
 

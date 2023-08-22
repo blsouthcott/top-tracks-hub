@@ -12,7 +12,7 @@ import requests
 from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import Schema, fields, validate, ValidationError
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_mail import Message
 import tekore as tk
@@ -124,15 +124,18 @@ class VerifyAccount(Resource):
         return f"Account verification successful! Please go to {os.getenv('BASE_URL', 'http://127.0.0.1:5000')} to sign in to your account.", 200
 
 
+def get_token_and_expiration(user):
+    expiration = (datetime.now() + timedelta(minutes=30.0)).timestamp() * 1000
+    access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(minutes=30.0))
+    return expiration, access_token
+
+
 class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
 
 
 class Login(Resource):
-
-    def get(self):
-        pass
 
     def post(self):
         schema = LoginSchema()
@@ -149,12 +152,26 @@ class Login(Resource):
             logging.info("wrong password")
             return "incorrect password", 400
 
-        expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
-        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
+        expiration, access_token = get_token_and_expiration(user)
+        refresh_token = create_refresh_token(identity=user.get_id())
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "expiration": expiration,
             "name": user.name
+        }, 200
+
+
+class RefreshToken(Resource):
+
+    @jwt_required(refresh=True)
+    def post(self):
+        email = get_jwt_identity()
+        user = User.query.get(email)
+        expiration, access_token = get_token_and_expiration(user)
+        return {
+            "access_token": access_token,
+            "expiration": expiration
         }, 200
 
 

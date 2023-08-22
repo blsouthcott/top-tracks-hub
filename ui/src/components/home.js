@@ -92,7 +92,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
                   </div>
                   {spotifyAccountIsAuthorized &&
                   <div className="block has-text-centered">
-                    <p>Cick here to remove your Spotify account authorization.&nbsp;</p>
+                    <p>Click here to remove your Spotify account authorization.&nbsp;</p>
                     <div className="is-flex is-justify-content-center">
                       <button className="button is-primary m-2" onClick={unauthorizeAccount}>Unauthorize</button>
                     </div>

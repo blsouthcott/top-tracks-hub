@@ -23,6 +23,7 @@ from app.api import (
 logging.basicConfig(level=logging.INFO)
 
 PORT = int(os.environ["PORT"])
+logging.info(f"port: {PORT}")
 
 app = create_app()
 api = Api(app)

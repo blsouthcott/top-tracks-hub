@@ -16,6 +16,7 @@ def create_app():
 
     app = Flask(__name__, static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")))
     if allowed_origins := os.getenv("ALLOWED_ORIGINS"):
+        logging.info(allowed_origins)
         CORS(app, origins=allowed_origins)
     JWTManager(app)
 

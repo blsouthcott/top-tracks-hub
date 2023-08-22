@@ -19,12 +19,7 @@ function App () {
         <Router>
           <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
           <Routes>
-            <Route path="/" exact element={
-              <Home 
-                isAuthenticated={isAuthenticated} 
-                setIsAuthenticated={setIsAuthenticated}
-              />
-            }/>
+            <Route path="/" exact element={<Home isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />}/>
             <Route path="/signup" exact element={<Signup />}></Route>
             <Route path="/tracks" exact element={<Tracks setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/add-spotify-track-id/:trackId" exact element={<AddSpotifyTrackId setIsAuthenticated={setIsAuthenticated} />} />
