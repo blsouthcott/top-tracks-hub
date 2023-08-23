@@ -20,6 +20,8 @@ def get_spotify_obj(user: User = None) -> tk.Spotify | None:
         if not users:
             return None
         user = users[0]
+    elif user.config_file is None:
+        return None
 
     with tempfile.NamedTemporaryFile() as temp_config_file:
         temp_config_file.write(user.config_file)
@@ -84,6 +86,8 @@ def get_user_spotify_playlists(user: User, filter_keyword="Pitchfork") -> list[d
     returns the name and id for each playlist in the user's account filtered by keyword
     """
     spotify_obj = get_spotify_obj(user)
+    if not spotify_obj:
+        return []
     spotify_playlists = spotify_obj.playlists(spotify_obj.current_user().id)
     return [{"name": playlist.name, "id": playlist.id} for playlist in spotify_playlists.items if filter_keyword.lower() in playlist.name.lower()]
 
@@ -93,14 +97,15 @@ def create_spotify_playlist(user: User, playlist_name="Pitchfork Top Tracks") ->
     create a new playlist in the user's Spotify account
     """
     spotify_obj = get_spotify_obj(user)
-    new_playlist = spotify_obj.playlist_create(
-        spotify_obj.current_user().id,
-        playlist_name,
-        public=False,
-        description="Playlist containing Pitchfork recommended tracks",
-    )
-    user.playlist_id = new_playlist.id
-    db.session.commit()
+    if spotify_obj:
+        new_playlist = spotify_obj.playlist_create(
+            spotify_obj.current_user().id,
+            playlist_name,
+            public=False,
+            description="Playlist containing Pitchfork recommended tracks",
+        )
+        user.playlist_id = new_playlist.id
+        db.session.commit()
 
 
 def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_id: str) -> bool:

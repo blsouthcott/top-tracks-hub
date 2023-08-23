@@ -8,6 +8,8 @@ import { getAccessToken } from "../utils/accessToken";
 import { alert } from "./alert";
 import AudioPlayer from "./audioPlayer";
 import Footer from "./footer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBan } from "@fortawesome/free-solid-svg-icons";
 
 
 export default function Tracks ({ setIsAuthenticated }) {
@@ -331,7 +333,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                                 : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
                             </td>
                             <td data-label="Preview Track">
-                              {track.spotify_track_id && track.preview_url ? <AudioPlayer src={track.preview_url} displayControls={false} /> : "Unavailable" }
+                              {track.spotify_track_id && track.preview_url ? <AudioPlayer src={track.preview_url} displayControls={false} /> : <FontAwesomeIcon icon={faBan} /> }
                             </td>
                             {isMobile && <td data-label="Add to Playlist">
                               <input
