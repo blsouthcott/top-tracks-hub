@@ -71,12 +71,19 @@ export default function UserTopContent ({ setIsAuthenticated }) {
   const loadContent = async () => {
     setIsLoading(true);
     const accessToken = getAccessToken(navigate, setIsAuthenticated);
+    const displayTestData = JSON.parse(localStorage.getItem("displayTestData"));
     if (accessToken) {
       const authorized = await accountIsAuthorized(accessToken);
-      if (!authorized) {
+      if (!authorized && !displayTestData) {
         alert.fire("To view your Top Spotify Content please authorize your account 🙂");
         navigate("/");
       };
+    };
+    if (displayTestData) {
+      const resp = await fetch(`/exampleData/top_${personalizationType}_${timePeriod}.json`);
+      const data = await resp.json();
+      personalizationType === "artists" ? setArtists(data) : setTracks(data);
+    } else {
       const resp = await fetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`, {
         headers: {
           "Content-Type": "application/json",
@@ -89,9 +96,9 @@ export default function UserTopContent ({ setIsAuthenticated }) {
       } else {
         alert(`Unable to load top ${personalizationType}`);
         navigate("/");
-      }
-      setIsLoading(false);
+      };
     };
+    setIsLoading(false);
   }
 
   useEffect(() => {

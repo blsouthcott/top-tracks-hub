@@ -68,6 +68,20 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     setSpotifyAccountAuthorizationStatus();
   }, [isAuthenticated])
 
+  useEffect(() => {
+    const welcomeMsgDisplayed = JSON.parse(localStorage.getItem("welcomeMsgDisplayed"));
+    const now = new Date().getTime();
+    const twoWeeks = 2 * 7 * 24 * 60 * 60 * 1000;
+    if (!welcomeMsgDisplayed || welcomeMsgDisplayed.timestamp < now - twoWeeks ) {
+      alert.fire({
+        title: "Welcome to Music Recommendations Playlist Manager & Web Scraper!",
+        html: "<p>If you'd like to checkout the app's features without signing up, feel free to use the following credentials to sign in:</p><p>username: test_user@test.com<br />password: testing123</p>",
+        icon: "info",
+      });
+      localStorage.setItem("welcomeMsgDisplayed", JSON.stringify({timestamp: now}));
+    };
+  }, [])
+
   return (
     <section className="hero is-fullheight">
       <div className="hero-body">

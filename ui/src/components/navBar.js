@@ -17,6 +17,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("accessTokenExpiration");
+    localStorage.removeItem("displayTestData");
     setIsAuthenticated(false);
     navigate("/");
   }
