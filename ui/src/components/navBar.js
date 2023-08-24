@@ -72,7 +72,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
           {isAuthenticated && 
           <Link className="navbar-item" to="/tracks">
-            Pitchfork Tracks
+            Recommended Tracks
           </Link>}
 
           <div className={`navbar-item has-dropdown ${dropDownIsOpen ? "is-active" : ""}`}
