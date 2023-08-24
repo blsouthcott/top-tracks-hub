@@ -84,7 +84,7 @@ class Signup(Resource):
         clear_expired_verification_codes()
 
         msg = Message("Verify Top Tracks Account", recipients=[req["email"]])
-        base_url = os.getenv("BASE_URL", "http://127.0.0.1:5000")
+        base_url = os.getenv("BASE_URL", "http://127.0.0.1:5001")
         verification_url = f"{base_url}/api/verify-account?code={verification_code}"
         msg.html = f"<p>Please click the following link or copy and paste into your browser's address bar to verify your account.</p><p>If the verification code has expired, please complete the sign up process again to generate another code.</p><p>{verification_url}</p>"
         mail.send(msg)
@@ -174,7 +174,7 @@ class AuthorizeAccount(Resource):
             "response_type": "code",
             "redirect_uri": config[2],
             "state": "".join([choice(ascii_letters + digits) for _ in range(43)]),
-            "scope": str(tk.scope.every),
+            "scope": "playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public user-top-read user-read-recently-played user-library-read",
             "show_dialog": True
         }
         logging.debug(f"using params: {params}")
