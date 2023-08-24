@@ -30,22 +30,6 @@ export default function Tracks ({ setIsAuthenticated }) {
   const highlightedRowRef = useRef(null);
   const trackId = location.state?.trackId;
 
-  const getUserIsAdmin = async () => {
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/account-is-authorized", {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      }
-    });
-    if (resp.status === 200) {
-      const data = await resp.json();
-      data.admin ? setAllowDbUpdate(true) : setAllowDbUpdate(false);
-    } else {
-      alert.fire("Unable to determine if user is admin");
-    };
-  }
-
   const handlePlaylistChange = (e) => {
     setSelectedPlaylistId(e.target.value);
   };
@@ -208,27 +192,6 @@ export default function Tracks ({ setIsAuthenticated }) {
     }
   }
 
-  const updateTopTracksDb = async () => {
-    setIsLoading(true);
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/pitchfork-tracks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({max_page_num: 25}),
-    });
-    setIsLoading(false);
-    if (resp.status === 200) {
-      const data = await resp.json();
-      loadTracks();
-      alert.fire(`${data.num_new_tracks} new ${data.num_new_tracks == 1 ? "track" : "tracks"} added to database!`);
-    } else {
-      alert.fire("Error updating database");
-    };
-  }
-
   useEffect(() => {
     if (highlightedRowRef.current) {
       console.log("scrolling element into view: ", `track-${trackId}`)
@@ -239,7 +202,6 @@ export default function Tracks ({ setIsAuthenticated }) {
   
   useEffect(() => {
     getAccessToken(navigate, setIsAuthenticated);
-    getUserIsAdmin();
     loadPlaylists();
     loadTracks();
     const handleDeviceChange = () => setIsMobile(window.innerWidth < 769);
@@ -279,12 +241,6 @@ export default function Tracks ({ setIsAuthenticated }) {
                       style={{maxWidth: "400px"}}
                       placeholder="Filter table..."
                       onChange={filterTracksTable}/>
-                    {allowDbUpdate && 
-                    <button
-                        className="m-1 button is-primary"
-                        onClick={updateTopTracksDb}>
-                      Update Top Tracks Database
-                    </button>}
                 </div>
                 <div className="is-scrollable mt-4">
                   <table className="table full-width is-bordered is-hoverable is-striped is-narrow">

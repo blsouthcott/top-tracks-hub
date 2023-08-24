@@ -74,7 +74,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     const twoWeeks = 2 * 7 * 24 * 60 * 60 * 1000;
     if (!welcomeMsgDisplayed || welcomeMsgDisplayed.timestamp < now - twoWeeks ) {
       alert.fire({
-        title: "Welcome to Music Recommendations Playlist Manager & Web Scraper!",
+        title: "Welcome to Music Recommendations Playlist Manager!",
         html: "<p>If you'd like to checkout the app's features without signing up, feel free to use the following credentials to sign in:</p><p>username: test_user@test.com<br />password: testing123</p>",
         icon: "info",
       });
