@@ -99,14 +99,14 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
                     </div>
                   </div>}
                   <div className="block has-text-centered">
-                    <p>Click here to view all tracks recommended by Pitchfork and add them to your Spotify playlist.&nbsp;</p>
+                    <p>Click here to view all tracks available to add to your Spotify playlist.&nbsp;</p>
                     <div className="is-flex is-justify-content-center">
                       <button className="button is-primary m-2" onClick={goToTracks}>View Tracks</button>
                     </div>
                   </div>
                   {spotifyAccountIsAuthorized &&
                   <div className="block has-text-centered">
-                    <p>Cick here to remove your Spotify account authorization.&nbsp;</p>
+                    <p>Click here to remove your Spotify account authorization.&nbsp;</p>
                     <div className="is-flex is-justify-content-center">
                       <button className="button is-primary m-2" onClick={unauthorizeAccount}>Unauthorize</button>
                     </div>

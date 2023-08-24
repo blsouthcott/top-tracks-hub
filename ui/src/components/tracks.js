@@ -9,7 +9,8 @@ import { alert } from "./alert";
 import AudioPlayer from "./audioPlayer";
 import Footer from "./footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBan } from "@fortawesome/free-solid-svg-icons";
+import { faBan,  } from "@fortawesome/free-solid-svg-icons";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 
 
 export default function Tracks ({ setIsAuthenticated }) {
@@ -252,7 +253,7 @@ export default function Tracks ({ setIsAuthenticated }) {
         <div className="container full-width">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
             <>            
-              <h1 className="title mt-6 is-size-1 has-text-centered">Pitchfork Top Tracks</h1>
+              <h1 className="title mt-6 is-size-1 has-text-centered">Recommended Tracks</h1>
               <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
                 <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
                   <div className="select m-1" style={{"zIndex": 1}}>
@@ -269,7 +270,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                       className="m-1 button is-primary"
                       disabled={selectedTrackIds.length === 0 || playlists.length < 1}
                       onClick={addTracksToPlaylist}>
-                        Add to Spotify Playlist
+                      Add to Spotify Playlist&nbsp;<FontAwesomeIcon icon={faSpotify} />
                     </button>
                   </div>
                     <input
@@ -333,7 +334,7 @@ export default function Tracks ({ setIsAuthenticated }) {
                                 : <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
                             </td>
                             <td data-label="Preview Track">
-                              {track.spotify_track_id && track.preview_url ? <AudioPlayer src={track.preview_url} displayControls={false} /> : <FontAwesomeIcon icon={faBan} /> }
+                              <div className="is-flex is-clipped is-justify-content-center">{track.spotify_track_id && track.preview_url ? <><AudioPlayer src={track.preview_url} displayControls={false} />&nbsp;<FontAwesomeIcon icon={faSpotify} /></> : <FontAwesomeIcon icon={faBan} />}</div>
                             </td>
                             {isMobile && <td data-label="Add to Playlist">
                               <input

@@ -7,6 +7,8 @@ import { getAccessToken } from "../utils/accessToken";
 import { alert } from "./alert";
 import Footer from "./footer";
 import { accountIsAuthorized } from "../utils/accountAuth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 
 
 const ArtistCard = ({ artist, num }) => (
@@ -24,7 +26,7 @@ const ArtistCard = ({ artist, num }) => (
         <div className="content">
           <p>Popularity: <b>{artist.popularity}</b></p>
           <p>Genres: {artist.genres.join(", ")}</p>
-          <Link to={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="button is-primary">Listen on Spotify</Link>
+          <Link to={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="button is-primary">Listen on Spotify&nbsp;<FontAwesomeIcon icon={faSpotify} /></Link>
         </div>
       </div>
     </div>
@@ -48,11 +50,11 @@ const TrackCard = ({ track, num }) => (
           <h2 className="is-size-4">{track.artists[0].name}</h2>
           <p>Album: <b>{track.album.name}</b></p>
           <p>Popularity: <b>{track.popularity}</b></p>
-          <Link to={track.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="button is-primary ml-2">Listen on Spotify</Link>
+          <Link to={track.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="button is-primary ml-2">Listen on Spotify&nbsp;<FontAwesomeIcon icon={faSpotify} /></Link>
         </div>
       </div>
       <div className="column is-one-third has-text-centered">
-        <p className="is-size-4">Track Preview</p>
+        <p className="is-size-4">Track Preview&nbsp;<FontAwesomeIcon icon={faSpotify} /></p>
         <AudioPlayer src={track.preview_url}/>
       </div>
     </div>
