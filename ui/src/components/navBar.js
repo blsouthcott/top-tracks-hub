@@ -24,7 +24,7 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
       navigate("/");
     } else {
       alert.fire("Something went wrong. Unable to log out 🙁");
-    }
+    };
   }
 
   const handleMouseOver = () => setDropDownIsOpen(true);

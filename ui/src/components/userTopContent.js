@@ -98,6 +98,12 @@ export default function UserTopContent ({ setIsAuthenticated }) {
     loadContent();
   }, [personalizationType, timePeriod])
 
+  useEffect(() => {
+    api.tokenIsValid().then(isValid => {
+      setIsAuthenticated(isValid);
+    })
+  }, [])
+
   return (
     <section className="hero is-fullheight">
       <div className="hero-body">
