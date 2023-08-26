@@ -270,11 +270,8 @@ class AccountIsAuthorized(Resource):
         logging.debug(f"checking authorization status for {email}")
         user = User.query.get(email)
         if user.config_file:
-            return {
-                "authorized": True,
-                "admin": user.email.lower() == os.environ["ADMIN_EMAIL"].lower()
-            }, 200
-        return {"authorized": False}, 200
+            return jsonify(authorized=True)
+        return jsonify(authorized=False)
 
 
 class TracksSchema(Schema):

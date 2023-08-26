@@ -6,6 +6,7 @@ import store from "./store/store";
 import { ThemeProvider } from "react-native-elements";
 import Home from "./components/home";
 import Signup from "./components/signup";
+import NavBar from "./components/navBar";
 
 const Stack = createNativeStackNavigator();
 
@@ -21,7 +22,10 @@ export default function App() {
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <NavigationContainer>
-          <Stack.Navigator>
+          <Stack.Navigator
+            screenOptions={{
+              header: () => <NavBar />
+            }}>
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="Signup" component={Signup} />
             {/* <Stack.Screen name="Tracks" component={Tracks} />
