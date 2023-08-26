@@ -1,11 +1,16 @@
 # scrape-top-tracks
-Provides tracks recommended tracks from music review sites such as Pitchfork and allows you to add them to your Spotify playlist. Also allows you to view your top tracks and artists.
+Provides tracks recommended by music review sites such as Pitchfork and allows you to add them to your Spotify playlist. Also allows you to view your top tracks and artists.
 
-## Demo
-Click [here](https://youtu.be/DSUNz7GJ_nQa) to see a demo of this project!
+## Visit the app [here](https://top-tracks-a3b9b29d489d.herokuapp.com/)!
 
-# To run this locally
-A .flaskenv file should be saved in the root directory with the following enviornment variables:
+If you'd rather not sign up but still want to see the app's functionality, you can log in with the following credentials:
+
+email: test_user@test.com  
+password: testing123
+
+# Run locally
+## Environment configuration
+A .flaskenv file should be saved in the `server/` directory with the following enviornment variables:
 ```
 SPOTIFY_CLIENT_ID={get from your spotify developer dashboard}
 SPOTIFY_CLIENT_SECRET={get from your spotify developer dashboard}
@@ -15,13 +20,37 @@ FLASK_APP=run.py
 FLASK_ENV=development
 FLASK_DEBUG=1
 
-SECRET_KEY={change this}
+JWT_COOKIE_SECURE=false (should be true in production)
+JWT_COOKIE_CSRF_PROTECT=false (should be true in production)
 JWT_SECRET_KEY={change this}
 
-PORT=5000
+SECRET_KEY={change this}
+
+POSTGRES_CONNECTION_STRING={set up your own postgres database or some other database and put the connection string here}
+
+PORT=5001
+
+MAIL_USERNAME={user for email where you'll send sign up verifications}
+MAIL_PASSWORD={password for the account}
+
+ALLOWED_ORIGINS={the URL the frontend will run on}
 ```
 
-If you change PORT you'll also need to change it in the client side code.
+## Install the dependencies
+From the `server/` directory run
+```
+poetry env use {a version of python3.11}
+poetry install --no-root
+poetry shell
+```
+
+## Start the backend
+After installing the dependencies, from the `server/` directory run
+```
+flask run --port=5001
+```
+
+If you change the port you'll also need to change the proxy in the client side code.
 
 ## Frontend
 From the root directory run
@@ -31,20 +60,7 @@ npm install
 npm start
 ```
 
-## Backend
-From the root directory run
-```
-pyenv virtualenv install <python version> <virtual env name>
-pyenv local <virtual env name>
-pyenv activate <virtual env name>
-cd server
-pip install -r requirements.txt
-flask run
-```
-
 # Dependency Documentation
-tekore documentation @ https://tekore.readthedocs.io/en/stable/index.html
-
-Spotify developer dashboard @ https://developer.spotify.com/dashboard/applications
-
-Flask SQLAlchemy documentation: https://flask-sqlalchemy.palletsprojects.com/en/2.x/
+tekore - https://tekore.readthedocs.io/en/stable/index.html  
+Spotify developer dashboard - https://developer.spotify.com/dashboard/applications  
+Flask SQLAlchemy - https://flask-sqlalchemy.palletsprojects.com/en/2.x/
