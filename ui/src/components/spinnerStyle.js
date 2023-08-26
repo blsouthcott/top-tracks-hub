@@ -1,4 +1,3 @@
-
 export const spinnerStyle = {
     position: "absolute",
     top: "50%",

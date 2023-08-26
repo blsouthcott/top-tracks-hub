@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { getAccessToken } from "../utils/accessToken";
 import Footer from "./footer";
+import { tokenIsValid } from "../utils/api";
 
 export default function About ({ setIsAuthenticated }) {
-  const navigate = useNavigate();
   useEffect(() => {
-    getAccessToken(navigate, setIsAuthenticated, false);
+    tokenIsValid().then(isValid => {
+      setIsAuthenticated(isValid);
+    })
   });
   return (
     <section className="hero is-fullheight">

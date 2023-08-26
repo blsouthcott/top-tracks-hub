@@ -3,12 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import AudioPlayer from "./audioPlayer";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
-import { getAccessToken } from "../utils/accessToken";
-import { alert } from "./alert";
+import { alert } from "../utils/alert";
 import Footer from "./footer";
-import { accountIsAuthorized } from "../utils/accountAuth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import * as api from "../utils/api";
 
 
 const ArtistCard = ({ artist, num }) => (
@@ -72,26 +71,18 @@ export default function UserTopContent ({ setIsAuthenticated }) {
 
   const loadContent = async () => {
     setIsLoading(true);
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
     const displayTestData = JSON.parse(localStorage.getItem("displayTestData"));
-    if (accessToken) {
-      const authorized = await accountIsAuthorized(accessToken);
-      if (!authorized && !displayTestData) {
-        alert.fire("To view your Top Spotify Content please authorize your account 🙂");
-        navigate("/");
-      };
+    const authorized = await api.accountIsAuthorized();
+    if (!authorized && !displayTestData) {
+      alert.fire("To view your Top Spotify Content please authorize your account 🙂");
+      navigate("/");
     };
     if (displayTestData) {
       const resp = await fetch(`/exampleData/top_${personalizationType}_${timePeriod}.json`);
       const data = await resp.json();
       personalizationType === "artists" ? setArtists(data) : setTracks(data);
     } else {
-      const resp = await fetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        }
-      });
+      const resp = await api.getUserTopContent(navigate, timePeriod, personalizationType);
       if (resp.status === 200) {
         const data = await resp.json();
         personalizationType === "artists" ? setArtists(data) : setTracks(data);
@@ -113,7 +104,6 @@ export default function UserTopContent ({ setIsAuthenticated }) {
         <div className="container">
           {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
           <>
-          {/* <div className="section"> */}
             <h1 className="title is-size-1 has-text-centered mt-6">Your Top {`${personalizationType[0].toUpperCase()}${personalizationType.slice(1)}`}</h1>
             <div className="is-flex is-justify-content-center">
               <div className="select mr-3" style={{"zIndex": 1}}>
@@ -139,7 +129,6 @@ export default function UserTopContent ({ setIsAuthenticated }) {
                 <TrackCard key={track.id} track={track} num={cnt} />
               ))
             }
-          {/* </div>} */}
           </>}
         </div>
       </div>

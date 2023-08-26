@@ -4,11 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "./spinnerStyle";
-import { getAccessToken } from "../utils/accessToken";
-import { alert } from "./alert";
+import { alert } from "../utils/alert";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboard } from "@fortawesome/free-solid-svg-icons";
+import * as api from "../utils/api";
+
 
 export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
 
@@ -22,54 +23,42 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
 
   const loadSongInfo = async () => {
     const resp = await fetch(`/api/tracks?song-id=${trackId}`);
+    if (resp.status === 401) {
+
+    }
     if (resp.status !== 200) {
-      alert.fire(`Unable to load information for track with id: ${trackId}`)
+      alert.fire({title: `Unable to load information for track with id: ${trackId}`, icon: "error"});
       navigate("/tracks");
     };
-    const trackData = await resp.json();
-    console.log("track data: ", trackData);
-    setTrack(trackData);
-    return trackData;
+    const data = await resp.json();
+    console.log("track data: ", data);
+    setTrack(data);
+    return data;
   }
 
   const loadSearchResults = async (track) => {
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch(`/api/spotify-tracks?song-name=${track.name}&artists=${track.artists.join(", ")}`, {
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-      }
-    })
+    const resp = await api.searchTrack(navigate, track);
     if (resp.status !== 200) {
-      alert.fire(`Unable to load information for Spotify Tracks search for track with id: ${trackId}`)
+      alert.fire({title: `Unable to load information for Spotify Tracks search for track with id: ${trackId}`, icon: "error"});
       navigate("/tracks", { state: { trackId: trackId } });
+    } else {
+      const data = await resp.json();
+      if (data.length === 0) {
+        alert.fire({title: `No search results for ${track.name}`, icon: "warning"})
+        navigate("/tracks", { state: { trackId: trackId } });
+      }
+      console.log("search results: ", data);
+      setSearchResults(data);
     };
-    const data = await resp.json();
-    if (data.length === 0) {
-      alert.fire(`No search results for ${track.name}`)
-      navigate("/tracks", { state: { trackId: trackId } });
-    }
-    console.log("search results: ", data);
-    setSearchResults(data);
   }
 
   const addTrackId = async () => {
     setIsLoading(true);
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/spotify-track-id", {
-      method: "PATCH",
-      body: JSON.stringify({
-        "song-id": trackId,
-        "spotify-track-id": spotifyTrackId
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      }
-    });
+    const resp = await api.addTrackId(navigate, trackId, spotifyTrackId);
     if (resp.status !== 204) {
-      alert.fire("Unable to update Spotify Track ID");
+      alert.fire({title: "Unable to update Spotify Track ID", icon: "error"});
     } else {
-      alert.fire("Spotify Track ID successfully updated!");
+      alert.fire({title: "Spotify Track ID successfully updated!", icon: "success"});
     };
     navigate("/tracks", { state: { trackId: trackId } });
   }

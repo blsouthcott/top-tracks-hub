@@ -1,6 +1,6 @@
 import logging
 import os
-from random import randint, choice
+from random import choice
 from datetime import datetime, timedelta
 import tempfile
 import pickle
@@ -12,7 +12,15 @@ import requests
 from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import Schema, fields, validate, ValidationError
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    get_jwt_identity,
+    jwt_required,
+    set_access_cookies,
+    set_refresh_cookies,
+    unset_jwt_cookies,
+)
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_mail import Message
 import tekore as tk
@@ -131,9 +139,6 @@ class LoginSchema(Schema):
 
 class Login(Resource):
 
-    def get(self):
-        pass
-
     def post(self):
         schema = LoginSchema()
         try:
@@ -149,13 +154,51 @@ class Login(Resource):
             logging.info("wrong password")
             return "incorrect password", 400
 
-        expiration = (datetime.now() + timedelta(hours=3.0)).timestamp() * 1000
-        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(hours=3.0))
-        return {
-            "access_token": access_token,
-            "expiration": expiration,
-            "name": user.name
-        }, 200
+        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(minutes=30.0))
+        refresh_token = create_refresh_token(identity=user.get_id(), expires_delta=timedelta(days=90.0))
+
+        use_cookie = request.headers.get("X-Auth-Method") == "Cookie"
+        if use_cookie:
+            resp = jsonify(login=True, name=user.name)
+            set_access_cookies(resp, access_token)
+            set_refresh_cookies(resp, refresh_token)
+            return resp
+        
+        return jsonify(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            name=user.name
+        )
+    
+
+class RefreshToken(Resource):
+
+    @jwt_required(refresh=True)
+    def post(self):
+        email = get_jwt_identity()
+        user = User.query.get(email)
+        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(minutes=30.0))
+        use_cookie = request.headers.get("X-Auth-Method") == "Cookie"
+        if use_cookie:
+            resp = jsonify(token_refreshed=True)
+            set_access_cookies(resp, access_token)
+            return resp
+        return jsonify(access_token=access_token)
+    
+
+class TokenIsValid(Resource):
+
+    @jwt_required()
+    def get(self):
+        return jsonify(valid=True)
+    
+
+class Logout(Resource):
+
+    def post(self):
+        resp = jsonify(logout=True)
+        unset_jwt_cookies(resp)
+        return resp
 
 
 class AuthorizeAccount(Resource):

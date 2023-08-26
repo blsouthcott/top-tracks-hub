@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
+import { alert } from "../utils/alert";
 
 export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -14,12 +15,16 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
     setBurgerIsActive(!burgerIsActive);
   };
 
-  const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("accessTokenExpiration");
-    localStorage.removeItem("displayTestData");
-    setIsAuthenticated(false);
-    navigate("/");
+  const logout = async () => {
+    const resp = await fetch("/api/logout", {method: "POST"});
+    if (resp.status === 200) {
+      alert.fire({title: "You have been successfully logged out.", icon: "success"});
+      localStorage.removeItem("displayTestData");
+      setIsAuthenticated(false);
+      navigate("/");
+    } else {
+      alert.fire("Something went wrong. Unable to log out 🙁");
+    }
   }
 
   const handleMouseOver = () => setDropDownIsOpen(true);

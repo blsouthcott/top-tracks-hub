@@ -7,6 +7,9 @@ from app.api import (
     Signup,
     VerifyAccount,
     Login,
+    TokenIsValid,
+    RefreshToken,
+    Logout,
     AuthorizeAccount,
     Unauthorize,
     AccountIsAuthorized,
@@ -30,6 +33,9 @@ api = Api(app)
 api.add_resource(Signup, "/api/signup")
 api.add_resource(VerifyAccount, "/api/verify-account")
 api.add_resource(Login, "/api/login")
+api.add_resource(TokenIsValid, "/api/token-is-valid")
+api.add_resource(RefreshToken, "/api/refresh")
+api.add_resource(Logout, "/api/logout")
 api.add_resource(AuthorizeAccount, "/api/authorize")
 api.add_resource(Unauthorize, "/api/unauthorize")
 api.add_resource(AccountIsAuthorized, "/api/account-is-authorized")

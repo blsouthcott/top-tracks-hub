@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Login from "./login";
-import { getAccessToken } from "../utils/accessToken";
-import { alert } from "./alert";
+import { alert } from "../utils/alert";
 import Footer from "./footer";
-import { accountIsAuthorized } from "../utils/accountAuth";
+import * as api from "../utils/api";
 
 
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
@@ -14,35 +13,19 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   
   const authorizeAccount = async (e) => {
     e.preventDefault();
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/authorize", {
-      method: "POST",
-      body: JSON.stringify({}),
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      }
-    })
+    const resp = await api.authorizeAccount(navigate);
     if (resp.status !== 307) {
       alert.fire("Unable to authorize account");
       return;
-    }
-    const respData = await resp.json();
-    window.open(respData.redirect_url);
+    };
+    const data = await resp.json();
+    window.open(data.redirect_url);
     alert.fire("Please refresh the page to update your account authorization status.");
   }
 
   const unauthorizeAccount = async (e) => {
     e.preventDefault();
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/unauthorize", {
-      method: "POST",
-      body: JSON.stringify({}),
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      }
-    })
+    const resp = await api.unauthorizeAccount(navigate);
     if (resp.status === 200) {
       alert.fire("Your Spotify account has been removed");
       setSpotifyAccountIsAuthorized(false);
@@ -57,18 +40,20 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   }
 
   const setSpotifyAccountAuthorizationStatus = async () => {
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    if (accessToken) {
-      const authorized = await accountIsAuthorized(accessToken);
-      setSpotifyAccountIsAuthorized(authorized);
-    };
+    const authorized = await api.accountIsAuthorized(navigate);
+    setSpotifyAccountIsAuthorized(authorized);
   }
 
   useEffect(() => {
-    setSpotifyAccountAuthorizationStatus();
+    if (isAuthenticated) {
+      setSpotifyAccountAuthorizationStatus();
+    };
   }, [isAuthenticated])
 
   useEffect(() => {
+    api.tokenIsValid().then(isValid => {
+      setIsAuthenticated(isValid);
+    })
     const welcomeMsgDisplayed = JSON.parse(localStorage.getItem("welcomeMsgDisplayed"));
     const now = new Date().getTime();
     const twoWeeks = 2 * 7 * 24 * 60 * 60 * 1000;

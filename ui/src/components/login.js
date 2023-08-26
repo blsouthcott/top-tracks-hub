@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { alert } from "./alert";
+import { alert } from "../utils/alert";
 import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
 
@@ -22,21 +22,19 @@ export default function Login ({ setIsAuthenticated }) {
       }),
       headers: {
         "Content-Type": "application/json",
+        "X-Auth-Method": "Cookie",
       },
     })
     setIsLoading(false);
     if (resp.status !== 200) {
       alert.fire("Unable to login");
     } else {
-      const respData = await resp.json();
-      const jwt = respData.access_token;
-      const expiration = respData.expiration;
-      localStorage.setItem("accessToken", jwt);
-      localStorage.setItem("accessTokenExpiration", expiration);
+      const data = await resp.json();
       const displayTestData = email === "test_user@test.com";
       localStorage.setItem("displayTestData", JSON.stringify(displayTestData));
+      localStorage.setItem("name", data.name);
       setIsAuthenticated(true);
-      alert.fire(`Welcome, ${respData.name}!`);
+      alert.fire(`Welcome, ${data.name}!`);
     };
   }
 

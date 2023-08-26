@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
-import { alert } from "./alert";
+import { alert } from "../utils/alert";
 
 export default function Signup () {
   

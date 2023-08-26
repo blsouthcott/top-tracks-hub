@@ -4,13 +4,13 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { tableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
-import { getAccessToken } from "../utils/accessToken";
-import { alert } from "./alert";
+import { alert } from "../utils/alert";
 import AudioPlayer from "./audioPlayer";
 import Footer from "./footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBan,  } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import * as api from "../utils/api";
 
 
 export default function Tracks ({ setIsAuthenticated }) {
@@ -35,19 +35,13 @@ export default function Tracks ({ setIsAuthenticated }) {
   };
 
   const loadPlaylists = async () => {
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/playlists", {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      }
-    });
+    const resp = await api.loadPlaylists();
     if (resp.status === 200) {
       const data = await resp.json();
       setPlaylists(data);
     } else {
       alert.fire("Failed to load user playlists");
-    }
+    };
   }
 
   const mapKeysToTracks = (tracks) => {
@@ -88,18 +82,7 @@ export default function Tracks ({ setIsAuthenticated }) {
       return;
     };
     setIsLoading(true);
-    const accessToken = getAccessToken(navigate, setIsAuthenticated);
-    const resp = await fetch("/api/playlist-tracks", {
-      method: "POST",
-      body: JSON.stringify({
-        "spotify-track-ids": selectedTrackIds,
-        "spotify-playlist-id": selectedPlaylistId,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      }
-    })
+    const resp = await api.addTracksToPlaylist(selectedTrackIds, selectedPlaylistId);
     setIsLoading(false);
     if (resp.status === 200) {
       alert.fire("Tracks successfully added to playlist!")
@@ -149,27 +132,27 @@ export default function Tracks ({ setIsAuthenticated }) {
     const tracksCopy = [...displayedTracks];
     console.log(`sorting ${tracksCopy.length} tracks....`)
     if ((sortedBy !== attr) || (sortedBy === attr && orderedBy === "asc")) {
-        tracksCopy.sort((a, b) => {
-            if (a[attr] < b[attr]) {
-                return -1;
-            }
-            if (a[attr] > b[attr]) {
-                return 1;
-            }
-            return 0;
-        });
-        setOrderedBy("desc");
+      tracksCopy.sort((a, b) => {
+        if (a[attr] < b[attr]) {
+          return -1;
+        }
+        if (a[attr] > b[attr]) {
+          return 1;
+        }
+        return 0;
+      });
+      setOrderedBy("desc");
     } else if (sortedBy === attr && orderedBy === "desc") {
-        tracksCopy.sort((a, b) => {
-            if (a[attr] < b[attr]) {
-                return 1;
-            }
-            if (a[attr] > b[attr]) {
-                return -1;
-            }
-            return 0;
-        });
-        setOrderedBy("asc");
+      tracksCopy.sort((a, b) => {
+        if (a[attr] < b[attr]) {
+          return 1;
+        }
+        if (a[attr] > b[attr]) {
+          return -1;
+        }
+        return 0;
+      });
+      setOrderedBy("asc");
     };
     setSortedBy(attr);
     setDisplayedTracks(tracksCopy);
@@ -201,7 +184,9 @@ export default function Tracks ({ setIsAuthenticated }) {
   }, [highlightedRowRef.current, tracks])
   
   useEffect(() => {
-    getAccessToken(navigate, setIsAuthenticated);
+    api.tokenIsValid(navigate).then(isValid => {
+      setIsAuthenticated(isValid);
+    });
     loadPlaylists();
     loadTracks();
     const handleDeviceChange = () => setIsMobile(window.innerWidth < 769);
