@@ -24,12 +24,9 @@ const authedFetch = async (url, baseUrl, options={}) => {
       const newAccessToken  = data.accessToken;
       await SecureStorage.setItemAsync("accessToken", newAccessToken);
       authedFetch(url, baseUrl, newAccessToken, options);
-    } else {
-      // go to login screen somehow
     };
-  } else {
-    return resp;
   };
+  return resp;
 }
 
 
@@ -49,36 +46,21 @@ export const login = async (email, password, baseUrl="") => {
 
 export const spotifyAccountIsAuthorized = async (baseUrl="") => {
   const resp = await authedFetch(`${baseUrl}/api/account-is-authorized`, baseUrl);
-  if (resp.status !== 200) {
-    return false;
-  }
-  const data = await resp.json();
-  if (!data.authorized) {
-    return false;
-  } else {
-    return true;
-  };
+  return resp;
 }
 
 export const authorizeAccount = async (baseUrl="") => {
   const resp = await authedFetch(`${baseUrl}/api/authorize`, baseUrl, {
     method: "POST",
   });
-  if (resp.status !== 307) {
-    return undefined;
-  }
-  const data = await resp.json();
-  return data.redirect_url;
+  return resp;
 }
 
 export const unauthorizeSpotifyAccount = async (baseUrl="") => {
   const resp = await authedFetch(`${baseUrl}/api/unauthorize`, baseUrl, {
     method: "POST",
   });
-  if (resp.status === 200) {
-    return true;
-  };
-  return false;
+  return resp;
 }
 
 export const signup = async (email, password, name, baseUrl="") => {

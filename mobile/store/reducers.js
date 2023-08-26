@@ -6,6 +6,7 @@ const initialState = {
   authRedirectUrl: "",
   redirectTo: undefined,
   isLoading: false,
+  error: undefined,
 }
 
 export const reducer = (state=initialState, action) => {
@@ -30,6 +31,12 @@ export const reducer = (state=initialState, action) => {
         ...state,
         isAuthenticated: false,
         alertMsg: "Unable to login",
+      }
+    case "REFRESH_TOKEN_EXPIRED":
+      return {
+        ...state,
+        error: "Your current login session has expired",
+        redirectTo: "Home",
       }
     case "SPOTIFY_ACCOUNT_AUTHORIZED":
       return {
@@ -78,7 +85,12 @@ export const reducer = (state=initialState, action) => {
       case "SET_IS_LOADING":
         return {
           ...state,
-          isLoading: payload.isLoading
+          isLoading: payload.isLoading,
+        }
+      case "ERROR":
+        return {
+          ...state,
+          error: payload.msg,
         }
     default:
       return state;

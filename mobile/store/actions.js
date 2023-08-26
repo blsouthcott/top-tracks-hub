@@ -8,12 +8,32 @@ export const checkUserIsAuthenticated = () => {
     dispatch(setIsLoading(true));
     const refreshToken = await SecureStorage.getItemAsync("refreshToken");
     if (refreshToken) {
-      const isAuthorized = await api.spotifyAccountIsAuthorized(baseUrl);
-      dispatch(setUserIsAuthenticated(true, isAuthorized));
-    } else {
-      dispatch(setUserIsAuthenticated(false));
-    }
+      const resp = await api.spotifyAccountIsAuthorized(baseUrl);
+      if (resp.status === 200) {
+        const data = await resp.json();
+        data.authorized ? dispatch(setUserIsAuthenticated(true, true)) : dispatch(setUserIsAuthenticated(true, false));
+      } else if (resp.status === 401) {
+        dispatch(refreshTokenExpired());
+      } else {
+        dispatch(setError("Unable to determine validity of access token"));
+      };
+    };
     dispatch(setIsLoading(false));
+  };
+}
+
+const setError = (msg) => {
+  return {
+    type: "ERROR",
+    payload: {
+      msg: msg
+    }
+  }
+}
+
+const refreshTokenExpired = () => {
+  return {
+    type: "REFRESH_TOKEN_EXPIRED",
   }
 }
 
@@ -70,8 +90,15 @@ const loginFailure = () => {
 
 export const checkSpotifyAccountAuthorization = () => {
   return async function (dispatch) {
-    const accountIsAuthorized = api.spotifyAccountIsAuthorized(baseUrl);
-    dispatch(spotifyAccountAuthorized(accountIsAuthorized));
+    const resp = await api.spotifyAccountIsAuthorized(baseUrl);
+    if (resp.status === 200) {
+      const data = await resp.json();
+      dispatch(spotifyAccountAuthorized(data.authorized));
+    } else if (resp.status === 401) {
+      dispatch(refreshTokenExpired());
+    } else {
+      dispatch(setError("Unable to check Spotify account authorization status"));
+    }
   }
 }
 
@@ -86,13 +113,16 @@ const spotifyAccountAuthorized = (isAuthorized) => {
 
 export const authorizeSpotifyAccount = () => {
   return async function (dispatch) {
-    const redirectUrl = await api.authorizeAccount(baseUrl);
-    if (redirectUrl) {
-      dispatch(accountAuthorizationRedirectSuccess(redirectUrl));
-    } else {
+    const resp = await api.authorizeAccount(baseUrl);
+    if (resp.status === 401) {
+      dispatch(refreshTokenExpired());
+    } else if (resp.status !== 307) {
       dispatch(accountAuthorizationRedirectFailure());
-    }
-  }
+    } else {
+      const data = await resp.json();
+      dispatch(accountAuthorizationRedirectSuccess(data.redirectUrl));
+    };
+  };
 }
 
 const accountAuthorizationRedirectSuccess = (redirectUrl) => {
@@ -113,9 +143,13 @@ const accountAuthorizationRedirectFailure = () => {
 
 export const unauthorizeSpotifyAccount = () => {
   return async function (dispatch) {
-    const accountRemoved = await api.unauthorizeSpotifyAccount(baseUrl);
-    accountRemoved ? dispatch(spotifyAccountRemovedSuccess()) : dispatch(spotifyAccountRemovedFailure);
-  }
+    const resp = await api.unauthorizeSpotifyAccount(baseUrl);
+    if (resp.status === 401) {
+      dispatch(refreshTokenExpired());
+    } else {
+      resp.status === 200 ? dispatch(spotifyAccountRemovedSuccess()) : dispatch(spotifyAccountRemovedFailure);
+    };
+  };
 }
 
 const spotifyAccountRemovedSuccess = () => {
@@ -130,7 +164,7 @@ const spotifyAccountRemovedFailure = () => {
   }
 }
 
-const signup = (email, password, name) => {
+export const signup = (email, password, name) => {
   return async function () {
     dispatch(setIsLoading(true));
     const resp = await api.signup(email, password, name, baseUrl);

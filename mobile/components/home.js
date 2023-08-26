@@ -19,6 +19,7 @@ export default function Home () {
   const redirectTo = useSelector(state => state.redirectTo);
   const redirectUrl = useSelector(state => state.authRedirectUrl);
   const isLoading = useSelector(state => state.isLoading);
+  const error = useSelector(state => state.error);
 
   const handleAuthModalClose = () => {
     setAuthModalIsVisible(false);
@@ -57,11 +58,11 @@ export default function Home () {
     dispatch(actions.checkUserIsAuthenticated());
   }, [])
 
-  useEffect(() => {
-    if (redirectTo) {
-      navigation.navigate(redirectTo);
-    };
-  }, [redirectTo])
+  // useEffect(() => {
+  //   if (redirectTo) {
+  //     navigation.navigate(redirectTo);
+  //   };
+  // }, [redirectTo])
 
   return (
     <View style={styles.container}>
