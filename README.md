@@ -1,5 +1,5 @@
 # scrape-top-tracks
-Scrapes recommended tracks from music review sites, currently just Pitchfork, and adds them to your Spotify playlist. 
+Provides tracks recommended tracks from music review sites such as Pitchfork and allows you to add them to your Spotify playlist. Also allows you to view your top tracks and artists.
 
 ## Demo
 Click [here](https://youtu.be/DSUNz7GJ_nQa) to see a demo of this project!
