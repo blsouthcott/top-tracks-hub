@@ -72,18 +72,33 @@ export default function UserTopContent ({ setIsAuthenticated }) {
   const loadContent = async () => {
     setIsLoading(true);
     const displayTestData = JSON.parse(localStorage.getItem("displayTestData"));
-    const authorized = await api.accountIsAuthorized();
+    let authorized;
+    const resp = await api.accountIsAuthorized();
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status !== 200) {
+      alert.fire({title: "Unable to check Spotify account authorization status", icon: "error"});
+      navigate("/");
+    } else {
+      const data = await resp.json();
+      authorized = data.authorized;
+    };
     if (!authorized && !displayTestData) {
       alert.fire("To view your Top Spotify Content please authorize your account 🙂");
       navigate("/");
+      return;
     };
     if (displayTestData) {
       const resp = await fetch(`/exampleData/top_${personalizationType}_${timePeriod}.json`);
       const data = await resp.json();
       personalizationType === "artists" ? setArtists(data) : setTracks(data);
     } else {
-      const resp = await api.getUserTopContent(navigate, timePeriod, personalizationType);
-      if (resp.status === 200) {
+      const resp = await api.getUserTopContent(timePeriod, personalizationType);
+      if (resp.status === 401) {
+        alert.fire({title: "Your current login session has expired", icon: "warning"});
+        navigate("/");
+      } else if (resp.status === 200) {
         const data = await resp.json();
         personalizationType === "artists" ? setArtists(data) : setTracks(data);
       } else {
@@ -99,8 +114,12 @@ export default function UserTopContent ({ setIsAuthenticated }) {
   }, [personalizationType, timePeriod])
 
   useEffect(() => {
-    api.tokenIsValid().then(isValid => {
-      setIsAuthenticated(isValid);
+    api.checkValidToken(navigate).then(isValid => {
+      if (isValid) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      };
     })
   }, [])
 

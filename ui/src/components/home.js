@@ -13,8 +13,11 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   
   const authorizeAccount = async (e) => {
     e.preventDefault();
-    const resp = await api.authorizeAccount(navigate);
-    if (resp.status !== 307) {
+    const resp = await api.authorizeAccount();
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status !== 307) {
       alert.fire("Unable to authorize account");
       return;
     };
@@ -25,8 +28,11 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const unauthorizeAccount = async (e) => {
     e.preventDefault();
-    const resp = await api.unauthorizeAccount(navigate);
-    if (resp.status === 200) {
+    const resp = await api.unauthorizeAccount();
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status === 200) {
       alert.fire("Your Spotify account has been removed");
       setSpotifyAccountIsAuthorized(false);
       return;
@@ -40,9 +46,25 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   }
 
   const setSpotifyAccountAuthorizationStatus = async () => {
-    const authorized = await api.accountIsAuthorized(navigate);
+    const resp = await api.accountIsAuthorized();
+    let authorized;
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+      return;
+    } else if (resp.status !== 200) {
+      alert.fire({title: "Unable to obtain Spotify account authorization status", icon: "warning"});
+      authorized = false;
+    } else {
+      const data = await resp.json();
+      if (!data.authorized) {
+        authorized = false;
+      } else {
+        authorized = true;
+      };
+    };
     setSpotifyAccountIsAuthorized(authorized);
-  }
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -51,9 +73,13 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
   }, [isAuthenticated])
 
   useEffect(() => {
-    api.tokenIsValid().then(isValid => {
-      setIsAuthenticated(isValid);
-    })
+    api.checkValidToken().then(isValid => {
+      if (isValid) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      };
+    });
     const welcomeMsgDisplayed = JSON.parse(localStorage.getItem("welcomeMsgDisplayed"));
     const now = new Date().getTime();
     const twoWeeks = 2 * 7 * 24 * 60 * 60 * 1000;

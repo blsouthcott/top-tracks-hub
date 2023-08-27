@@ -36,7 +36,10 @@ export default function Tracks ({ setIsAuthenticated }) {
 
   const loadPlaylists = async () => {
     const resp = await api.loadPlaylists();
-    if (resp.status === 200) {
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status === 200) {
       const data = await resp.json();
       setPlaylists(data);
     } else {
@@ -84,7 +87,10 @@ export default function Tracks ({ setIsAuthenticated }) {
     setIsLoading(true);
     const resp = await api.addTracksToPlaylist(selectedTrackIds, selectedPlaylistId);
     setIsLoading(false);
-    if (resp.status === 200) {
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status === 200) {
       alert.fire("Tracks successfully added to playlist!")
     } else {
       alert.fire("Error adding tracks to playlist")
@@ -184,8 +190,12 @@ export default function Tracks ({ setIsAuthenticated }) {
   }, [highlightedRowRef.current, tracks])
   
   useEffect(() => {
-    api.tokenIsValid(navigate).then(isValid => {
-      setIsAuthenticated(isValid);
+    api.checkValidToken().then(isValid => {
+      if (isValid) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      };
     });
     loadPlaylists();
     loadTracks();

@@ -37,8 +37,11 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
   }
 
   const loadSearchResults = async (track) => {
-    const resp = await api.searchTrack(navigate, track);
-    if (resp.status !== 200) {
+    const resp = await api.searchTrack(track);
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status !== 200) {
       alert.fire({title: `Unable to load information for Spotify Tracks search for track with id: ${trackId}`, icon: "error"});
       navigate("/tracks", { state: { trackId: trackId } });
     } else {
@@ -54,8 +57,11 @@ export default function AddSpotifyTrackId ({ setIsAuthenticated }) {
 
   const addTrackId = async () => {
     setIsLoading(true);
-    const resp = await api.addTrackId(navigate, trackId, spotifyTrackId);
-    if (resp.status !== 204) {
+    const resp = await api.addTrackId(trackId, spotifyTrackId);
+    if (resp.status === 401) {
+      alert.fire({title: "Your current login session has expired", icon: "warning"});
+      navigate("/");
+    } else if (resp.status !== 204) {
       alert.fire({title: "Unable to update Spotify Track ID", icon: "error"});
     } else {
       alert.fire({title: "Spotify Track ID successfully updated!", icon: "success"});
