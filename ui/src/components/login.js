@@ -27,14 +27,14 @@ export default function Login ({ setIsAuthenticated }) {
     })
     setIsLoading(false);
     if (resp.status !== 200) {
-      alert.fire("Unable to login");
+      alert.fire({title: "Unable to login", icon: "error"});
     } else {
       const data = await resp.json();
       const displayTestData = email === "test_user@test.com";
       localStorage.setItem("displayTestData", JSON.stringify(displayTestData));
       localStorage.setItem("name", data.name);
       setIsAuthenticated(true);
-      alert.fire(`Welcome, ${data.name}!`);
+      alert.fire({title: `Welcome, ${data.name}!`, icon: "success"});
     };
   }
 

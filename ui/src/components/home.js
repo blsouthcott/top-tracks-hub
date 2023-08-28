@@ -18,7 +18,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
       alert.fire({title: "Your current login session has expired", icon: "warning"});
       navigate("/");
     } else if (resp.status !== 307) {
-      alert.fire("Unable to authorize account");
+      alert.fire({title: "Unable to authorize account", icon: "error"});
       return;
     };
     const data = await resp.json();
@@ -33,11 +33,11 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
       alert.fire({title: "Your current login session has expired", icon: "warning"});
       navigate("/");
     } else if (resp.status === 200) {
-      alert.fire("Your Spotify account has been removed");
+      alert.fire({title: "Your Spotify account has been removed", icon: "success"});
       setSpotifyAccountIsAuthorized(false);
       return;
     }
-    alert.fire("There was a problem removing your Spotify Account")
+    alert.fire({title: "There was a problem removing your Spotify Account", icon: "error"});
   }
 
   const goToTracks = async (e) => {
