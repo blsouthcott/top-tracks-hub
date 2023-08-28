@@ -23,7 +23,7 @@ const authedFetch = async (url, baseUrl, options={}) => {
       data = await resp.json();
       const newAccessToken  = data.accessToken;
       await SecureStorage.setItemAsync("accessToken", newAccessToken);
-      authedFetch(url, baseUrl, newAccessToken, options);
+      return await authedFetch(url, baseUrl, newAccessToken, options);
     };
   };
   return resp;
@@ -74,3 +74,8 @@ export const signup = async (email, password, name, baseUrl="") => {
   });
   return resp;
 };
+
+export const loadUserTopContent = async (timePeriod, personalizationType, baseUrl="") => {
+  const resp = await authedFetch(`${baseUrl}/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`);
+  return resp;
+}

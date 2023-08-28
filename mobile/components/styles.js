@@ -16,4 +16,20 @@ export const styles = StyleSheet.create({
   title: {
     marginVertical: 10,
   },
+  scrollView: {
+    marginTop: 20,
+  },
+  card: {
+    width: 300,
+  },
+  cardContainer: {
+    padding: 10,
+    alignItems: "center",
+  },
+  child: {
+    marginBottom: 10,
+  },
+  boldText: {
+    fontWeight: "bold",
+  }
 })

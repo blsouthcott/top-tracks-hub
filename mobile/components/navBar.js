@@ -1,13 +1,20 @@
 import React, { useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Header, Icon, Overlay } from "react-native-elements";
+import { useNavigation } from "@react-navigation/native";
 
 export default function NavBar () {
+  const navigation = useNavigation();
   const [dropdownIsVisible, setDropdownIsVisible] = useState(false);
 
   const toggleDropdownVisible = () => {
     setDropdownIsVisible(!dropdownIsVisible);
   };
+
+  const handleNavigateToUserTopContent = () => {
+    navigation.navigate("UserTopContent");
+    setDropdownIsVisible(false);
+  }
 
   return (
     <>
@@ -15,9 +22,10 @@ export default function NavBar () {
         leftComponent={
           <Icon
             name="menu"
-            onPress={toggleDropdownVisible}/>
+            onPress={toggleDropdownVisible}
+            color="white"/>
         }
-        centerComponent={{ text: "Top Tracks", style: {color: "#fff"}}}
+        centerComponent={{ text: "Top Tracks", style: {color: "white", fontSize: 22.5} }}
       />
       <Overlay 
         isVisible={dropdownIsVisible} 
@@ -29,9 +37,9 @@ export default function NavBar () {
           width: 200,
         }}>
         <View>
-          <Text>Go to page 1</Text>
-          <Text>Go to page 2</Text>
-          <Text>Go to page 3</Text>
+          <TouchableOpacity onPress={handleNavigateToUserTopContent}>
+            <Text>Your Top Spotify Content</Text>
+            </TouchableOpacity>
         </View>
       </Overlay>
     </>

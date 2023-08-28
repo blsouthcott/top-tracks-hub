@@ -195,7 +195,7 @@ const signupFailure = (msg, redirectTo="") => {
 }
 
 
-const setIsLoading = (isLoading) => {
+export const setIsLoading = (isLoading) => {
   return {
     type: "SET_IS_LOADING",
     payload: {

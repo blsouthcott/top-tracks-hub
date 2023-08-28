@@ -7,6 +7,7 @@ import { ThemeProvider } from "react-native-elements";
 import Home from "./components/home";
 import Signup from "./components/signup";
 import NavBar from "./components/navBar";
+import UserTopContent from "./components/userTopContent";
 
 const Stack = createNativeStackNavigator();
 
@@ -28,12 +29,12 @@ export default function App() {
             }}>
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="Signup" component={Signup} />
-            {/* <Stack.Screen name="Tracks" component={Tracks} />
-            <Stack.Screen name="AddSpotifyTrackId" component={AddSpotifyTrackId} />
+            {/* <Stack.Screen name="Tracks" component={Tracks} /> */}
+            {/* <Stack.Screen name="AddSpotifyTrackId" component={AddSpotifyTrackId} /> */}
             <Stack.Screen name="UserTopContent" component={UserTopContent} />
-            <Stack.Screen name="About" component={About} />
-            <Stack.Screen name="Contact" component={Contact} />
-            <Stack.Screen name="ReportAnIssue" component={ReportAnIssue} /> */}
+            {/* <Stack.Screen name="About" component={About} /> */}
+            {/* <Stack.Screen name="Contact" component={Contact} /> */}
+            {/* <Stack.Screen name="ReportAnIssue" component={ReportAnIssue} /> */}
           </Stack.Navigator>
         </NavigationContainer>
       </ThemeProvider>
