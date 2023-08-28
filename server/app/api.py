@@ -154,8 +154,8 @@ class Login(Resource):
             logging.info("wrong password")
             return "incorrect password", 400
 
-        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(minutes=30.0))
-        refresh_token = create_refresh_token(identity=user.get_id(), expires_delta=timedelta(days=90.0))
+        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(seconds=30.0))
+        refresh_token = create_refresh_token(identity=user.get_id(), expires_delta=timedelta(seconds=90.0))
 
         use_cookie = request.headers.get("X-Auth-Method") == "Cookie"
         if use_cookie:
@@ -177,7 +177,7 @@ class RefreshToken(Resource):
     def post(self):
         email = get_jwt_identity()
         user = User.query.get(email)
-        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(minutes=30.0))
+        access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(seconds=30.0))
         use_cookie = request.headers.get("X-Auth-Method") == "Cookie"
         if use_cookie:
             resp = jsonify(token_refreshed=True)
