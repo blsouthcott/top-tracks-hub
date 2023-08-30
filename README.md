@@ -1,5 +1,5 @@
 # scrape-top-tracks
-Provides tracks recommended by music review sites such as Pitchfork and allows you to add them to your Spotify playlist. Also allows you to view your top tracks and artists.
+Discover new music effortlessly with Scrape Top Tracks. This application curates song recommendations from reputable music review sites and integrates seamlessly with your Spotify playlist.
 
 ## Visit the app [here](https://top-tracks-a3b9b29d489d.herokuapp.com/)!
 
@@ -8,9 +8,64 @@ If you'd rather not sign up but still want to see the app's functionality, you c
 email: test_user@test.com  
 password: testing123
 
-# Run locally
+# Features
+- Curated Song Recommendations
+- Spotify Playlist Integration
+- View Your most listened to Tracks and Artists
+- User-friendly Interface
+
+# Installation
+
+## Prerequisites
+- Node.js
+- Python 3.11
+- [Poetry](https://python-poetry.org) (the requirements.txt file is for Heroku deployments)
+
+## Steps
+1. Clone the repository
+```
+git clone https://github.com/blsouthcott/scrape-top-tracks.git
+```
+
+2. Navigate to the `server` directory
+```
+cd server
+```
+
+3. Run
+```
+poetry env use 3.11.x
+```
+
+4. Navigate to the `ui` directory
+```
+poetry install --no-root
+```
+
+5. Navigate to the `ui` directory
+```
+cd ../ui
+```
+
+6. Install frontend dependencies
+```
+npm install
+```
+
+7. **See below to configure your environment before continuing on and starting the application**
+
+8. Start the backend
+```
+poetry shell && flask run --port=5001
+```
+
+9. Start the frontend
+```
+npm start
+```
+
 ## Environment configuration
-A .flaskenv file should be saved in the `server/` directory with the following enviornment variables:
+A .flaskenv file should be saved in the `server/` directory with the following environment variables:
 ```
 SPOTIFY_CLIENT_ID={get from your spotify developer dashboard}
 SPOTIFY_CLIENT_SECRET={get from your spotify developer dashboard}
@@ -36,29 +91,12 @@ MAIL_PASSWORD={password for the account}
 ALLOWED_ORIGINS={the URL the frontend will run on}
 ```
 
-## Install the dependencies
-From the `server/` directory run
-```
-poetry env use {a version of python3.11}
-poetry install --no-root
-poetry shell
-```
-
-## Start the backend
-After installing the dependencies, from the `server/` directory run
-```
-flask run --port=5001
-```
-
-If you change the port you'll also need to change the proxy in the client side code.
-
-## Frontend
-From the root directory run
-```
-cd ui
-npm install
-npm start
-```
+# Usage
+1. Open the application in your web browser at http://localhost:3000
+2. Create an account and login.
+3. Authorize your Spotify account.
+4. Browse curated song recommendations.
+5. Add songs directly to your Spotify playlist.
 
 # Dependency Documentation
 tekore - https://tekore.readthedocs.io/en/stable/index.html  
