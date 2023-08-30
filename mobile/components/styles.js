@@ -31,5 +31,21 @@ export const styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: "bold",
-  }
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "grey",
+    marginVertical: 8,
+  },
 })

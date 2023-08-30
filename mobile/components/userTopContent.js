@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, StyleSheet, ActivityIndicator, Alert, Linking } from "react-native";
+import { View, ScrollView, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Modal, FlatList } from "react-native";
 import { useTheme, Card, Text, Button } from "react-native-elements";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
@@ -51,13 +51,33 @@ export default function UserTopContent () {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [personalizationType, setPersonalizationType] = useState("artists");
+  const [personalizationTypeOptionsVisible, setPersonalizationTypeOptionsVisible] = useState(false);
   const [timePeriod, setTimePeriod] = useState("short_term");
+  const [timePeriodOptionsVisible, setTimePeriodOptionsVisible] = useState(false);
   const [artists, setArtists] = useState([]);
   const [tracks, setTracks] = useState([]);
   const isLoading = useSelector(state => state.isLoading);
   const redirectTo = useSelector(state => state.redirectTo);
   const isAuthenticated = useSelector(state => state.isAuthenticated);
   spotifyAccountIsAuthorized = useSelector(state => state.spotifyAccountIsAuthorized);
+
+  const personalizationTypeOptions = {
+    artists: "Artists",
+    tracks: "Tracks",
+  }
+
+  const timePeriodOptions = {
+    short_term: "Last 4 Weeks",
+    medium_term: "Last 6 Months",
+    long_term: "Last Several Years",
+  }
+
+  const handleTimePeriodChange = (timePeriodSelection) => {
+    if (timePeriodSelection !== timePeriod) {
+      setTimePeriod(timePeriodSelection);
+    };
+    setTimePeriodOptionsVisible(false);
+  }
 
   const loadContent = async () => {
     dispatch(setIsLoading(true));
@@ -100,18 +120,43 @@ export default function UserTopContent () {
     <>
       {isLoading ? <ActivityIndicator size="large" />
       :
-      <ScrollView
-        style={StyleSheet.scrollView}>
-        {personalizationType === "artists" ?
-          artists.map((artist, cnt) => (
-            <ArtistCard key={artist.id} artist={artist} num={cnt} />
-          ))
-        :
-          tracks.map((track, cnt) => (
-            <TrackCard key={track.id} track={track} num={cnt} />
-          ))
-        }
-      </ScrollView>}
+      <>
+        <View>
+          <TouchableOpacity onPress={() => setPersonalizationTypeOptionsVisible(true)}>
+            <Text>{personalizationType === "artists" ? "Artists" : "Tracks"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setTimePeriodOptionsVisible(true)}>
+            <Text>{timePeriodOptions[timePeriod]}</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          style={StyleSheet.scrollView}>
+          {personalizationType === "artists" ?
+            artists.map((artist, cnt) => (
+              <ArtistCard key={artist.id} artist={artist} num={cnt} />
+            ))
+          :
+            tracks.map((track, cnt) => (
+              <TrackCard key={track.id} track={track} num={cnt} />
+            ))
+          }
+        </ScrollView>
+
+        <Modal 
+          visible={timePeriodOptionsVisible} 
+          onRequestClose={() => setTimePeriodOptionsVisible(false)}
+          transparent={true}>
+          <TouchableOpacity style={styles.modalOverlay} onPress={() => setTimePeriodOptionsVisible(false)}>
+            <View style={styles.modalContent}>
+              <Text>Option 1</Text>
+              <View styles={styles.divider}></View>
+              <Text>Option 2</Text>
+              <View styles={styles.divider}></View>
+              <Text>Option 3</Text>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </>}
     </>
   )
 }
