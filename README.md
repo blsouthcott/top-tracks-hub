@@ -1,5 +1,5 @@
 # scrape-top-tracks
-Discover new music effortlessly with Scrape Top Tracks. This application curates song recommendations from reputable music review sites and integrates seamlessly with your Spotify playlist.
+Discover new music effortlessly with Music Recommendations Playlist Manager. This application curates song recommendations from reputable music review sites and integrates seamlessly with your Spotify playlist.
 
 ## Visit the app [here](https://top-tracks-a3b9b29d489d.herokuapp.com/)!
 
