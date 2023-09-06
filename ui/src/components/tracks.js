@@ -208,9 +208,10 @@ export default function Tracks ({ setIsAuthenticated }) {
     <section className="hero is-fullheight">
       <div className="hero-body">
         <div className="container full-width">
-          {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
+          {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
+          {!isLoading &&
             <>            
-              <h1 className="title mt-6 is-size-1 has-text-centered">Recommended Tracks</h1>
+              <h1 className="title mt-6 is-size-2 has-text-centered">Recommended Tracks</h1>
               <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
                 <div className="is-flex is-justify-content-center is-flex-wrap-wrap is-flex-direction-column-touch">
                   <div className="select m-1" style={{"zIndex": 1}}>

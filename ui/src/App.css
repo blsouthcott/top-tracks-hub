@@ -88,7 +88,6 @@ footer {
   }
   /* Make table rows behave like blocks */
   tr {
-    /* border: 1px solid #ccc; */
     margin-bottom: 0.625rem;
     display: block;
     min-height: 1.25rem;
