@@ -29,7 +29,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     if (!welcomeMsgDisplayed || welcomeMsgDisplayed.timestamp < now - twoWeeks ) {
       alert.fire({
         title: "Welcome to Music Recommendations Playlist Manager!",
-        html: "<p>Spotify's policy currently requires user accounts to be authorized prior to completing the sign up process on this site. If you'd like to sign up, please reach out to contact.top.tracks@gmail.com with your Spotify email address</p><br /><p>Otherwise, if you'd like to check out the app's features without signing up, please use the following credentials to sign in:</p><p>username: test_user@test.com<br />password: testing123</p><br /><p>Thanks for your understanding!</p>",
+        html: "<p>Spotify's policy currently requires user accounts to be authorized prior to completing the sign up process on this site. If you'd like to sign up, please reach out to contact.top.tracks@gmail.com with your Spotify email address.</p><br /><p>Otherwise, if you'd like to check out the app's features without signing up, please use the following credentials to sign in:</p><p>username: test_user@test.com<br />password: testing123</p><br /><p>Thanks for your understanding!</p>",
         icon: "info",
       });
       localStorage.setItem("welcomeMsgDisplayed", JSON.stringify({timestamp: now}));
