@@ -15,6 +15,20 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     navigate("/tracks");
   }
 
+  const welcomeHtml = `
+    <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+      <p style="font-weight: bold;">Notice:</p>
+      <p>Spotify's policy currently requires user accounts to be authorized prior to completing the sign up process on this site. If you'd like to sign up, please reach out to <span style="font-weight: bold;">contact.top.tracks@gmail.com</span> with your Spotify email address.</p>
+      <hr />
+      <p>Otherwise, if you'd like to check out the app's features without signing up, please use the following credentials to sign in:</p>
+      <p style="background-color: #e6e6e6; padding: 10px; border-radius: 3px;">
+        <span style="font-weight: bold;">Username:</span> test_user@test.com<br />
+        <span style="font-weight: bold;">Password:</span> testing123
+      </p>
+      <hr />
+      <p>Thanks for your understanding!</p>
+    </div>`
+
   useEffect(() => {
     api.checkValidToken().then(isValid => {
       if (isValid) {
@@ -29,7 +43,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
     if (!welcomeMsgDisplayed || welcomeMsgDisplayed.timestamp < now - twoWeeks ) {
       alert.fire({
         title: "Welcome to Music Recommendations Playlist Manager!",
-        html: "<p>Spotify's policy currently requires user accounts to be authorized prior to completing the sign up process on this site. If you'd like to sign up, please reach out to contact.top.tracks@gmail.com with your Spotify email address.</p><br /><p>Otherwise, if you'd like to check out the app's features without signing up, please use the following credentials to sign in:</p><p>username: test_user@test.com<br />password: testing123</p><br /><p>Thanks for your understanding!</p>",
+        html: welcomeHtml,
         icon: "info",
       });
       localStorage.setItem("welcomeMsgDisplayed", JSON.stringify({timestamp: now}));
