@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import Home from './components/home';
+import Account from './components/account';
 import Tracks from './components/tracks';
 import Navbar from './components/navBar';
 import About from './components/about';
@@ -25,7 +26,13 @@ function App () {
                 setIsAuthenticated={setIsAuthenticated}
               />
             }/>
-            <Route path="/signup" exact element={<Signup />}></Route>
+            <Route path="/account" exact element={
+              <Account 
+                isAuthenticated={isAuthenticated} 
+                setIsAuthenticated={setIsAuthenticated}
+              />
+            }/>
+            <Route path="/signup" exact element={<Signup />} />
             <Route path="/tracks" exact element={<Tracks setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/add-spotify-track-id/:trackId" exact element={<AddSpotifyTrackId setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/personalization" exact element={<UserTopContent setIsAuthenticated={setIsAuthenticated} />} />

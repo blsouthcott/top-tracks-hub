@@ -70,6 +70,10 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
             Home
           </Link>
 
+          <Link className="navbar-item" to="/account">
+            Account
+          </Link>
+
           {isAuthenticated && 
           <Link className="navbar-item" to="/personalization">
             Your Top Spotify Content
