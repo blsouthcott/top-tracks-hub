@@ -17,16 +17,13 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const welcomeHtml = `
     <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
-      <p style="font-weight: bold;">Notice:</p>
-      <p>Spotify's policy currently requires user accounts to be authorized prior to completing the sign up process on this site. If you'd like to sign up, please reach out to <span style="font-weight: bold;">contact.top.tracks@gmail.com</span> with your Spotify email address.</p>
+      <p>After signing up, add tracks to your Spotify Playlists from the Recommended Tracks page and view your Top Artists and Tracks on the Your Top Spotify Content page!</p>
       <hr />
-      <p>Otherwise, if you'd like to check out the app's features without signing up, please use the following credentials to sign in:</p>
+      <p>If you'd like to check out the app's features without signing up, please use the following credentials to sign in:</p>
       <p style="background-color: #e6e6e6; padding: 10px; border-radius: 3px;">
         <span style="font-weight: bold;">Username:</span> test_user@test.com<br />
         <span style="font-weight: bold;">Password:</span> testing123
       </p>
-      <hr />
-      <p>Thanks for your understanding!</p>
     </div>`
 
   useEffect(() => {

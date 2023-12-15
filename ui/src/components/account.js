@@ -69,6 +69,7 @@ export default function Account ({ isAuthenticated, setIsAuthenticated }) {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
+        navigate("/");
       };
     });
   }, [])
@@ -82,7 +83,7 @@ export default function Account ({ isAuthenticated, setIsAuthenticated }) {
               <div className="card-content">
                 {spotifyAccountIsAuthorized &&
                 <>
-                  <p className="mb-0 has-text-centered">Your Spotify is currently authorized.</p>
+                  <p className="mb-0 has-text-centered">Your Spotify account is currently authorized.</p>
                   <p className="has-text-centered">If you would like to remove this authorization, please click here.&nbsp;</p>
                   <div className="is-flex is-justify-content-center">
                     <button className="button is-primary m-2" onClick={unauthorizeAccount}>Unauthorize</button>

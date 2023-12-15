@@ -69,10 +69,11 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
           <Link className="navbar-item" to="/">
             Home
           </Link>
-
+          
+          {isAuthenticated &&
           <Link className="navbar-item" to="/account">
             Account
-          </Link>
+          </Link>}
 
           {isAuthenticated && 
           <Link className="navbar-item" to="/personalization">
