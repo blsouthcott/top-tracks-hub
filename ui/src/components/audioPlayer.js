@@ -50,11 +50,11 @@ export default function AudioPlayer ({ src, displayControls=true }) {
       {isLoading ? <ClipLoader /> :
         <>
         {displayControls ? 
-          <audio className="audio-player" controls>
+          <audio className="audio-player" controls preload="metadata">
             <source src={src} type="audio/mpeg" />
           </audio>
         : <>
-            <audio ref={audioRef} onEnded={handleSongEnd}>
+            <audio ref={audioRef} onEnded={handleSongEnd} preload="metadata">
               <source src={src} type="audio/mpeg" />
             </audio>
             {playing ? <FontAwesomeIcon className="fa-lg" icon={faPause} onClick={togglePlayPause} /> : 
