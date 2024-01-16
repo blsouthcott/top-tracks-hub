@@ -1,8 +1,8 @@
 import os
-import logging
 from flask import send_from_directory
 from flask_restful import Api
 from app.app import create_app
+from app.logging_utils import logger
 from app.api import (
     Signup,
     VerifyAccount,
@@ -20,10 +20,8 @@ from app.api import (
     SearchSpotifyTracks,
     SpotifyTrackId,
     PitchforkTracks,
-    Personalization
+    Personalization,
 )
-
-logging.basicConfig(level=logging.INFO)
 
 PORT = int(os.environ["PORT"])
 
@@ -52,15 +50,15 @@ api.add_resource(Personalization, "/api/personalization")
 # these routes serve the React frontend
 @app.route("/")
 def serve():
-    logging.info("Serving React app...")
+    logger.info("Serving React app...")
     index_file_path = os.path.join(app.static_folder, "index.html")
-    logging.info(f"Trying to serve {index_file_path}")
+    logger.info(f"Trying to serve {index_file_path}")
     return send_from_directory(app.static_folder, "index.html")
 
 
 @app.route("/<path:path>")
 def static_proxy(path):
-    logging.info(f"handling request for /{path}...")
+    logger.info(f"handling request for /{path}...")
     if os.path.exists(f"{app.static_folder}/{path}"):
         return app.send_static_file(path)
     else:

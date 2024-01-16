@@ -1,132 +1,344 @@
-import os
-import logging
 import tempfile
+import time
+from typing import Callable, Iterable, Any
+from functools import wraps
+from dataclasses import dataclass
 
 import tekore as tk
+from tekore.model import FullTrackPaging, FullTrack, PlaylistTrack, Paging
 
+from .logging_utils import logger
 from .models import db, Song, User
 from .scrape_top_tracks import sanitize_track_name
 
 
-logging.basicConfig(level=logging.DEBUG)
+def safe_spotify_call(spotify_fnx: Callable[..., Any]):
+    """
+    Decorator function that executes a function through the Spotify API with rate limit error handling and thread safety
 
-CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_files")
-PITCHFORK_TOP_TRACKS_PLAYLIST_NAME = "Pitchfork Top Tracks"
+    Args:
+        spotify_fnx (Callable): The Spotify function to be called - should be a method of the tekore.Spotify authentication object
+        lock (Lock | None): A Lock object to prevent multiple threads modifying the authentication object concurrently
+        *args (Any): positional arguments to be passed to the Spotify function
+        **kwargs (Any): Arbitrary keyword arguments to be passed to the Spotify function
+
+    Returns:
+        Any | None: The result of the Spotify function call, or None if the call fails after maximum retries
+    """
+
+    @wraps(spotify_fnx)
+    def wrapper(
+        *args,
+        lock=None,
+        max_tries: int = 10,
+        **kwargs,
+    ) -> Any | None:
+        num_tries = 0
+        while num_tries < max_tries:
+            try:
+                if not lock:
+                    return spotify_fnx(*args, **kwargs)
+                with lock:
+                    return spotify_fnx(*args, **kwargs)
+            except tk.TooManyRequests as err:
+                num_tries += 1
+                logger.debug(
+                    f"reached rate limit making the following request: {spotify_fnx.__qualname__} with args: {args} and keyword args: {kwargs}"
+                )
+                logger.debug("trying again...")
+                retry_after = int(err.response.headers.get("Retry-After", "1"))
+                time.sleep(retry_after)
+
+        logger.error(
+            f"Unable to execute request. Maximum retries attempted for request: {spotify_fnx} with args: {args} and keyword args: {kwargs}"
+        )
+        return None
+
+    return wrapper
 
 
-def get_spotify_obj(user: User = None) -> tk.Spotify | None:
+class SafeSpotify(tk.Spotify):
+    """
+    Extended Spotify class with built-in rate limit handling and thread safety
+
+    This class inherits from tekore.Spotify and adds automatic handling for rate limits
+    and optional thread safety for its methods
+    """
+
+    @safe_spotify_call
+    def current_user(self):
+        return super().current_user()
+    
+    @safe_spotify_call
+    def current_user_top_tracks(self, time_range: str = "medium_term", limit: int = 20, offset: int = 0):
+        return super().current_user_top_tracks(time_range=time_range, limit=limit, offset=offset)
+
+    @safe_spotify_call
+    def current_user_top_artists(self, time_range: str = "medium_term", limit: int = 20, offset: int = 0):
+        return super().current_user_top_artists(time_range=time_range, limit=limit, offset=offset)
+
+    @safe_spotify_call
+    def track(self, track_id: str, market: str | None = None):
+        return super().track(track_id, market=market)
+
+    @safe_spotify_call
+    def next(self, page: Paging):
+        return super().next(page)
+
+    @safe_spotify_call
+    def playlists(self, user_id: str, limit: int = 20, offset: int = 0):
+        return super().playlists(user_id, limit=limit, offset=offset)
+
+    @safe_spotify_call
+    def playlist(
+        self,
+        playlist_id: str,
+        fields: str | None = None,
+        market: str | None = None,
+        as_tracks: bool | Iterable[str] = False,
+    ):
+        return super().playlist(playlist_id, fields=fields, market=market, as_tracks=as_tracks)
+
+    @safe_spotify_call
+    def playlist_create(self, user_id: str, name: str, public: bool = True, description: str = ""):
+        return super().playlist_create(user_id, name, public=public, description=description)
+
+    @safe_spotify_call
+    def playlist_add(self, playlist_id: str, uris: list[str], position: int | None = None):
+        return super().playlist_add(playlist_id, uris, position=position)
+
+    @safe_spotify_call
+    def search(
+        self,
+        query: str,
+        types: tuple = ("track",),
+        market: str | None = None,
+        include_external: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ):
+        return super().search(
+            query, types=types, market=market, include_external=include_external, limit=limit, offset=offset
+        )
+
+
+def track_id_to_uri(track_id: str):
+    """
+    Formats the Track ID to the URI
+
+    Args:
+        track_id (str): the track ID
+
+    Returns:
+        str: the track's URI
+    """
+    return f"spotify:track:{track_id}"
+
+
+def get_spotify_obj(user: User | None = None) -> tk.Spotify | None:
+    """
+    Creates and returns a Spotify authentication object for a given user
+
+    Because not all calls to the Spotify API require authentication with a specific user,
+        if no user is specified it selects the first user in the list of returned users
+
+    Args:
+        user (User | None): The user to authenticate with - defaults to the first user with a config file if None
+
+    Returns:
+        tk.Spotify | None: A Spotify client object or None if no valid user is found
+    """
     if user is None:
-        users = User.query.filter(User.config_file.is_not(None)).all()
-        if not users:
+        if users := User.query.filter(User.config_file.is_not(None)).all():
+            user = users[0]
+        else:
             return None
-        user = users[0]
+
     elif user.config_file is None:
         return None
 
-    with tempfile.NamedTemporaryFile() as temp_config_file:
-        temp_config_file.write(user.config_file)
-        temp_config_file.seek(0)
-        config = tk.config_from_file(
-            temp_config_file.name, return_refresh=True
+    else:
+        # tekore provides a convenient function for parsing the credentials necessary for authenticating to the
+        #   Spotify API, so first we first write the credentials to a temp file
+        with tempfile.NamedTemporaryFile() as temp_config_file:
+            temp_config_file.write(user.config_file)
+            temp_config_file.seek(0)
+            config = tk.config_from_file(temp_config_file.name, return_refresh=True)
+
+        token = tk.refresh_user_token(
+            config[0],
+            config[1],
+            config[3],
         )
-
-    token = tk.refresh_user_token(
-        *config[:2],
-        config[3],
-    )
-    return tk.Spotify(token)
+        return SafeSpotify(token)
 
 
-def search_spotify_track_id(spotify_obj: tk.Spotify, song: Song) -> str or None:
+def get_track_match(song: Song, tracks: list[FullTrack]) -> FullTrack | None:
     """
-    searches for the song through the Spotify API based on the song name and first artist
-    if both the song name matches and the number of artists match and the artists' names match it,
-    it returns the track ID, otherwise we can't find an exact match and it returns None
+    Finds and returns the first Spotify track that matches the given song
+
+    Args:
+        song (Song): The song for which we attempt to find the Spotify track ID
+        tracks (ModelList[FullTrack]): A list of Spotify tracks with which to perform the matching
+
+    Returns:
+        tk.model.FullTrack | None: The matching Spotify track or None if no match is found
     """
-    logging.debug(f"Track info: {song.name}, {song.artists}")
-
-    search = spotify_obj.search(f"{song.name} artist:{song.artists[0].name}")
-    logging.debug(f"Searched for: '{song.name} artist:{song.artists[0].name}'")
-    for search_result in search[0].items:
-        spotify_track_info = spotify_obj.track(search_result.id)
-        spotify_track_name = sanitize_track_name(spotify_track_info.name)
-        logging.debug(f"Search result track name: {spotify_track_name}")
-
-        if spotify_track_name.lower() == song.name.lower():  # the track names match
-            spotify_track_artists = []
-            for artist in spotify_track_info.artists:
-                spotify_track_artists.append(artist.name)
-            spotify_track_artists.sort()
-            song_artists = list(song.artists)
-            song_artists.sort(key=lambda artist: artist.name)
-            logging.debug(f"Search result track artists: {spotify_track_artists}")
-            if len(spotify_track_artists) == len(
-                song_artists
-            ):  # the number of artists is the same
-                artists_match = True
-                cnt = 0
-                while artists_match and cnt < len(song_artists):
-                    if (
-                        spotify_track_artists[cnt].lower()
-                        != song_artists[cnt].name.lower()
-                    ):
-                        artists_match = False
-                    cnt += 1
-                if artists_match:
-                    # TODO: decide how to validate the track beyond the track names matching
-                    # for now, only return the track id if it's an exact match
-                    return search_result.id
-
-    # we couldn't find a match
+    for track in tracks:
+        spotify_track_name = sanitize_track_name(track.name)
+        logger.debug(f"Sanitized search result track name: {spotify_track_name}")
+        spotify_track_artists = sorted([artist.name.lower() for artist in track.artists])
+        logger.debug(f"Search result track artists: {spotify_track_artists}")
+        song_artists = sorted([artist.name.lower() for artist in list(song.artists)])
+        if spotify_track_artists == song_artists:
+            return track
     return None
 
 
-def get_user_spotify_playlists(user: User, filter_keyword="Pitchfork") -> list[dict]:
+def search_spotify_track_id(spotify_obj: tk.Spotify, song: Song) -> str | None:
     """
-    returns the name and id for each playlist in the user's account filtered by keyword
+    Searches for a Spotify track ID that matches the given song
+
+    Args:
+        spotify_obj (tk.Spotify): The Spotify authenticatino object
+        song (Song): The song to search for on Spotify
+
+    Returns:
+        str | None: The Spotify track ID if a match is found, otherwise None
     """
-    spotify_obj = get_spotify_obj(user)
-    if not spotify_obj:
-        return []
+    logger.debug(f"Searching for track info - song name: {song.name}, song artists: {song.artists}")
+
+    search_results = search_spotify_tracks(spotify_obj, song.name, song.artists[0].name)
+    if track := get_track_match(song, search_results.items):
+        return track.id
+    
+    while search_results.next:
+        search_results = spotify_obj.next(search_results)
+        if track := get_track_match(song, search_results.items):
+            return track.id
+
+    return None
+
+
+def get_user_spotify_playlists(spotify_obj: tk.Spotify, filter_keyword="Pitchfork") -> list[dict]:
+    """
+    Retrieves a list of the user's Spotify playlists filtered by a keyword
+
+    Args:
+        spotify_obj (tk.Spotify): The Spotify authentication object
+        filter_keyword (str): The keyword to filter playlists - defaults to "Pitchfork"
+
+    Returns:
+        list[dict]: A list of dictionaries containing the name and ID of each playlist after filtering
+    """
     spotify_playlists = spotify_obj.playlists(spotify_obj.current_user().id)
-    return [{"name": playlist.name, "id": playlist.id} for playlist in spotify_playlists.items if filter_keyword.lower() in playlist.name.lower()]
+    lkeyword = filter_keyword.lower()
+    return [
+        {"name": playlist.name, "id": playlist.id}
+        for playlist in spotify_playlists.items
+        if lkeyword in playlist.name.lower()
+    ]
 
 
-def create_spotify_playlist(user: User, playlist_name="Pitchfork Top Tracks") -> None:
+def create_spotify_playlist(user: User, spotify_obj: tk.Spotify, playlist_name="Pitchfork Top Tracks") -> None:
     """
-    create a new playlist in the user's Spotify account
+    Creates a new Spotify playlist for the user
+
+    Args
+        user (User): The user for whom to create the playlist
+        spotify_obj (tk.Spotify): The Spotify authentication object
+        playlist_name (str): The name of the new playlist - defaults to "Pitchfork Top Tracks"
     """
-    spotify_obj = get_spotify_obj(user)
-    if spotify_obj:
-        new_playlist = spotify_obj.playlist_create(
-            spotify_obj.current_user().id,
-            playlist_name,
-            public=False,
-            description="Playlist containing Pitchfork recommended tracks",
+    new_playlist = spotify_obj.playlist_create(
+        spotify_obj.current_user().id,
+        playlist_name,
+        public=False,
+        description="Playlist containing Pitchfork recommended tracks",
+    )
+    user.playlist_id = new_playlist.id
+    db.session.commit()
+
+
+def get_playlist_tracks(
+    spotify_obj: tk.Spotify, playlist_id: str, ids_as_set=False
+) -> list[PlaylistTrack] | set[str]:
+    """
+    Retrieves the tracks that are in the given user's playlist
+    """
+    playlist = spotify_obj.playlist(playlist_id)
+    if not ids_as_set:
+        return playlist.tracks.items
+    
+    playlist_tracks = playlist.tracks.items
+    return {playlist_track.track.id for playlist_track in playlist_tracks}
+
+
+@dataclass
+class PlaylistAddResults:
+    """
+    Represents the results of adding tracks to a playlist
+
+    Attributes:
+        success (tuple[str]): List of successful track IDs
+        failure (tuple[str]): List of failed track IDs
+        duplicate (tuple[str]): List of duplicate track IDs
+    """
+    success: tuple[str]
+    failure: tuple[str]
+    duplicate: tuple[str]
+
+
+def add_tracks_to_playlist(
+    spotify_obj: tk.Spotify, playlist_id: str, new_track_ids: set[str]
+) -> PlaylistAddResults:
+    """
+    Adds a list of track IDs to a Spotify playlist without duplicating any tracks in the playlist
+
+    Args:
+        spotify_obj (tk.Spotify): The Spotify authentication object
+        playlist_id (str): The ID of the playlist the tracks should be added to
+        new_track_ids (list[str]): A list of Spotify track IDs to add
+
+    Returns:
+        dict: PlaylistAddResults object with success, failure, and duplicate fields to indicate the result of each track ID
+    """
+    playlist_track_ids = get_playlist_tracks(spotify_obj, playlist_id, ids_as_set=True)
+
+    # Spotify allows duplicate tracks in playlists, so we check which track IDs are already in the playlist
+    #   to avoid adding duplicates
+    filtered_track_ids = set()
+    duplicates = set()
+    for track_id in new_track_ids:
+        if track_id in playlist_track_ids:
+            logger.warning(f"skipping duplicate track with id {track_id} to playlist")
+            duplicates.add(track_id)
+        else:
+            filtered_track_ids.add(track_id)
+
+    if filtered_track_ids:
+        snapshot_id = spotify_obj.playlist_add(
+            playlist_id, [track_id_to_uri(track_id) for track_id in filtered_track_ids]
         )
-        user.playlist_id = new_playlist.id
-        db.session.commit()
+        logger.info(f"Successfully updated playlist - snapshot ID returned: {snapshot_id}")
+        playlist_track_ids = get_playlist_tracks(spotify_obj, playlist_id, ids_as_set=True)
+
+    added_track_ids = filtered_track_ids & playlist_track_ids
+    missing_track_ids = filtered_track_ids - playlist_track_ids
+    return PlaylistAddResults(
+        success=tuple(added_track_ids), failure=tuple(missing_track_ids), duplicate=tuple(duplicates)
+    )
 
 
-def add_track_to_playlist(spotify_obj: tk.Spotify, playlist_id: str, new_track_id: str) -> bool:
+def search_spotify_tracks(spotify_obj: tk.Spotify, song_name: str, artist_name: str) -> FullTrackPaging:
     """
-    TODO: implement a more efficient version of this function
+    Searches Spotify for tracks matching a specific song name and artist
+
+    Args:
+        spotify_obj (tk.Spotify): The Spotify client object
+        song_name (str): The name of the song to search for
+        artist_name (str): The name of the artist of the song
+
+    Returns:
+        tk.model.FullTrackPaging: A paging object containing the search results
     """
-    top_tracks_playlist = spotify_obj.playlist(playlist_id)
-    top_tracks_playlist_tracks = top_tracks_playlist.tracks
-
-    # Spotify does allow duplicate tracks in a playlist
-    # check which track IDs are already in the playlist so we avoid adding duplicates
-    for playlist_track in top_tracks_playlist_tracks.items:
-        if playlist_track.track.id == new_track_id:
-            logging.debug(f"skipped adding duplicate track with id {new_track_id} to playlist")
-            return False
-
-    added = spotify_obj.playlist_add(playlist_id, [spotify_obj.track(new_track_id).uri])
-    logging.debug(f"playlist_add returned: {added}")
-    return added
-
-
-def search_spotify_tracks(spotify_obj: tk.Spotify, song_name: str, artist: str) -> list[tk.model.FullTrack]:
-    search_results = spotify_obj.search(f"{song_name} artist:{artist}")[0].items
-    return [spotify_obj.track(search_result.id) for search_result in search_results]
+    return spotify_obj.search(f"{song_name} artist:{artist_name}")[0]

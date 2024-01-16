@@ -1,4 +1,3 @@
-import logging
 import os
 from random import choice
 from datetime import datetime, timedelta
@@ -29,18 +28,15 @@ from .app import mail
 from .models import db, Song, User, Auth, AccountVerification
 from .api_utils import row_to_dict
 from .validator_utils import CommaDelimitedStringField
-from .controller import (
-    update_pitchfork_top_tracks_db
-)
+from .controller import update_pitchfork_top_tracks_db
 from .spotify import (
     get_spotify_obj,
     create_spotify_playlist,
-    add_track_to_playlist,
+    add_tracks_to_playlist,
     get_user_spotify_playlists,
-    search_spotify_tracks
+    search_spotify_tracks,
 )
-
-logging.basicConfig(level=logging.DEBUG)
+from .logging_utils import logger
 
 
 def clear_expired_verification_codes():
@@ -58,7 +54,6 @@ class SignupSchema(Schema):
 
 
 class Signup(Resource):
-
     def post(self):
         schema = SignupSchema()
         try:
@@ -69,11 +64,13 @@ class Signup(Resource):
         user = User.query.get(req["email"])
         if user:
             return "email address already exists in the database", 409
-        
+
+        # If a user attempted to sign up but did not complete the process and and thus their email is not present in the database
+        #   delete the previous verification code and allow them to continue with the sign up process as usual
         if account_verification := AccountVerification.query.get(req["email"]):
             db.session.delete(account_verification)
             db.session.commit()
-        
+
         verification_code = "".join([choice(ascii_letters + digits) for _ in range(32)])
         user = User(
             email=req["email"],
@@ -81,16 +78,16 @@ class Signup(Resource):
             password=generate_password_hash(req["password"]),
         )
         pickled_user = pickle.dumps(user)
-        
+
         account_verification = AccountVerification(
             verification_code=verification_code,
             expires=(datetime.now() + timedelta(hours=24.0)).timestamp(),
-            user_obj=pickled_user
+            user_obj=pickled_user,
         )
         db.session.add(account_verification)
         db.session.commit()
         clear_expired_verification_codes()
-
+        
         msg = Message("Verify Top Tracks Account", recipients=[req["email"]])
         base_url = os.getenv("BASE_URL", "http://127.0.0.1:5001")
         verification_url = f"{base_url}/api/verify-account?code={verification_code}"
@@ -104,10 +101,9 @@ class VerifyAccountSchema(Schema):
 
 
 class VerifyAccount(Resource):
-
     def get(self):
         """
-        verify the verification code is correct and then commit the new User to the db
+        Verify the verification code is correct and then commit the new User to the db
         """
         schema = VerifyAccountSchema()
         try:
@@ -119,7 +115,7 @@ class VerifyAccount(Resource):
         if not account_verification:
             clear_expired_verification_codes()
             return "Invalid verification code", 400
-        
+
         if account_verification.expires < datetime.now().timestamp():
             clear_expired_verification_codes()
             return "Verification code already expired", 400
@@ -129,7 +125,10 @@ class VerifyAccount(Resource):
         db.session.delete(account_verification)
         db.session.commit()
 
-        return f"Account verification successful! Please go to {os.getenv('BASE_URL', 'http://127.0.0.1:5000')} to sign in to your account.", 200
+        return (
+            f"Account verification successful! Please go to {os.getenv('BASE_URL', 'http://127.0.0.1:5000')} to sign in to your account.",
+            200,
+        )
 
 
 class LoginSchema(Schema):
@@ -138,7 +137,6 @@ class LoginSchema(Schema):
 
 
 class Login(Resource):
-
     def post(self):
         schema = LoginSchema()
         try:
@@ -148,10 +146,10 @@ class Login(Resource):
 
         user = User.query.get(req["email"].lower())
         if not user:
-            logging.info("user not found")
+            logger.info("user not found")
             return "user not found", 400
         elif not check_password_hash(user.password, req["password"]):
-            logging.info("wrong password")
+            logger.info("wrong password")
             return "incorrect password", 400
 
         access_token = create_access_token(identity=user.get_id(), expires_delta=timedelta(minutes=10.0))
@@ -163,16 +161,11 @@ class Login(Resource):
             set_access_cookies(resp, access_token)
             set_refresh_cookies(resp, refresh_token)
             return resp
-        
-        return jsonify(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            name=user.name
-        )
-    
+
+        return jsonify(access_token=access_token, refresh_token=refresh_token, name=user.name)
+
 
 class RefreshToken(Resource):
-
     @jwt_required(refresh=True)
     def post(self):
         email = get_jwt_identity()
@@ -184,17 +177,15 @@ class RefreshToken(Resource):
             set_access_cookies(resp, access_token)
             return resp
         return jsonify(access_token=access_token)
-    
+
 
 class TokenIsValid(Resource):
-
     @jwt_required()
     def get(self):
         return jsonify(valid=True)
-    
+
 
 class Logout(Resource):
-
     def post(self):
         resp = jsonify(logout=True)
         unset_jwt_cookies(resp)
@@ -202,15 +193,14 @@ class Logout(Resource):
 
 
 class AuthorizeAccount(Resource):
-
     @jwt_required()
     def post(self):
-        logging.debug("handling request to authorize account endpoint")
+        logger.debug("handling request to authorize account endpoint")
         email = get_jwt_identity()
         user = User.query.get(email)
         if user.config_file:
             return "account already authorized", 400
-        logging.debug("user is not currently authorized")
+        logger.debug("user is not currently authorized")
         config = tk.config_from_environment()
         params = {
             "client_id": config[0],
@@ -218,40 +208,37 @@ class AuthorizeAccount(Resource):
             "redirect_uri": config[2],
             "state": "".join([choice(ascii_letters + digits) for _ in range(43)]),
             "scope": "playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public user-top-read user-read-recently-played user-library-read",
-            "show_dialog": True
+            "show_dialog": True,
         }
-        logging.debug(f"using params: {params}")
+        logger.debug(f"using params: {params}")
         redirect_url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
         auth = Auth(state=params["state"], email=email)
         db.session.add(auth)
         db.session.commit()
-        logging.debug(f"added {auth} to database and redirecting to: {redirect_url}")
+        logger.debug(f"added {auth} to database and redirecting to: {redirect_url}")
         return {"redirect_url": redirect_url}, 307
-    
+
 
 class AuthCallback(Resource):
-
     def get(self):
         code = request.args["code"]
         state = request.args["state"]
-        
+
         auth = Auth.query.get(state)
         if not auth:
             return "Invalid state", 400
-        
+
         email = auth.email
         # token = auth_obj.request_token(code, state)
         config = tk.config_from_environment()
-        headers = {
-            "Authorization": f"Basic {b64encode(f'{config[0]}:{config[1]}'.encode()).decode()}"
-        }
+        headers = {"Authorization": f"Basic {b64encode(f'{config[0]}:{config[1]}'.encode()).decode()}"}
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": config[2]
+            "redirect_uri": config[2],
         }
         resp = requests.post("https://accounts.spotify.com/api/token", headers=headers, data=data)
-        
+
         if resp.status_code != 200:
             return "Unable to obtain authorization token", 400
 
@@ -262,21 +249,24 @@ class AuthCallback(Resource):
                 config + (token["refresh_token"],),
             )
             config_file_bytes = temp_config_file.read()
-          
+
         user = User.query.get(email)
         user.config_file = config_file_bytes
         db.session.delete(auth)
         db.session.commit()
 
-        playlists = get_user_spotify_playlists(user)
+        spotify_obj = get_spotify_obj(user)
+        playlists = get_user_spotify_playlists(spotify_obj)
         if not playlists:
-            create_spotify_playlist(user)
+            create_spotify_playlist(user, spotify_obj)
 
-        return "Your account has been authorized and playlist created in your Spotify account. You can now close this window.", 200
+        return (
+            "Your account has been authorized and playlist created in your Spotify account. You can now close this window.",
+            200,
+        )
 
 
 class Unauthorize(Resource):
-
     @jwt_required()
     def post(self):
         email = get_jwt_identity()
@@ -289,11 +279,10 @@ class Unauthorize(Resource):
 
 
 class AccountIsAuthorized(Resource):
-
     @jwt_required()
     def get(self):
         email = get_jwt_identity()
-        logging.debug(f"checking authorization status for {email}")
+        logger.debug(f"checking authorization status for {email}")
         user = User.query.get(email)
         if user.config_file:
             return jsonify(authorized=True)
@@ -311,31 +300,30 @@ class TracksSchema(Schema):
 
 
 class Tracks(Resource):
-    
     def get(self):
         schema = TracksSchema()
         try:
             args = schema.load(request.args)
         except ValidationError as err:
             return err.messages, 400
-        
-        logging.info(f"received request to /tracks with params: {args}")
+
+        logger.info(f"received request to /tracks with params: {args}")
         query = Song.query
 
         if song_id := args.get("song_id"):
             song = Song.query.get(song_id)
             return jsonify(row_to_dict(song)) if song else jsonify([])
-            
+
         if site_name := args.get("site_name"):
             query = query.filter(Song.site_name == site_name)
-            
+
         if song_name := args.get("song_name"):
             query = query.filter(Song.name.icontains(song_name))
 
         if artists := args.get("artists"):
             for artist in artists:
                 query = query.filter(Song.artists.any(name=artist))
-            
+
         if genres := args.get("genres"):
             for genre in genres:
                 query = query.filter(Song.genres.any(name=genre))
@@ -353,7 +341,6 @@ class SpotifyTrackIdSchema(Schema):
 
 
 class SpotifyTrackId(Resource):
-
     @jwt_required()
     def patch(self):
         schema = SpotifyTrackIdSchema()
@@ -361,12 +348,12 @@ class SpotifyTrackId(Resource):
             req = schema.load(request.get_json())
         except ValidationError as err:
             return err.messages, 400
-        logging.info(f"request body for patch request: {req}")
+        logger.info(f"request body for patch request: {req}")
         song = Song.query.get(req["song_id"])
         spotify_obj = get_spotify_obj()
         tracks = search_spotify_tracks(spotify_obj, song.name, song.artists[0].name)
         if req["spotify_track_id"] not in [track.id for track in tracks]:
-            logging.info("spotify-track-id did not match track id in search results")
+            logger.info("spotify-track-id did not match track id in search results")
             return "invalid spotify track ID", 400
         song.spotify_track_id = req["spotify_track_id"]
         song.preview_url = [track for track in tracks if track.id == req["spotify_track_id"]][0].preview_url
@@ -378,15 +365,13 @@ class SpotifyTrackId(Resource):
 
 
 class Playlists(Resource):
-
     @jwt_required()
     def get(self):
         email = get_jwt_identity()
         user = User.query.get(email)
-        playlists = get_user_spotify_playlists(user)
-        if not playlists:
-            return "no playlists found", 400
-        return jsonify(playlists)
+        spotify_obj = get_spotify_obj(user)
+        playlists = get_user_spotify_playlists(spotify_obj)
+        return jsonify(playlists) if playlists else ("no playlists found", 400,)
 
 
 class PlaylistTracksSchema(Schema):
@@ -395,10 +380,9 @@ class PlaylistTracksSchema(Schema):
 
 
 class PlaylistTracks(Resource):
-
     @jwt_required()
     def get(self):
-        """ return all the track Ids in the playlist passed up in the request query """
+        """return all the track Ids in the playlist passed up in the request query"""
 
     @jwt_required()
     def post(self):
@@ -410,11 +394,12 @@ class PlaylistTracks(Resource):
         email = get_jwt_identity()
         user = User.query.get(email)
         spotify_obj = get_spotify_obj(user)
-        results = []
-        for track_id in req["spotify_track_ids"]:
-            added = add_track_to_playlist(spotify_obj, req["spotify_playlist_id"], track_id)
-            results.append({track_id: "success" if added else "error"})
-        return results, 200
+        # results = []
+        # for track_id in req["spotify_track_ids"]:
+        #     added = add_tracks_to_playlist(spotify_obj, req["spotify_playlist_id"], track_id)
+        #     results.append({track_id: "success" if added else "error"})
+        results = add_tracks_to_playlist(spotify_obj, req["spotify_playlist_id"], set(req["spotify_track_ids"]))
+        return jsonify(results)
 
 
 class SearchSpotifyTracksSchema(Schema):
@@ -423,7 +408,6 @@ class SearchSpotifyTracksSchema(Schema):
 
 
 class SearchSpotifyTracks(Resource):
-
     @jwt_required()
     def get(self):
         schema = SearchSpotifyTracksSchema()
@@ -431,9 +415,9 @@ class SearchSpotifyTracks(Resource):
             req = schema.load(request.args)
         except ValidationError as err:
             return err.messages, 400
-        logging.debug(f"song name: {req['song_name']}, artists: {req['artists']}")
+        logger.debug(f"song name: {req['song_name']}, artists: {req['artists']}")
         spotify_obj = get_spotify_obj()
-        tracks = search_spotify_tracks(spotify_obj, req["song_name"], req["artists"].split(',')[0])
+        tracks = search_spotify_tracks(spotify_obj, req["song_name"], req["artists"].split(",")[0])
         return jsonify(tracks)
 
 
@@ -442,7 +426,6 @@ class PitchforkTracksSchema(Schema):
 
 
 class PitchforkTracks(Resource):
-
     @jwt_required()
     def post(self):
         schema = PitchforkTracksSchema()
@@ -457,12 +440,19 @@ class PitchforkTracks(Resource):
 
 
 class PersonalizationSchema(Schema):
-    personalization_type = fields.Str(required=True, validate=validate.OneOf(["tracks", "artists"]), data_key="personalization-type")
-    time_period = fields.Str(required=True, validate=validate.OneOf(["short_term", "medium_term", "long_term"]), data_key="time-period")
+    personalization_type = fields.Str(
+        required=True,
+        validate=validate.OneOf(("tracks", "artists",)),
+        data_key="personalization-type",
+    )
+    time_period = fields.Str(
+        required=True,
+        validate=validate.OneOf(("short_term", "medium_term", "long_term",)),
+        data_key="time-period",
+    )
 
 
 class Personalization(Resource):
-
     @jwt_required()
     def get(self):
         schema = PersonalizationSchema()

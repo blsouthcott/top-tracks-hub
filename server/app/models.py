@@ -54,12 +54,8 @@ class Artist(db.Model):
 class Song(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
-    artists = db.relationship(
-        "Artist", secondary=track_artists_table, lazy="subquery", backref="song"
-    )
-    genres = db.relationship(
-        "Genre", secondary=track_genres_table, lazy="subquery", backref="song"
-    )
+    artists = db.relationship("Artist", secondary=track_artists_table, lazy="subquery", backref="song")
+    genres = db.relationship("Genre", secondary=track_genres_table, lazy="subquery", backref="song")
     site_name = db.Column(db.String(80), db.ForeignKey("site.name"), nullable=False)
     link = db.Column(db.String(80))
     date_published = db.Column(db.Date)

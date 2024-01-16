@@ -1,5 +1,6 @@
 from datetime import date
 
+
 def row_to_dict(row):
     row_dict = {}
     for key in row.__dict__:

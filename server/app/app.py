@@ -1,5 +1,4 @@
 import os
-import logging
 
 from flask import Flask
 from flask_cors import CORS
@@ -8,17 +7,18 @@ from flask_mail import Mail
 
 from .models import db
 
-logging.basicConfig(level=logging.INFO)
-
 mail = Mail()
 
-def create_app():
 
-    app = Flask(__name__, static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")))
+def create_app():
+    app = Flask(
+        __name__,
+        static_folder=os.path.abspath(os.path.join(__file__, "../../../ui/build")),
+    )
 
     if allowed_origins := os.getenv("ALLOWED_ORIGINS"):
         CORS(app, origins=allowed_origins)
-    
+
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_COOKIE_SECURE"] = os.environ["JWT_COOKIE_SECURE"].lower() == "true"
     app.config["JWT_COOKIE_CSRF_PROTECT"] = os.environ["JWT_COOKIE_CSRF_PROTECT"].lower() == "true"
@@ -30,7 +30,7 @@ def create_app():
 
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["POSTGRES_CONNECTION_STRING"]
     db.init_app(app)
-    
+
     # email sending config
     app.config["MAIL_SERVER"] = "smtp.gmail.com"
     app.config["MAIL_PORT"] = 465
