@@ -3,13 +3,12 @@ from multiprocessing.dummy import Pool
 import tekore as tk
 
 from .models import db, Song, Site, Artist, Genre
-from .spotify import get_spotify_obj, search_spotify_track_id
-from .scrape_top_tracks import (
+from .integrations.spotify import get_spotify_obj, search_spotify_track_id
+from .integrations.scrape_top_tracks import (
     Track,
     get_pitchfork_top_tracks_html,
     parse_top_tracks_html,
 )
-from .logging_utils import logger
 
 
 def save_new_recommendations_site(site_name):

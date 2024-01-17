@@ -7,9 +7,10 @@ from dataclasses import dataclass
 import tekore as tk
 from tekore.model import FullTrackPaging, FullTrack, PlaylistTrack, Paging
 
-from .logging_utils import logger
-from .models import db, Song, User
 from .scrape_top_tracks import sanitize_track_name
+from ..utils.logging_utils import logger
+from ..models import db, Song, User
+
 
 
 def safe_spotify_call(spotify_fnx: Callable[..., Any]):

@@ -2,18 +2,22 @@ import os
 from flask import send_from_directory
 from flask_restful import Api
 from app.app import create_app
-from app.logging_utils import logger
-from app.api import (
+from app.utils.logging_utils import logger
+from app.routes.user_routes import (
     Signup,
     VerifyAccount,
     Login,
     TokenIsValid,
     RefreshToken,
-    Logout,
+    Logout
+)
+from app.routes.auth_routes import (
     AuthorizeAccount,
     Unauthorize,
     AccountIsAuthorized,
     AuthCallback,
+)
+from app.routes.tracks_routes import (
     Tracks,
     Playlists,
     PlaylistTracks,
