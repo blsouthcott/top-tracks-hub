@@ -1,5 +1,6 @@
 
 export const styles = {
+  // Bulma
   margins: {
     m1: "m-1",
     m2: "m-2",
@@ -11,10 +12,8 @@ export const styles = {
     mr3: "mr-3",
     mb0: "mb-0",
     my3: "my-3",
-    mt6: "mt-6",
     ml2: "ml-2",
     ml3: "ml-3",
-    mb0: "mb-0",
   },
   padding: {
     p1: "p-1",
@@ -33,6 +32,7 @@ export const styles = {
   card: "card",
   cardHeader: "card-header",
   cardHeaderTitle: "card-header-title",
+  cardContent: "card-content",
   select: "select",
   search: "search",
   input: "input",
@@ -42,6 +42,7 @@ export const styles = {
   isVcentered: "is-vcentered",
   isOneThird: "is-one-third",
   isTwoThirds: "is-two-thirds",
+  field: "field",
   section: "section",
   label: "label",
   control: "control",
@@ -52,9 +53,8 @@ export const styles = {
   isFlexDirectionColumn: "is-flex-direction-column",
   isFlexDirectionColumnTouch: "is-flex-direction-column-touch",
   isAlignContentCenter: "is-align-content-center",
+  isAlignItemsCenter: "is-align-items-center",
   isJustifyContentCenter: "is-justify-content-center",
-  card: "card",
-  cardContent: "card-content",
   hasTextCentered: "has-text-centered",
   hasTextWhite: "has-text-white",
   button: "button",
@@ -75,7 +75,6 @@ export const styles = {
   navbarStart: "navbar-start",
   navbarMenu: "navbar-menu",
   navbarLink: "navbar-link",
-  navbarStart: "navbar-start",
   navbarBrand: "navbar-brand",
   navbarItem: "navbar-item",
   navbarDropdown: "navbar-dropdown",
@@ -86,7 +85,7 @@ export const styles = {
   hasDropdown: "has-dropdown",
   navbarEnd: "navbar-end",
 
-  // non-bulma
+  // non-Bulma
   isScrollable: "is-scrollable",
   tableHeader: "table-header",
   stickyHeader: "sticky-header",

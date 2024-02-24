@@ -4,6 +4,8 @@ import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
 import { alert } from "../utils/alert";
 import HeroSection from "./heroSection";
+import { styles, toClassName } from "./styles";
+import { Field, SubmitButton } from "./formComponents";
 
 
 const signup = async (e, setIsLoading, navigate, email, password, name) => {
@@ -32,6 +34,7 @@ const signup = async (e, setIsLoading, navigate, email, password, name) => {
   }
 };
 
+
 export default function Signup () {
   
   const navigate = useNavigate();
@@ -50,53 +53,16 @@ export default function Signup () {
       <>
         {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
         {!isLoading &&
-          <div className="columns is-flex-direction-column is-align-items-center">
-            <div className="column is-one-third">
-              <div className="box">
-                <h2 className="title has-text-centered">Sign up</h2>
+          <div className={toClassName(styles.columns, styles.isFlexDirectionColumn, styles.isAlignItemsCenter)}>
+            <div className={toClassName(styles.column, styles.isOneThird)}>
+              <div className={styles.box}>
+                <h2 className={toClassName(styles.title, styles.hasTextCentered)}>Sign up</h2>
                 <form onSubmit={handleSignup}>
-                  <div className="field is-fullwidth">
-                    <label className="label">Email</label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="email"
-                        value={email}
-                        placeholder="Enter email..."
-                        onChange={handleEmailChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="field is-fullwidth">
-                    <label className="label">Password</label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="password"
-                        value={password}
-                        placeholder="Enter password..."
-                        onChange={handlePasswordChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="field is-fullwidth">
-                    <label className="label">Name</label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="text"
-                        value={name}
-                        placeholder="Enter name..."
-                        onChange={handleNameChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="control">
-                    <button type="submit" className="button is-primary is-fullwidth">Sign up</button>
-                  </div>
+                  <Field labelName={"Email"} fieldType={"email"} fieldVal={email} placeholderText={"Enter email..."} onChange={handleEmailChange} requiredField={true} />
+                  <Field labelName={"Password"} fieldType={"password"} fieldVal={password} placeholderText={"Enter password..."} onChange={handlePasswordChange} requiredField={true} />
+                  <Field labelName={"Name"} fieldType={"text"} fieldVal={name} placeholderText={"Enter name..."} onChange={handleNameChange} requiredField={true} />
+                  <hr />
+                  <SubmitButton title={"Sign up"} />
                 </form>
               </div>
             </div>

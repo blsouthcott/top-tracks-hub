@@ -4,6 +4,7 @@ import { alert } from "../utils/alert";
 import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
 import { styles, toClassName } from "./styles";
+import { Field, SubmitButton } from "./formComponents";
 
 
 const login = async (e, setIsLoading, email, password, setIsAuthenticated) => {
@@ -54,52 +55,19 @@ export default function Login ({ setIsAuthenticated }) {
           <div className={styles.box}>
             <h1 className={toClassName(styles.title, styles.hasTextCentered)}>Login</h1>
             <form onSubmit={handleLogin}>
-              <label className={styles.label}>Email</label>
-                <div className={styles.control}>
-                  <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="test_user@test.com ..."
-                    value={email}
-                    onChange={handleEmailChange}
-                  />
-                </div>
-              <br />
-              <label className={styles.label}>Password</label>
-                <div className={styles.control}>
-                  <input
-                    className={styles.input}
-                    type="password"
-                    placeholder="testing123 ..."
-                    value={password}
-                    onChange={handlePasswordChange}
-                  />
-                </div>
-              <br />
-              <div className={styles.control}>
-                <button 
-                  type="submit"
-                  className={toClassName(styles.button, styles.isPrimary, styles.isFullWidth)}
-                >
-                  Login
-                </button>
-              </div>
+              <Field labelName={"Email"} fieldType={"text"} fieldVal={email} placeholderText={"test_user@test.com ..."} onChange={handleEmailChange} requiredField={true} />
+              <Field labelName={"Password"} fieldType={"password"} fieldVal={password} placeholderText={"testing123 ..."} onChange={handlePasswordChange} requiredField={true} />
+              <SubmitButton title={"Login"} />
             </form>
             <hr />
-            <form>
-              <div className={styles.content}>  
-                <p className={styles.hasTextCentered}>Or click here to sign up</p>
-                <div className={styles.control}>
-                  <button
-                    type="submit"
-                    className={toClassName(styles.button, styles.isPrimary, styles.isFullWidth)}
-                    onClick={goToSignupPage}
-                  >
-                    Sign up
-                  </button>
-                </div>
+            <div className={styles.content}>  
+              <p className={styles.hasTextCentered}>Or click here to sign up</p>
+              <div className={styles.control}>
+                <button onClick={goToSignupPage} className={toClassName(styles.button, styles.isPrimary, styles.isFullWidth)}>
+                  Sign up
+                </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>
