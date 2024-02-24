@@ -3,6 +3,34 @@ import { useNavigate } from "react-router-dom";
 import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
 import { alert } from "../utils/alert";
+import HeroSection from "./heroSection";
+
+
+const signup = async (e, setIsLoading, navigate, email, password, name) => {
+  e.preventDefault();
+  setIsLoading(true);
+  const resp = await fetch("/api/signup", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email: email,
+      name: name,
+      password: password,
+    })
+  });
+  setIsLoading(false);
+  if (resp.status === 200) {
+    alert.fire("Please check your email for a link to verify your account. This verification link is only good for 24 hours.");
+    navigate('/');
+  } else if (resp.status === 409) {
+    alert.fire("Email already exists in the database. Please choose a different email and try again.");
+  } else {
+    alert.fire("Unable to complete sign up 🙁");
+    navigate("/");
+  }
+};
 
 export default function Signup () {
   
@@ -12,42 +40,21 @@ export default function Signup () {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const signup = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const resp = await fetch("/api/signup", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email,
-        name: name,
-        password: password,
-      })
-    });
-    setIsLoading(false);
-    if (resp.status === 200) {
-      alert.fire("Please check your email for a link to verify your account. This verification link is only good for 24 hours.");
-      navigate('/');
-    } else if (resp.status === 409) {
-      alert.fire("Email already exists in the database. Please choose a different email and try again.");
-    } else {
-      alert.fire("Unable to complete sign up 🙁");
-      navigate("/");
-    }
-  };
+  const handleSignup = (e) => signup(e, setIsLoading, navigate, email, password, name);
+  const handleEmailChange = (e) => setEmail(e.target.value);
+  const handlePasswordChange = (e) => setPassword(e.target.value);
+  const handleNameChange = (e) => setName(e.target.value);
 
   return (
-    <section className="hero is-fullheight">
-      <div className="hero-body">
-        <div className="container">
-          {isLoading ? <ClipLoader size={75} cssOverride={spinnerStyle}/> :
+    <HeroSection content={
+      <>
+        {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
+        {!isLoading &&
           <div className="columns is-flex-direction-column is-align-items-center">
             <div className="column is-one-third">
               <div className="box">
                 <h2 className="title has-text-centered">Sign up</h2>
-                <form onSubmit={signup}>
+                <form onSubmit={handleSignup}>
                   <div className="field is-fullwidth">
                     <label className="label">Email</label>
                     <div className="control">
@@ -56,7 +63,7 @@ export default function Signup () {
                         type="email"
                         value={email}
                         placeholder="Enter email..."
-                        onChange={e => setEmail(e.target.value)}
+                        onChange={handleEmailChange}
                         required
                       />
                     </div>
@@ -69,7 +76,7 @@ export default function Signup () {
                         type="password"
                         value={password}
                         placeholder="Enter password..."
-                        onChange={e => setPassword(e.target.value)}
+                        onChange={handlePasswordChange}
                         required
                       />
                     </div>
@@ -82,7 +89,7 @@ export default function Signup () {
                         type="text"
                         value={name}
                         placeholder="Enter name..."
-                        onChange={e => setName(e.target.value)}
+                        onChange={handleNameChange}
                         required
                       />
                     </div>
@@ -93,9 +100,9 @@ export default function Signup () {
                 </form>
               </div>
             </div>
-          </div>}
-        </div>
-      </div>
-    </section>
+          </div>
+        }
+      </>}
+    />
   );
 }

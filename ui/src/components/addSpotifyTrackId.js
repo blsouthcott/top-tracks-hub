@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import { tableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
+import HeroSection from "./heroSection";
 import { styles, toClassName } from "./styles";
 import { spinnerStyle } from "./spinnerStyle";
 import { alert } from "../utils/alert";
@@ -177,14 +178,16 @@ export default function AddSpotifyTrackId () {
   }, [])
 
   return (
-    <>
-      {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
-      {!isLoading &&
-        <div className={styles.section}>
-          <TrackTable navigate={navigate} setIsLoading={setIsLoading} track={track} spotifyTrackId={spotifyTrackId} setSpotifyTrackId={setSpotifyTrackId} />
-          <SearchResultsTable searchResults={searchResults} copiedIds={copiedIds} setCopiedIds={setCopiedIds} />
-        </div>
-      }
-      </>
+    <HeroSection content={
+      <>
+        {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
+        {!isLoading &&
+          <div className={styles.section}>
+            <TrackTable navigate={navigate} setIsLoading={setIsLoading} track={track} spotifyTrackId={spotifyTrackId} setSpotifyTrackId={setSpotifyTrackId} />
+            <SearchResultsTable searchResults={searchResults} copiedIds={copiedIds} setCopiedIds={setCopiedIds} />
+          </div>
+        }
+      </>}
+    />
   )
 }

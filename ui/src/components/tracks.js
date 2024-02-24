@@ -14,15 +14,6 @@ import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import * as api from "../utils/api";
 import { checkToken } from "../utils/utils";
 
-const mapKeysToTracks = (tracks) => {
-  return tracks.map((track) => {
-    return {
-      ...track,
-      key: track.id,
-      checked: false,
-    }
-  });
-}
 
 const loadTracks = async (setIsLoading, setTracks, setDisplayedTracks) => {
   setIsLoading(true);
@@ -33,8 +24,14 @@ const loadTracks = async (setIsLoading, setTracks, setDisplayedTracks) => {
     return;
   };
   let tracksData = await resp.json();
-  // tracksData = tracksData.filter(track => track.spotify_track_id !== null);
-  tracksData = mapKeysToTracks(tracksData);
+  // tracksData = tracksData.filter(track => !!track.spotify_track_id);
+  tracksData = tracksData.map((track) => (
+    {
+      ...track,
+      key: track.id,
+      checked: false,
+    }
+  ));
   tracksData.sort((track1, track2) => {
     if (track1["date_published"] > track2["date_published"]) { return -1; };
     if (track1["date_published"] < track2["date_published"]) { return 1; };
@@ -165,6 +162,7 @@ const handlePlaylistChange = (e, setSelectedPlaylistId) => {
 };
 
 function TableControls ({ navigate, setIsLoading, tracks, setDisplayedTracks, playlists }) {
+  
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
 
   return (

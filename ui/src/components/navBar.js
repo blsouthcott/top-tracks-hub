@@ -3,52 +3,69 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
 import { alert } from "../utils/alert";
+import { styles, toClassName } from "./styles";
+
+
+const logout = async (navigate, setIsAuthenticated) => {
+  const resp = await fetch("/api/logout", {method: "POST"});
+  if (resp.status === 200) {
+    alert.fire({title: "You have been successfully logged out.", icon: "success"});
+    localStorage.removeItem("displayTestData");
+    setIsAuthenticated(false);
+    navigate("/");
+  } else {
+    alert.fire("Something went wrong. Unable to log out 🙁");
+  };
+}
 
 export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [burgerIsActive, setBurgerIsActive] = useState(false);
-  const [dropDownIsOpen, setDropDownIsOpen] = useState(false);
-
-
+  const defaultBurgerStyle = toClassName(styles.burgerMenu, styles.navbarBurger, styles.burger);
+  const [burgerStyle, setBurgerStyle] = useState(defaultBurgerStyle);
+  const defaultDropdownStyle = toClassName(styles.navbarItem, styles.hasDropdown);
+  const [dropDownStyle, setDropdownStyle] = useState(defaultDropdownStyle);
+  
+  
   const toggleBurger = () => {
-    setBurgerIsActive(!burgerIsActive);
+    setBurgerIsActive(prevActive => !prevActive);
   };
 
-  const logout = async () => {
-    const resp = await fetch("/api/logout", {method: "POST"});
-    if (resp.status === 200) {
-      alert.fire({title: "You have been successfully logged out.", icon: "success"});
-      localStorage.removeItem("displayTestData");
-      setIsAuthenticated(false);
-      navigate("/");
-    } else {
-      alert.fire("Something went wrong. Unable to log out 🙁");
-    };
+  const handleMouseOver = () => {
+    setDropdownStyle(toClassName(defaultDropdownStyle, styles.isActive));
+  }
+  const handleMouseOut = () => {
+    setDropdownStyle(defaultDropdownStyle);
   }
 
-  const handleMouseOver = () => setDropDownIsOpen(true);
-  const handleMouseOut = () => setDropDownIsOpen(false);
-
   useEffect(() => {
-    setDropDownIsOpen(false);
+    setDropdownStyle(defaultDropdownStyle);
     setBurgerIsActive(false);
   }, [location])
 
+  useEffect(() => {
+    if (burgerIsActive) {
+      setBurgerStyle(toClassName(defaultBurgerStyle, styles.isActive));
+    } else {
+      setBurgerStyle(defaultBurgerStyle);
+    }
+  }, [burgerIsActive])
+
   return (
     <nav 
-      className="navbar" 
-      role="navigation" 
+      className={styles.navbar}
+      role="navigation"
       aria-label="main navigation"
-      style={{ position: 'fixed', top: '0', width: '100%', zIndex: 2 }}>
+      style={{ position: "fixed", top: "0", width: "100%", zIndex: 2 }}>
       
-      <div className="navbar-brand">
-        <Link className="navbar-item" to="/">
+      <div className={styles.navbarBrand}>
+        <Link className={styles.navbarItem} to="/">
           <FontAwesomeIcon icon={faCirclePlay} />
         </Link>
 
         <button
-          className={`burger-menu navbar-burger burger ${burgerIsActive ? 'is-active' : ''}`}
+          className={burgerStyle}
           aria-label="menu"
           aria-expanded="false"
           data-target="navbar"
@@ -62,63 +79,64 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
       <div
         id="navbar"
-        className={`navbar-menu ${burgerIsActive ? 'is-active' : ''}`}
+        className={styles.navbarMenu + `${burgerIsActive ? " " + styles.isActive : ""}`}
         style={{"zIndex": 2}}
       >
-        <div className="navbar-start">
-          <Link className="navbar-item" to="/">
+        <div className={styles.navbarStart}>
+          <Link className={styles.navbarItem} to="/">
             Home
           </Link>
           
           {isAuthenticated &&
-          <Link className="navbar-item" to="/account">
+          <Link className={styles.navbarItem} to="/account">
             Account
           </Link>}
 
           {isAuthenticated && 
-          <Link className="navbar-item" to="/personalization">
+          <Link className={styles.navbarItem} to="/personalization">
             Your Top Spotify Content
           </Link>}
 
           {isAuthenticated && 
-          <Link className="navbar-item" to="/tracks">
+          <Link className={styles.navbarItem} to="/tracks">
             Recommended Tracks
           </Link>}
-
-          <div className={`navbar-item has-dropdown ${dropDownIsOpen ? "is-active" : ""}`}
+          <div
+            className={dropDownStyle}
             onMouseOver={handleMouseOver}
             onMouseOut={handleMouseOut}>
-            <Link className="navbar-link" to="#">
-              More
-            </Link>
 
-            <div className="navbar-dropdown">
-              <Link className="navbar-item" to="/about">
-                About
+              <Link className={styles.navbarLink} to="#">
+                More
               </Link>
-              <Link className="navbar-item" to="/contact">
-                Contact
-              </Link>
-              <Link className="navbar-item" to="/report-an-issue">
-                Report an issue
-              </Link>
-            </div>
+
+              <div className={styles.navbarDropdown}>
+                <Link className={styles.navbarItem} to="/about">
+                  About
+                </Link>
+                <Link className={styles.navbarItem} to="/contact">
+                  Contact
+                </Link>
+                <Link className={styles.navbarItem} to="/report-an-issue">
+                  Report an issue
+                </Link>
+              </div>
           </div>
         </div>
 
-        <div className="navbar-end">
-          <div className="navbar-item">
-            <div className="buttons">
+        <div className={styles.navbarEnd}>
+          <div className={styles.navbarItem}>
+            <div className={styles.buttons}>
               {!isAuthenticated && 
-                <Link className="button is-primary" to="/signup">
+                <Link className={toClassName(styles.button, styles.isPrimary)} to="/signup">
                   <strong>Sign up</strong>
                 </Link>}
               {isAuthenticated ?
-                <button className="button is-light" onClick={logout}>
+                <button className={toClassName(styles.button, styles.isLight)} onClick={() => logout(navigate, setIsAuthenticated)}>
                   Log out
                 </button>
                 :
-                <Link className="button is-light" to="/">
+                <Link className={toClassName(styles.button, styles.isLight)} to="/">
                   Log in
                 </Link>
               }
