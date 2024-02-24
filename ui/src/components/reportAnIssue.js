@@ -1,29 +1,22 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import Footer from "./footer";
-import { checkValidToken } from "../utils/api";
+import { styles, toClassName } from "./styles";
+import { checkToken } from "../utils/utils";
+import HeroSection from "./heroSection";
 
 export default function ReportAnIssue ({ setIsAuthenticated }) {
   useEffect(() => {
-    checkValidToken().then(isValid => {
-      if (isValid) {
-        setIsAuthenticated(isValid);
-      };
-    })
+    checkToken(setIsAuthenticated);
   }, []);
   return (
-    <section className="hero is-fullheight">
-      <div className="hero-body">
-        <div className="container">
-          <div className="section m-4">
-            <h1 className="title">
-              Report an Issue
-            </h1>
-            <p>To report an issue, please create a new issue here: <Link to="https://github.com/blsouthcott/scrape-top-tracks/issues" target="_blank">GitHub Issues</Link>.</p>
-          </div>
-        </div>
+    <HeroSection content={
+      <div className={toClassName(styles.section, styles.margins.m4)}>
+        <h1 className={styles.title}>
+          Report an Issue
+        </h1>
+        <p>To report an issue, please create a new issue here: <Link to="https://github.com/blsouthcott/scrape-top-tracks/issues" target="_blank">GitHub Issues</Link>.</p>
       </div>
-      <Footer />
-    </section>
+    }/>
+          
   )
 }

@@ -93,14 +93,14 @@ export default function Navbar({ isAuthenticated, setIsAuthenticated }) {
             </Link>
 
             <div className="navbar-dropdown">
+              <Link className="navbar-item" to="/about">
+                About
+              </Link>
               <Link className="navbar-item" to="/contact">
                 Contact
               </Link>
               <Link className="navbar-item" to="/report-an-issue">
                 Report an issue
-              </Link>
-              <Link className="navbar-item" to="/about">
-                About
               </Link>
             </div>
           </div>

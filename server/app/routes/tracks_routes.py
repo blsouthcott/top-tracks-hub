@@ -73,6 +73,8 @@ class SpotifyTrackId(Resource):
         logger.info(f"request body for patch request: {req}")
         song = Song.query.get(req["song_id"])
         spotify_obj = get_spotify_obj()
+        if not spotify_obj:
+            return "Unable to authenticate to Spotify API", 500
         tracks = search_spotify_tracks(spotify_obj, song.name, song.artists[0].name)
         if req["spotify_track_id"] not in [track.id for track in tracks]:
             logger.info("spotify-track-id did not match track id in search results")
@@ -98,10 +100,6 @@ class Playlists(Resource):
 
 class PlaylistTracks(Resource):
     @jwt_required()
-    def get(self):
-        """return all the track Ids in the playlist passed up in the request query"""
-
-    @jwt_required()
     def post(self):
         schema = PlaylistTracksSchema()
         try:
@@ -125,6 +123,8 @@ class SearchSpotifyTracks(Resource):
             return err.messages, 400
         logger.debug(f"song name: {req['song_name']}, artists: {req['artists']}")
         spotify_obj = get_spotify_obj()
+        if not spotify_obj:
+            return "Unable to execute search through Spotify API", 500
         tracks = search_spotify_tracks(spotify_obj, req["song_name"], req["artists"].split(",")[0])
         return jsonify(tracks)
 
@@ -154,8 +154,10 @@ class Personalization(Resource):
         email = get_jwt_identity()
         user = User.query.get(email)
         spotify_obj = get_spotify_obj(user)
-        limit = 50
+        # limit = 50
         if req["personalization_type"] == "tracks":
-            return jsonify(spotify_obj.current_user_top_tracks(req["time_period"], limit=limit).items)
+            # return jsonify(spotify_obj.current_user_top_tracks(req["time_period"], limit=limit).items)
+            return jsonify(spotify_obj.current_user_top_tracks(req["time_period"]).items)
         else:
-            return jsonify(spotify_obj.current_user_top_artists(req["time_period"], limit=limit).items)
+            # return jsonify(spotify_obj.current_user_top_artists(req["time_period"], limit=limit).items)
+            return jsonify(spotify_obj.current_user_top_artists(req["time_period"]).items)

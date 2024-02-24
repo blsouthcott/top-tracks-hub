@@ -136,7 +136,7 @@ def track_id_to_uri(track_id: str):
     return f"spotify:track:{track_id}"
 
 
-def get_spotify_obj(user: User | None = None) -> tk.Spotify | None:
+def get_spotify_obj(user: User | None = None) -> SafeSpotify | None:
     """
     Creates and returns a Spotify authentication object for a given user
 
@@ -153,25 +153,26 @@ def get_spotify_obj(user: User | None = None) -> tk.Spotify | None:
         if users := User.query.filter(User.config_file.is_not(None)).all():
             user = users[0]
         else:
+            logger.debug("Returning None for spotify obj function")
             return None
 
     elif user.config_file is None:
+        logger.debug("Returning None for spotify obj function")
         return None
 
-    else:
-        # tekore provides a convenient function for parsing the credentials necessary for authenticating to the
-        #   Spotify API, so first we first write the credentials to a temp file
-        with tempfile.NamedTemporaryFile() as temp_config_file:
-            temp_config_file.write(user.config_file)
-            temp_config_file.seek(0)
-            config = tk.config_from_file(temp_config_file.name, return_refresh=True)
+    # tekore provides a convenient function for parsing the credentials necessary for authenticating to the
+    #   Spotify API, so first we first write the credentials to a temp file
+    with tempfile.NamedTemporaryFile() as temp_config_file:
+        temp_config_file.write(user.config_file)
+        temp_config_file.seek(0)
+        config = tk.config_from_file(temp_config_file.name, return_refresh=True)
 
-        token = tk.refresh_user_token(
-            config[0],
-            config[1],
-            config[3],
-        )
-        return SafeSpotify(token)
+    token = tk.refresh_user_token(
+        config[0],
+        config[1],
+        config[3],
+    )
+    return SafeSpotify(token)
 
 
 def get_track_match(song: Song, tracks: list[FullTrack]) -> FullTrack | None:

@@ -35,7 +35,7 @@ export const checkValidToken = async (navigate) => {
     };
   } else if (resp.status !== 200) {
     if (navigate) {
-     alert.fire({title: "Unable to check token validity. Please try signing out and singning again.", icon: "warning"});
+      alert.fire({title: "Unable to check token validity. Please try signing out and singning again.", icon: "warning"});
       navigate("/");
     };
   } else {
@@ -44,51 +44,53 @@ export const checkValidToken = async (navigate) => {
 }
 
 export const tokenIsValid = async () => {
-  const resp = await authedFetch("/api/token-is-valid");
-  return resp;
+  return await authedFetch("/api/token-is-valid");
 }
 
 export const accountIsAuthorized = async () => {
-  const resp = await authedFetch("/api/account-is-authorized");
-  return resp;
+  return await authedFetch("/api/account-is-authorized");
 }
 
 export const authorizeAccount = async () => {
-  const resp = await authedFetch("/api/authorize", {
+  return await authedFetch("/api/authorize", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     }
   });
-  return resp;
 }
 
 export const unauthorizeAccount = async () => {
-  const resp = await fetch("/api/unauthorize", {
+  return await fetch("/api/unauthorize", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     }
   });
-  return resp;
 }
 
 export const getUserTopContent = async (timePeriod, personalizationType) => {
-  const resp = await authedFetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`, {
+  return await authedFetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`, {
     headers: {
       "Content-Type": "application/json",
     }
   });
-  return resp;
 }
 
-export const searchTrack = async (track) => {
-  const resp = await authedFetch(`/api/spotify-tracks?song-name=${track.name}&artists=${track.artists.join(", ")}`, );
-  return resp;
+export const loadTrack = async (trackId) => {
+  return await authedFetch(`/api/tracks?song-id=${trackId}`);
+}
+
+export const loadTracks = async () => {
+  return await authedFetch("/api/tracks");
+}
+
+export const searchTrack = async (trackName, trackArtists) => {
+  return await authedFetch(`/api/spotify-tracks?song-name=${trackName}&artists=${trackArtists}`);
 }
 
 export const addTrackId = async (trackId, spotifyTrackId) => {
-  const resp = await authedFetch("/api/spotify-track-id", {
+  return await authedFetch("/api/spotify-track-id", {
     method: "PATCH",
     body: JSON.stringify({
       "song-id": trackId,
@@ -98,20 +100,18 @@ export const addTrackId = async (trackId, spotifyTrackId) => {
       "Content-Type": "application/json",
     }
   });
-  return resp;
 }
 
 export const loadPlaylists = async () => {
-  const resp = await authedFetch("/api/playlists", {
+  return await authedFetch("/api/playlists", {
     headers: {
       "Content-Type": "application/json",
     }
   });
-  return resp;
 }
 
 export const addTracksToPlaylist = async (selectedTrackIds, selectedPlaylistId) => {
-  const resp = await authedFetch("/api/playlist-tracks", {
+  return await authedFetch("/api/playlist-tracks", {
     method: "POST",
     body: JSON.stringify({
       "spotify-track-ids": selectedTrackIds,
@@ -121,5 +121,4 @@ export const addTracksToPlaylist = async (selectedTrackIds, selectedPlaylistId) 
       "Content-Type": "application/json",
     }
   })
-  return resp;
 }

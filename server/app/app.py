@@ -19,6 +19,7 @@ def create_app():
     if allowed_origins := os.getenv("ALLOWED_ORIGINS"):
         CORS(app, origins=allowed_origins)
 
+    app.config["JWT_ALGORITHM"] = "HS256" 
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_COOKIE_SECURE"] = os.environ["JWT_COOKIE_SECURE"].lower() == "true"
     app.config["JWT_COOKIE_CSRF_PROTECT"] = os.environ["JWT_COOKIE_CSRF_PROTECT"].lower() == "true"
