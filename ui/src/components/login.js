@@ -5,22 +5,13 @@ import { ClipLoader } from 'react-spinners';
 import { spinnerStyle } from "./spinnerStyle";
 import { styles, toClassName } from "./styles";
 import { Field, SubmitButton } from "./formComponents";
+import { api } from "../utils/api";
 
 
 const login = async (e, setIsLoading, email, password, setIsAuthenticated) => {
   e.preventDefault();
   setIsLoading(true);
-  const resp = await fetch("/api/login", {
-    method: "POST",
-    body: JSON.stringify({
-      email: email,
-      password: password
-    }),
-    headers: {
-      "Content-Type": "application/json",
-      "X-Auth-Method": "Cookie",
-    },
-  })
+  const resp = await api.login(email, password);
   setIsLoading(false);
   if (resp.status !== 200) {
     alert.fire({title: "Unable to login", icon: "error"});

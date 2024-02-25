@@ -16,11 +16,7 @@ const loadContent = async (navigate, setIsLoading, personalizationType, timePeri
   const displayTestData = JSON.parse(localStorage.getItem("displayTestData"));
   let resp = await api.accountIsAuthorized();
   let data;
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-    return;
-  } else if (resp.status !== 200) {
+  if (resp.status !== 200) {
     alert.fire({title: "Unable to check Spotify account authorization status", icon: "error"});
     navigate("/");
     return;
@@ -38,15 +34,11 @@ const loadContent = async (navigate, setIsLoading, personalizationType, timePeri
     personalizationType === "artists" ? setArtists(data) : setTracks(data);
   } else {
     resp = await api.getUserTopContent(timePeriod, personalizationType);
-    if (resp.status === 401) {
-      alert.fire({title: "Your current login session has expired", icon: "warning"});
-      navigate("/");
-      return;
-    } else if (resp.status === 200) {
+    if (resp.status === 200) {
       data = await resp.json();
       personalizationType === "artists" ? setArtists(data) : setTracks(data);
     } else {
-      alert(`Unable to load top ${personalizationType}`);
+      alert.fire(`Unable to load top ${personalizationType}`);
       navigate("/");
       return;
     };

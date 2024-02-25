@@ -66,7 +66,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
                 <div className={toClassName(styles.block, styles.hasTextCentered)}>
                   <p>Click below to view all tracks available to add to your Spotify playlist.&nbsp;</p>
                   <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter)}>
-                    <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2)} onClick={(e) => goToTracks(e, navigate)}>View Tracks</button>
+                    <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2, styles.isFullWidth)} onClick={(e) => goToTracks(e, navigate)}>View Tracks</button>
                   </div>
                 </div>
             </div>

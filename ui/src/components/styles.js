@@ -56,6 +56,7 @@ export const styles = {
   isAlignItemsCenter: "is-align-items-center",
   isJustifyContentCenter: "is-justify-content-center",
   hasTextCentered: "has-text-centered",
+  hasTextLink: "has-text-link",
   hasTextWhite: "has-text-white",
   button: "button",
   buttons: "buttons",
@@ -91,6 +92,7 @@ export const styles = {
   stickyHeader: "sticky-header",
   flash: "flash",
   audioPlayer: "audio-player",
+  cursorPointer: "cursor-pointer",
 
   // font-awesome
   faLg: "fa-lg",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { addTrackIdTableHeaders, searchResultsTableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import HeroSection from "./heroSection";
@@ -13,39 +13,30 @@ import { faClipboard } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../utils/api";
 
 
-const loadSongInfo = async (navigate, trackId, setTrack) => {
-  const resp = await api.loadTrack(trackId)
-  if (resp.status !== 200) {
-    alert.fire({title: `Unable to load information for track with id: ${trackId}`, icon: "error"});
-    navigate("/tracks");
-  };
-  const data = await resp.json();
-  console.log("track data: ", data);
-  setTrack(data);
-  return data;
-}
-
-const loadSearchResults = async (navigate, track, trackId, setSearchResults) => {
+const loadSearchResults = async (navigate, setIsLoading, track, setSearchResults) => {
   const resp = await api.searchTrack(track.name, track.artists.join(", "));
   if (resp.status !== 200) {
-    alert.fire({title: `Unable to load information for Spotify Tracks search for track with id: ${trackId}`, icon: "error"});
-    navigate("/tracks", { state: { trackId: trackId } });
+    alert.fire({title: `Unable to load information for Spotify Tracks search for track with id: ${track.id}`, icon: "error"});
+    navigate("/tracks", { state: { trackId: track.id } });
   } else {
     const data = await resp.json();
     if (data.items.length === 0) {
       alert.fire({title: `No search results for ${track.name}`, icon: "warning"})
-      navigate("/tracks", { state: { trackId: trackId } });
+      navigate("/tracks", { state: { trackId: track.id } });
     }
     console.log("search results: ", data);
     setSearchResults(data);
   };
+  setIsLoading(false);
 }
 
 const addTrackId = async (navigate, setIsLoading, trackId, spotifyTrackId) => {
+  console.log(`update id for track with id: ${trackId} to Spotify id: ${spotifyTrackId}`);
   setIsLoading(true);
-  const resp = await api.addTrackId(trackId, spotifyTrackId);
+  const resp = await api.addTrackId(trackId.toString(), spotifyTrackId);
   if (resp.status !== 204) {
-    alert.fire({title: "Unable to update Spotify Track ID", icon: "error"});
+    const errMsg = await resp.text();
+    alert.fire({title: `Unable to update Spotify Track ID -  -  ${errMsg}`, icon: "error"});
   } else {
     alert.fire({title: "Spotify Track ID successfully updated!", icon: "success"});
   };
@@ -53,9 +44,9 @@ const addTrackId = async (navigate, setIsLoading, trackId, spotifyTrackId) => {
 }
 
 
-const TrackTable = ({ navigate, setIsLoading, track, trackId, spotifyTrackId, setSpotifyTrackId }) => {
+const TrackTable = ({ navigate, setIsLoading, track, spotifyTrackId, setSpotifyTrackId }) => {
   const handleSpotifyTrackIdChange = (e) => setSpotifyTrackId(e.target.value);
-  const handleAddTrackId = () => addTrackId(navigate, setIsLoading, trackId, spotifyTrackId);
+  const handleAddTrackId = () => addTrackId(navigate, setIsLoading, track.id, spotifyTrackId);
   return (
     <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
       <caption className={styles.title}>Track Info</caption>
@@ -103,58 +94,44 @@ const TrackTable = ({ navigate, setIsLoading, track, trackId, spotifyTrackId, se
 }
 
 
-const SearchResultsTable = ({ searchResults, copiedIds, setCopiedIds }) => (
-  <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
-    <caption className={styles.title}>Spotify Search Results</caption>
-    <thead>
-      <tr>
-        {searchResultsTableHeaders.map((header, i) => {
+const SearchResultsTable = ({ searchResults, copiedIds, setCopiedIds }) => {
+  const handleCopy = (text, result) => setCopiedIds({ ...copiedIds, [text]: result });
+  return (
+    <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
+      <caption className={styles.title}>Spotify Search Results</caption>
+      <thead>
+        <tr>
+          {searchResultsTableHeaders.map((header, i) => {
+            return (
+              <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
+                {header.display}
+              </th>
+            )
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {searchResults.items.map((result) => {
           return (
-            <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
-              {header.display}
-            </th>
+            <tr>
+              <td>{result.name}</td>
+              <td>{result.album.name}</td>
+              <td>{result.album.artists.map(artist => artist.name).join(", ")}</td>
+              <td><Link to={result.external_urls.spotify} target="_blank">Spotify</Link></td>
+              <td>
+                <CopyToClipboard text={result.id} onCopy={handleCopy}>
+                  <p style={{cursor: "pointer"}} className={copiedIds[result.id] ? styles.flash : ""}>
+                    {result.id} <FontAwesomeIcon className={copiedIds[result.id] ? styles.flash : ""} icon={faClipboard} />
+                  </p>
+                </CopyToClipboard>
+              </td>
+            </tr>
           )
         })}
-        
-        {/* <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
-          Album
-        </th>
-        <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
-          Artists
-        </th>
-        <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
-          Link
-        </th>
-        <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
-          Spotify Track ID
-        </th> */}
-      </tr>
-    </thead>
-    <tbody>
-      {searchResults.items.map((result) => {
-        return (
-          <tr>
-            <td>{result.name}</td>
-            <td>{result.album.name}</td>
-            <td>{result.album.artists.map(artist => artist.name).join(", ")}</td>
-            <td><Link to={result.external_urls.spotify} target="_blank">Spotify</Link></td>
-            <td>
-              <CopyToClipboard 
-                text={result.id}
-                onCopy={() => setCopiedIds({ ...copiedIds, [result.id]: true })}>
-                <p 
-                  style={{cursor: "pointer"}}
-                  className={copiedIds[result.id] ? styles.flash : ""}>
-                    {result.id} <FontAwesomeIcon className={copiedIds[result.id] ? styles.flash : ""} icon={faClipboard} />
-                </p>
-              </CopyToClipboard>
-            </td>
-          </tr>
-        )
-      })}
-    </tbody>
-  </table>
-)
+      </tbody>
+    </table>
+  )
+}
 
 
 const AddSpotifyTrackIdContent = ({ isLoading, setIsLoading, navigate, track, spotifyTrackId, setSpotifyTrackId, searchResults, copiedIds, setCopiedIds }) => (
@@ -167,31 +144,29 @@ const AddSpotifyTrackIdContent = ({ isLoading, setIsLoading, navigate, track, sp
       </div>
     }
   </>
-
 )
 
 
 export default function AddSpotifyTrackId () {
 
   const navigate = useNavigate();
-  const { trackId } = useParams();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-  const [track, setTrack] = useState({});
   const [searchResults, setSearchResults] = useState([]);
   const [spotifyTrackId, setSpotifyTrackId] = useState("");
   const [copiedIds, setCopiedIds] = useState({});
+  const { track } = location.state;
+
+  console.log("track: ", track)
   
   useEffect(() => {
-    loadSongInfo(navigate, trackId, setTrack).then(loadedTrack => {
-      loadSearchResults(navigate, loadedTrack, trackId, setSearchResults).then(() => {
-        setIsLoading(false);
-      })
-    })
+    loadSearchResults(navigate, setIsLoading, track, setSearchResults);
   }, [])
 
   return (
     <HeroSection content={
       <AddSpotifyTrackIdContent
+        navigate={navigate}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
         track={track}

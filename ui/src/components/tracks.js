@@ -89,10 +89,8 @@ const loadPlaylists = async (navigate, setPlaylists) => {
 
 const sortTracks = (attr, displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy) => {
   // attr can be any column header value in tableHeaders.js
-  console.log("attr", attr);
-  console.log("sorting tracks...");
   const displayedCopy = [...displayedTracks];
-  console.log(`sorting ${displayedCopy.length} tracks....`)
+  console.log(`sorting ${displayedCopy.length} tracks`)
   let retVal1, retVal2, updatedOrderedBy; 
   if ((sortedBy !== attr) || (sortedBy === attr && orderedBy === "asc")) {
     retVal1 = -1;
@@ -134,8 +132,7 @@ const filterTracksTable = (e, tracks, setDisplayedTracks) => {
   };
 }
 
-const handleCheckboxChange = (e, tracks, setTracks) => {
-  console.log("event: ", e.target.checked ? "checked" : "unchecked")
+const updateCheckboxes = (e, tracks, setTracks) => {
   const tracksCopy = [...tracks];
   for (let track of tracksCopy) {
     if (track.key == e.target.value) {
@@ -156,14 +153,11 @@ const addToPlaylistButtonDisabled = (selectedPlaylistId, tracks) => {
   return false;
 }
 
-const handlePlaylistChange = (e, setSelectedPlaylistId) => {
-  console.log("playlist: ", e.target.value)
-  setSelectedPlaylistId(e.target.value);
-};
-
 function TableControls ({ navigate, setIsLoading, tracks, setDisplayedTracks, playlists }) {
   
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+
+  const handlePlaylistChange = (e, setSelectedPlaylistId) => setSelectedPlaylistId(e.target.value);
 
   return (
     <>
@@ -198,7 +192,7 @@ function TableControls ({ navigate, setIsLoading, tracks, setDisplayedTracks, pl
   )
 }
 
-function TracksTable ({ isMobile, newTrackId, highlightedRowRef, tracks, setTracks, displayedTracks, setDisplayedTracks }) {
+function TracksTable ({ navigate, isMobile, newTrackId, highlightedRowRef, tracks, setTracks, displayedTracks, setDisplayedTracks }) {
 
   const [sortedBy, setSortedBy] = useState("date_published");
   const [orderedBy, setOrderedBy] = useState("asc");
@@ -207,8 +201,14 @@ function TracksTable ({ isMobile, newTrackId, highlightedRowRef, tracks, setTrac
   const audioRef = useRef();
 
   const handleUnselectAllTracks = () => unselectAllTracks(tracks, setTracks);
-  const handleSortTracks = (e) => {sortTracks(e.target.getAttribute("value"), displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy)
+  const handleSortTracks = (e) => sortTracks(e.target.getAttribute("value"), displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy);
+  const handleCheckboxChange = (e) => updateCheckboxes(e, tracks, setTracks);
+  const goToAddSpotifyTrackId = (e) => {
+    const trackIdToAdd = e.target.getAttribute("value");
+    const track = tracks.filter(t => t.id == trackIdToAdd)[0];
+    navigate(`/add-spotify-track-id/${trackIdToAdd}`, {state: {track: track}});
   }
+  
   return (
     <>
       <AudioPlayer audioRef={audioRef} src={currSrc} setSongEnded={setSongEnded} />
@@ -246,7 +246,7 @@ function TracksTable ({ isMobile, newTrackId, highlightedRowRef, tracks, setTrac
                     type="checkbox"
                     value={track.key}
                     checked={track.checked}
-                    onChange={(e) => handleCheckboxChange(e, tracks, setTracks)}
+                    onChange={handleCheckboxChange}
                   />
                 </td>}
                 <td data-label="Song Name">{track.name}</td>
@@ -255,7 +255,7 @@ function TracksTable ({ isMobile, newTrackId, highlightedRowRef, tracks, setTrac
                 <td data-label="Date Published">{track.date_published}</td>
                 <td data-label="Link to Review"><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
                 <td data-label="Site">{track.site_name}</td>
-                <td data-label="Spotify Track ID">{track.spotify_track_id || <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
+                <td data-label="Spotify Track ID">{track.spotify_track_id || <p className={toClassName(styles.hasTextLink, styles.cursorPointer)} value={track.id} onClick={goToAddSpotifyTrackId}>Add Spotify Track ID</p>}
                 </td>
                 <td data-label="Preview Track">
                   <div className={toClassName(styles.isFlex, styles.isClipped, styles.isJustifyContentCenter)}>
@@ -274,7 +274,7 @@ function TracksTable ({ isMobile, newTrackId, highlightedRowRef, tracks, setTrac
                     type="checkbox"
                     value={track.key}
                     checked={track.checked}
-                    onChange={(e) => handleCheckboxChange(e, tracks, setTracks)}
+                    onChange={handleCheckboxChange}
                   />
                 </td>}
               </tr>
@@ -295,7 +295,8 @@ const TracksContent = ({ isLoading, spinnerStyle, navigate, setIsLoading, tracks
         <h1 className={toClassName(styles.title, styles.margins.mt6, styles.sizes.isSize2, styles.hasTextCentered)}>Recommended Tracks</h1>
         <TableControls navigate={navigate} setIsLoading={setIsLoading} tracks={tracks} setDisplayedTracks={setDisplayedTracks} playlists={playlists} />
         <div className={toClassName(styles.isScrollable, styles.margins.mt4)}>
-          <TracksTable 
+          <TracksTable
+            navigate={navigate}
             isMobile={isMobile} 
             highlightedRowRef={highlightedRowRef} 
             newTrackId={newTrackId} 
@@ -345,7 +346,7 @@ export default function TracksPage ({ setIsAuthenticated }) {
     <HeroSection
       containerStyle={styles.fullWidth}
       content={
-        <TracksContent 
+        <TracksContent
           isLoading={isLoading} 
           spinnerStyle={spinnerStyle} 
           navigate={navigate} 

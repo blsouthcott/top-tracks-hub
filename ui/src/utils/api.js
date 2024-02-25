@@ -75,6 +75,31 @@ class Api {
     return await fetch("/api/token-is-valid");
   }
 
+  async login (email, password) {
+    return await fetch("/api/login", {
+      ...this.postOptions,
+      body: JSON.stringify({
+        email: email,
+        password: password
+      }),
+      headers: {
+        ...this.postOptions.headers,
+        "X-Auth-Method": "Cookie",
+      },
+    })
+  }
+
+  async signup (email, password, name) {
+    return await fetch("/api/signup", {
+      ...this.postOptions,
+      body: JSON.stringify({
+        email: email,
+        name: name,
+        password: password,
+      })
+    });
+  }
+
   async accountIsAuthorized () {
     return await this.authedFetch("/api/account-is-authorized");
   }

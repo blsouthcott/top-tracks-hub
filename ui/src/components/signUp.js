@@ -6,22 +6,12 @@ import { alert } from "../utils/alert";
 import HeroSection from "./heroSection";
 import { styles, toClassName } from "./styles";
 import { Field, SubmitButton } from "./formComponents";
-
+import { api } from "../utils/api";
 
 const signup = async (e, setIsLoading, navigate, email, password, name) => {
   e.preventDefault();
   setIsLoading(true);
-  const resp = await fetch("/api/signup", {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      email: email,
-      name: name,
-      password: password,
-    })
-  });
+  const resp = api.signup(email, password, name);
   setIsLoading(false);
   if (resp.status === 200) {
     alert.fire("Please check your email for a link to verify your account. This verification link is only good for 24 hours.");
