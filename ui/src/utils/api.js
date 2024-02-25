@@ -1,124 +1,135 @@
 import { alert } from "./alert";
 
-const authedFetch = async (url, options={}) => {
-  let resp = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      "Content-Type": "application/json",
+
+class Api {
+  constructor () {
+    if (Api.instance instanceof Api) {
+      return Api.instance;
     }
-  });
-  if (resp.status === 401) {
-    resp = await fetch("/api/refresh", {
+
+    this.instance = this;
+    this.navigate = null;
+    this.postOptions = {
       method: "POST",
       headers: {
-        "X-Auth-Method": "Cookie",
         "Content-Type": "application/json",
       }
-    })
-    if (resp.status === 200) {
-      return await authedFetch(url, options);
+    }
+  }
+
+  setNavigator (navigate) {
+    this.navigate = navigate;
+  }
+
+  async authedFetch (url, options={}) {
+    let resp = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        "Content-Type": "application/json",
+      }
+    });
+    if (resp.status === 401) {
+      resp = await this.refreshToken();
+      if (resp.status === 401) {
+        alert.fire({title: "Your current login session has expired", icon: "warning"});
+        this.navigate("/");
+      } else {
+        return await this.authedFetch(url, options);
+      };
     } else {
       return resp;
     };
-  } else {
-    return resp;
-  };
-}
+  }
 
-export const checkValidToken = async (navigate) => {
-  const resp = await tokenIsValid();
-  if (resp.status === 401) {
-    if (navigate) {
-      alert.fire({title: "Your current login session has expired", icon: "warning"});
-      navigate("/");
+  async refreshToken () {
+    return await fetch("/api/refresh", {
+      ...this.postOptions,
+      headers: {
+        "X-Auth-Method": "Cookie",
+        ...this.postOptions.headers
+      }
+    })
+  }
+
+  async checkToken (setIsAuthenticated, redirect) {
+    let resp = await this.tokenIsValid();
+    if (resp.status === 200) {
+      setIsAuthenticated(true);
+      return;
+    } else if (resp.status === 401) {
+      resp = await this.refreshToken();
+      if (resp.status === 200) {
+        setIsAuthenticated(true);
+        return;
+      }
+    }
+    setIsAuthenticated(false);
+    if (redirect) {
+      alert.fire({title: "Invalid token. Please try signing in again.", icon: "warning"});
+      this.navigate("/");
     };
-  } else if (resp.status !== 200) {
-    if (navigate) {
-      alert.fire({title: "Unable to check token validity. Please try signing out and singning again.", icon: "warning"});
-      navigate("/");
-    };
-  } else {
-    return true;
-  };
+  }
+
+  async tokenIsValid () {
+    return await fetch("/api/token-is-valid");
+  }
+
+  async accountIsAuthorized () {
+    return await this.authedFetch("/api/account-is-authorized");
+  }
+
+  async authorizeAccount () {
+    return await this.authedFetch("/api/authorize", this.postOptions);
+  }
+
+  async unauthorizeAccount () {
+    return await this.authedFetch("/api/unauthorize", this.postOptions);
+  }
+
+  async getUserTopContent (timePeriod, personalizationType) {
+    return await this.authedFetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`)
+  }
+
+  async loadTrack (trackId) {
+    return await this.authedFetch(`/api/tracks?song-id=${trackId}`);
+  }
+
+  async searchTrack (trackName, trackArtists) {
+    return await this.authedFetch(`/api/spotify-tracks?song-name=${trackName}&artists=${trackArtists}`);
+  }
+  
+  async addTrackId (trackId, spotifyTrackId) {
+    return await this.authedFetch("/api/spotify-track-id", {
+      method: "PATCH",
+      body: JSON.stringify({
+        "song-id": trackId,
+        "spotify-track-id": spotifyTrackId
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+  }
+  
+  async loadPlaylists () {
+    return await this.authedFetch("/api/playlists");
+  }
+  
+  async addTracksToPlaylist (selectedTrackIds, selectedPlaylistId) {
+    return await this.authedFetch("/api/playlist-tracks", {
+      ...this.postOptions,
+      body: JSON.stringify({
+        "spotify-track-ids": selectedTrackIds,
+        "spotify-playlist-id": selectedPlaylistId,
+      }),
+    })
+  }
+
+  async loadTracks () {
+    return await this.authedFetch("/api/tracks");
+  }
 }
 
-export const tokenIsValid = async () => {
-  return await authedFetch("/api/token-is-valid");
-}
 
-export const accountIsAuthorized = async () => {
-  return await authedFetch("/api/account-is-authorized");
-}
-
-export const authorizeAccount = async () => {
-  return await authedFetch("/api/authorize", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    }
-  });
-}
-
-export const unauthorizeAccount = async () => {
-  return await fetch("/api/unauthorize", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    }
-  });
-}
-
-export const getUserTopContent = async (timePeriod, personalizationType) => {
-  return await authedFetch(`/api/personalization?time-period=${timePeriod}&personalization-type=${personalizationType}`, {
-    headers: {
-      "Content-Type": "application/json",
-    }
-  });
-}
-
-export const loadTrack = async (trackId) => {
-  return await authedFetch(`/api/tracks?song-id=${trackId}`);
-}
-
-export const loadTracks = async () => {
-  return await authedFetch("/api/tracks");
-}
-
-export const searchTrack = async (trackName, trackArtists) => {
-  return await authedFetch(`/api/spotify-tracks?song-name=${trackName}&artists=${trackArtists}`);
-}
-
-export const addTrackId = async (trackId, spotifyTrackId) => {
-  return await authedFetch("/api/spotify-track-id", {
-    method: "PATCH",
-    body: JSON.stringify({
-      "song-id": trackId,
-      "spotify-track-id": spotifyTrackId
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    }
-  });
-}
-
-export const loadPlaylists = async () => {
-  return await authedFetch("/api/playlists", {
-    headers: {
-      "Content-Type": "application/json",
-    }
-  });
-}
-
-export const addTracksToPlaylist = async (selectedTrackIds, selectedPlaylistId) => {
-  return await authedFetch("/api/playlist-tracks", {
-    method: "POST",
-    body: JSON.stringify({
-      "spotify-track-ids": selectedTrackIds,
-      "spotify-playlist-id": selectedPlaylistId,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    }
-  })
-}
+export const api = new Api();

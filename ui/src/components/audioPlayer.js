@@ -5,8 +5,12 @@ import { faPlay, faPause } from "@fortawesome/free-solid-svg-icons";
 import { ClipLoader } from "react-spinners";
 
 
-const togglePlayPause = async (setIsLoading, audioRef, playing, setPlaying) => {
+const togglePlayPause = async (setIsLoading, audioRef, trackSrc, playing, setPlaying, setCurrSrc) => {
   const audio = audioRef.current;
+  if (audio.src !== trackSrc) {
+    audio.src = trackSrc;
+    setCurrSrc(trackSrc);
+  }
   if (playing) {
     audio.pause();
   } else {
@@ -14,6 +18,7 @@ const togglePlayPause = async (setIsLoading, audioRef, playing, setPlaying) => {
     if (audio.readyState < 4) {
       setIsLoading(true);
       audio.oncanplaythrough = () => {
+        setIsLoading(false);
         audio.play();
         audio.oncanplaythrough = null;  // remove the event listener after it fires once
       };
@@ -25,32 +30,45 @@ const togglePlayPause = async (setIsLoading, audioRef, playing, setPlaying) => {
 }
 
 
-export default function AudioPlayer ({ src, displayControls=true }) {
-  const audioRef = useRef();
-  const [playing, setPlaying] = useState(false);
+export const PlayPauseButton = ({ audioRef, trackSrc, currSrc, setCurrSrc, songEnded, setSongEnded }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [srcIsPlaying, setSrcIsPlaying] = useState(false);
+  
+  const handleTogglePlayPause = () => togglePlayPause(setIsLoading, audioRef, trackSrc, srcIsPlaying, setSrcIsPlaying, setCurrSrc);
+  
+  useEffect(() => {
+    if (currSrc !== trackSrc) {
+      setSrcIsPlaying(false);
+    };
+  }, [currSrc])
+
+  useEffect(() => {
+    if (songEnded) {
+      setSrcIsPlaying(false);
+      setSongEnded(false);
+    };
+  }, [songEnded])
 
   return (
     <>
-      {isLoading && <ClipLoader />}
+      {isLoading && <ClipLoader size={20}/>}
       {!isLoading &&
         <>
-          {displayControls &&
-            <audio className={styles.audioPlayer} controls preload="metadata">
-              <source src={src} type="audio/mpeg" />
-            </audio>
-          }
-          {!displayControls &&
-            <>
-              <audio ref={audioRef} onEnded={() => setPlaying(false)} preload="metadata">
-                <source src={src} type="audio/mpeg" />
-              </audio>
-              {playing && <FontAwesomeIcon className={styles.faLg} icon={faPause} onClick={() => togglePlayPause(setIsLoading, audioRef, playing, setPlaying)} />} 
-              {!playing && <FontAwesomeIcon className={styles.faLg} icon={faPlay} onClick={() => togglePlayPause(setIsLoading, audioRef, playing, setPlaying)} />}
-            </>
-          }
+          {srcIsPlaying && <FontAwesomeIcon className={styles.faLg} icon={faPause} onClick={handleTogglePlayPause} />} 
+          {!srcIsPlaying && <FontAwesomeIcon className={styles.faLg} icon={faPlay} onClick={handleTogglePlayPause} />}
         </>
       }
     </>
+  )
+}
+
+
+export default function AudioPlayer ({ audioRef, src, setSongEnded, displayControls=false }) {
+  const handleSongEnd = () => setSongEnded(true);
+  return (
+    <audio ref={audioRef} onEnded={handleSongEnd} preload="auto" controls={displayControls || undefined} style={{"display": "none"}}>
+      <source src={src} type="audio/mpeg" />
+    </audio>
+          
   )
 }

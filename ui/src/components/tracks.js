@@ -3,16 +3,15 @@ import 'bulma/css/bulma.min.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import HeroSection from "./heroSection";
 import { ClipLoader } from 'react-spinners';
-import { tableHeaders } from "./tableHeaders";
+import { tracksTableHeaders } from "./tableHeaders";
 import { spinnerStyle } from "./spinnerStyle";
 import { alert } from "../utils/alert";
-import AudioPlayer from "./audioPlayer";
+import AudioPlayer, { PlayPauseButton } from "./audioPlayer";
 import { styles, toClassName } from "./styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBan,  } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
-import * as api from "../utils/api";
-import { checkToken } from "../utils/utils";
+import { api } from "../utils/api";
 
 
 const loadTracks = async (setIsLoading, setTracks, setDisplayedTracks) => {
@@ -88,8 +87,9 @@ const loadPlaylists = async (navigate, setPlaylists) => {
   };
 }
 
-const sortTracksTable = (attr, displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy) => {
+const sortTracks = (attr, displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy) => {
   // attr can be any column header value in tableHeaders.js
+  console.log("attr", attr);
   console.log("sorting tracks...");
   const displayedCopy = [...displayedTracks];
   console.log(`sorting ${displayedCopy.length} tracks....`)
@@ -202,78 +202,113 @@ function TracksTable ({ isMobile, newTrackId, highlightedRowRef, tracks, setTrac
 
   const [sortedBy, setSortedBy] = useState("date_published");
   const [orderedBy, setOrderedBy] = useState("asc");
+  const [currSrc, setCurrSrc] = useState("");
+  const [songEnded, setSongEnded] = useState(false);
+  const audioRef = useRef();
 
+  const handleUnselectAllTracks = () => unselectAllTracks(tracks, setTracks);
+  const handleSortTracks = (e) => {sortTracks(e.target.getAttribute("value"), displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy)
+  }
   return (
-    <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
-      <thead className={styles.stickyHeader}>
-        <tr id="table-header-row">
-          <th className={toClassName(styles.hasTextWhite, styles.hasBackgroundPrimary)}>
-            <input
-              type="checkbox"
-              checked={(getSelectedTrackIds(tracks)).length > 0}
-              onChange={() => unselectAllTracks(tracks, setTracks)}
-            />
-          </th>
-          {tableHeaders.map((header, i) => {
+    <>
+      <AudioPlayer audioRef={audioRef} src={currSrc} setSongEnded={setSongEnded} />
+      <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
+        <thead className={styles.stickyHeader}>
+          <tr id="table-header-row">
+            <th className={toClassName(styles.hasTextWhite, styles.hasBackgroundPrimary)}>
+              <input
+                type="checkbox"
+                checked={(getSelectedTrackIds(tracks)).length > 0}
+                onChange={handleUnselectAllTracks}
+              />
+            </th>
+            {tracksTableHeaders.map((header, i) => {
+              return (
+                <th
+                  className={toClassName(styles.hasTextWhite, styles.hasBackgroundPrimary, styles.tableHeader)}
+                  onClick={handleSortTracks} 
+                  key={i}
+                  value={header.value}>
+                    {header.display}
+                    &nbsp;
+                    {header.value === sortedBy ? orderedBy === "asc" ? <span>&darr;</span> : <span>&uarr;</span> : ""}
+                </th>
+              )
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {displayedTracks.map((track) => {
             return (
-              <th
-                className={toClassName(styles.hasTextWhite, styles.hasBackgroundPrimary, styles.tableHeader)}
-                onClick={() => sortTracksTable(header.value, displayedTracks, setDisplayedTracks, sortedBy, setSortedBy, orderedBy, setOrderedBy)} 
-                key={i}>
-                  {header.display}
-                  &nbsp;
-                  {header.value === sortedBy ? orderedBy === "asc" ? <span>&darr;</span> : <span>&uarr;</span> : ""}
-              </th>
+              <tr key={track.id} id={`track-${track.id}`} className={track.id == newTrackId && "highlighted-row"} ref={track.id == newTrackId ? highlightedRowRef : null}>
+                {!isMobile && <td data-label="Add to Playlist">
+                  <input
+                    type="checkbox"
+                    value={track.key}
+                    checked={track.checked}
+                    onChange={(e) => handleCheckboxChange(e, tracks, setTracks)}
+                  />
+                </td>}
+                <td data-label="Song Name">{track.name}</td>
+                <td data-label="Artists">{track.artists.join(", ")}</td>
+                <td data-label="Genres">{track.genres.join(", ")}</td>
+                <td data-label="Date Published">{track.date_published}</td>
+                <td data-label="Link to Review"><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
+                <td data-label="Site">{track.site_name}</td>
+                <td data-label="Spotify Track ID">{track.spotify_track_id || <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
+                </td>
+                <td data-label="Preview Track">
+                  <div className={toClassName(styles.isFlex, styles.isClipped, styles.isJustifyContentCenter)}>
+                    {track.spotify_track_id && track.preview_url &&
+                      <>
+                        <PlayPauseButton audioRef={audioRef} trackSrc={track.preview_url} currSrc={currSrc} setCurrSrc={setCurrSrc} songEnded={songEnded} setSongEnded={setSongEnded} />
+                        &nbsp;<FontAwesomeIcon icon={faSpotify}/>
+                      </>
+                    }
+                    {!track.spotify_track_id &&
+                      <FontAwesomeIcon icon={faBan} />}
+                  </div>
+                </td>
+                {isMobile && <td data-label="Add to Playlist">
+                  <input
+                    type="checkbox"
+                    value={track.key}
+                    checked={track.checked}
+                    onChange={(e) => handleCheckboxChange(e, tracks, setTracks)}
+                  />
+                </td>}
+              </tr>
             )
           })}
-        </tr>
-      </thead>
-      <tbody>
-        {displayedTracks.map((track) => {
-          return (
-            <tr key={track.id} id={`track-${track.id}`} className={track.id == newTrackId && "highlighted-row"} ref={track.id == newTrackId ? highlightedRowRef : null}>
-              {!isMobile && <td data-label="Add to Playlist">
-                <input
-                  type="checkbox"
-                  value={track.key}
-                  checked={track.checked}
-                  onChange={(e) => handleCheckboxChange(e, tracks, setTracks)}
-                />
-              </td>}
-              <td data-label="Song Name">{track.name}</td>
-              <td data-label="Artists">{track.artists.join(", ")}</td>
-              <td data-label="Genres">{track.genres.join(", ")}</td>
-              <td data-label="Date Published">{track.date_published}</td>
-              <td data-label="Link to Review"><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
-              <td data-label="Site">{track.site_name}</td>
-              <td data-label="Spotify Track ID">{track.spotify_track_id || <Link to={`/add-spotify-track-id/${track.id}`}>Add Spotify Track ID</Link>}
-              </td>
-              <td data-label="Preview Track">
-                <div className={toClassName(styles.isFlex, styles.isClipped, styles.isJustifyContentCenter)}>
-                  {track.spotify_track_id && track.preview_url && 
-                    <>
-                      <AudioPlayer src={track.preview_url} displayControls={false} />
-                      &nbsp;<FontAwesomeIcon icon={faSpotify} />
-                    </>}
-                  {!track.spotify_track_id &&
-                    <FontAwesomeIcon icon={faBan} />}
-                </div>
-              </td>
-              {isMobile && <td data-label="Add to Playlist">
-                <input
-                  type="checkbox"
-                  value={track.key}
-                  checked={track.checked}
-                  onChange={(e) => handleCheckboxChange(e, tracks, setTracks)}
-                />
-              </td>}
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </>
   )
 }
+
+
+const TracksContent = ({ isLoading, spinnerStyle, navigate, setIsLoading, tracks, setDisplayedTracks, playlists, isMobile, highlightedRowRef, newTrackId, setTracks, displayedTracks }) => (
+  <>
+    {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle} />}
+    {!isLoading &&
+      <>
+        <h1 className={toClassName(styles.title, styles.margins.mt6, styles.sizes.isSize2, styles.hasTextCentered)}>Recommended Tracks</h1>
+        <TableControls navigate={navigate} setIsLoading={setIsLoading} tracks={tracks} setDisplayedTracks={setDisplayedTracks} playlists={playlists} />
+        <div className={toClassName(styles.isScrollable, styles.margins.mt4)}>
+          <TracksTable 
+            isMobile={isMobile} 
+            highlightedRowRef={highlightedRowRef} 
+            newTrackId={newTrackId} 
+            tracks={tracks}
+            setTracks={setTracks} 
+            displayedTracks={displayedTracks} 
+            setDisplayedTracks={setDisplayedTracks} 
+          />
+        </div>
+      </>
+    }
+  </>
+);
 
 
 export default function TracksPage ({ setIsAuthenticated }) {
@@ -281,7 +316,7 @@ export default function TracksPage ({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 769);
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [tracks, setTracks] = useState([]);
   const [displayedTracks, setDisplayedTracks] = useState([]);
   const [playlists, setPlaylists] = useState([]);
@@ -298,7 +333,7 @@ export default function TracksPage ({ setIsAuthenticated }) {
   }, [highlightedRowRef.current, tracks])
   
   useEffect(() => {
-    checkToken(setIsAuthenticated, navigate);
+    api.checkToken(setIsAuthenticated, true);
     loadPlaylists(navigate, setPlaylists);
     loadTracks(setIsLoading, setTracks, setDisplayedTracks);
     const handleDeviceChange = () => setIsMobile(window.innerWidth < 769);
@@ -310,26 +345,20 @@ export default function TracksPage ({ setIsAuthenticated }) {
     <HeroSection
       containerStyle={styles.fullWidth}
       content={
-        <>
-          {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
-          {!isLoading &&
-            <>
-              <h1 className={toClassName(styles.title, styles.margins.mt6, styles.sizes.isSize2, styles.hasTextCentered)}>Recommended Tracks</h1>
-              <TableControls navigate={navigate} setIsLoading={setIsLoading} tracks={tracks} setDisplayedTracks={setDisplayedTracks} playlists={playlists} />
-              <div className={toClassName(styles.isScrollable, styles.margins.mt4)}>
-                <TracksTable 
-                  isMobile={isMobile} 
-                  highlightedRowRef={highlightedRowRef} 
-                  newTrackId={newTrackId} 
-                  tracks={tracks}
-                  setTracks={setTracks} 
-                  displayedTracks={displayedTracks} 
-                  setDisplayedTracks={setDisplayedTracks} 
-                />
-              </div>
-            </>
-          }
-        </>
+        <TracksContent 
+          isLoading={isLoading} 
+          spinnerStyle={spinnerStyle} 
+          navigate={navigate} 
+          setIsLoading={setIsLoading} 
+          tracks={tracks} 
+          setDisplayedTracks={setDisplayedTracks} 
+          playlists={playlists} 
+          isMobile={isMobile} 
+          highlightedRowRef={highlightedRowRef} 
+          newTrackId={newTrackId} 
+          setTracks={setTracks} 
+          displayedTracks={displayedTracks} 
+        />
       }
     />
   )

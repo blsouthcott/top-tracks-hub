@@ -2,12 +2,12 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import HeroSection from "./heroSection";
 import { styles, toClassName } from "./styles";
-import { checkToken } from "../utils/utils";
+import { api } from "../utils/api";
 
 
 export default function Contact ({ setIsAuthenticated }) {
   useEffect(() => {
-    checkToken(setIsAuthenticated);
+    api.checkToken(setIsAuthenticated);
   }, []);
   return (
     <HeroSection content={

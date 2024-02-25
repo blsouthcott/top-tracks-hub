@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import HeroSection from "./heroSection";
-import * as api from "../utils/api";
-import { checkToken } from "../utils/utils";
+import { api } from "../utils/api";
 import { alert } from "../utils/alert";
 import { styles, toClassName } from "./styles";
 
-const authorizeAccount = async (navigate) => {
+const authorizeAccount = async () => {
   const resp = await api.authorizeAccount();
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-  } else if (resp.status !== 307) {
+  if (resp.status !== 307) {
     alert.fire({title: "Unable to authorize account", icon: "error"});
     return;
   };
@@ -20,27 +15,29 @@ const authorizeAccount = async (navigate) => {
   alert.fire("Please refresh the page to update your account authorization status.");
 }
 
-const unauthorizeAccount = async (navigate, setSpotifyAccountIsAuthorized) => {
-  const resp = await api.unauthorizeAccount();
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-  } else if (resp.status === 200) {
-    alert.fire({title: "Your Spotify account has been removed. Please refresh the page.", icon: "success"});
-    setSpotifyAccountIsAuthorized(false);
-    return;
-  }
-  alert.fire({title: "There was a problem removing your Spotify Account", icon: "error"});
+const unauthorizeAccount = async (setSpotifyAccountIsAuthorized) => {
+  const res = await alert.fire({
+    title: "Are you sure you want to unauthorize your Spotify account?",
+    showDenyButton: true,
+    showCancelButton: true,
+    confirmButtonText: "Yes",
+    denyButtonText: "No"
+  });
+  if (res.isConfirmed) {
+    const resp = await api.unauthorizeAccount();
+    if (resp.status === 200) {
+      alert.fire({title: "Your Spotify account has been removed. Please refresh the page.", icon: "success"});
+      setSpotifyAccountIsAuthorized(false);
+    } else {
+      alert.fire({title: "There was a problem removing your Spotify Account", icon: "error"});
+    };
+  };
 }
 
-const setSpotifyAccountAuthorizationStatus = async (navigate, setSpotifyAccountIsAuthorized) => {
+const setSpotifyAccountAuthorizationStatus = async (setSpotifyAccountIsAuthorized) => {
   const resp = await api.accountIsAuthorized();
   let authorized;
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-    return;
-  } else if (resp.status !== 200) {
+  if (resp.status !== 200) {
     alert.fire({title: "Unable to obtain Spotify account authorization status", icon: "warning"});
     authorized = false;
   } else {
@@ -54,7 +51,8 @@ const setSpotifyAccountAuthorizationStatus = async (navigate, setSpotifyAccountI
   setSpotifyAccountIsAuthorized(authorized);
 };
 
-function AccountPageContent ({ navigate, spotifyAccountIsAuthorized, setSpotifyAccountIsAuthorized }) {
+function AccountPageContent ({ spotifyAccountIsAuthorized, setSpotifyAccountIsAuthorized }) {
+  const handleUnauthorizeAccount = () => unauthorizeAccount(setSpotifyAccountIsAuthorized);
   return (
     <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter, styles.margins.my3)}>
       <div className={styles.card}>
@@ -64,7 +62,7 @@ function AccountPageContent ({ navigate, spotifyAccountIsAuthorized, setSpotifyA
               <p className={toClassName(styles.margins.mb0, styles.hasTextCentered)}>Your Spotify account is currently authorized.</p>
               <p className={styles.hasTextCentered}>If you would like to remove this authorization, please click here.&nbsp;</p>
               <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter)}>
-                <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2)} onClick={() => unauthorizeAccount(navigate, setSpotifyAccountIsAuthorized)}>Unauthorize</button>
+                <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2)} onClick={handleUnauthorizeAccount}>Unauthorize</button>
               </div>
             </>}
           {!spotifyAccountIsAuthorized &&
@@ -72,7 +70,7 @@ function AccountPageContent ({ navigate, spotifyAccountIsAuthorized, setSpotifyA
               <p className={toClassName(styles.margins.mb0, styles.hasTextCentered)}>Your Spotify account is not currently authorized.</p>
               <p className={styles.hasTextCentered}>Please click here to authorize your Spotify account.</p>
               <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter)}>
-                <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2)} onClick={() => authorizeAccount(navigate)}>Authorize</button>
+                <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2)} onClick={authorizeAccount}>Authorize</button>
               </div>
             </>}
         </div>
@@ -83,24 +81,22 @@ function AccountPageContent ({ navigate, spotifyAccountIsAuthorized, setSpotifyA
 
 export default function Account ({ isAuthenticated, setIsAuthenticated }) {
 
-  const navigate = useNavigate();
   const [spotifyAccountIsAuthorized, setSpotifyAccountIsAuthorized] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated) {
-      setSpotifyAccountAuthorizationStatus(navigate, setSpotifyAccountIsAuthorized);
+      setSpotifyAccountAuthorizationStatus(setSpotifyAccountIsAuthorized);
     };
   }, [isAuthenticated])
 
   useEffect(() => {
-    checkToken(setIsAuthenticated, navigate);
+    api.checkToken(setIsAuthenticated, true);
   }, [])
 
   return (
     <HeroSection 
       content={ 
-        <AccountPageContent 
-          navigate={navigate} 
+        <AccountPageContent
           spotifyAccountIsAuthorized={spotifyAccountIsAuthorized} 
           setSpotifyAccountIsAuthorized={setSpotifyAccountIsAuthorized} 
         /> 

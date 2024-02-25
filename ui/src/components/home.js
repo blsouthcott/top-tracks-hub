@@ -4,7 +4,7 @@ import { styles, toClassName } from "./styles";
 import { useNavigate } from "react-router-dom";
 import Login from "./login";
 import { alert } from "../utils/alert";
-import { checkToken } from "../utils/utils";
+import { api } from "../utils/api";
 
 
 const goToTracks = async (e, navigate) => {
@@ -42,9 +42,14 @@ const displayWelcomeMsg = () => {
 export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const navigate = useNavigate();
+  const name = localStorage.getItem("name");
+
+  useEffect(() => {
+    api.setNavigator(navigate);
+  }, [navigate])
   
   useEffect(() => {
-    checkToken(setIsAuthenticated);
+    api.checkToken(setIsAuthenticated);
     displayWelcomeMsg();
   }, [])
 
@@ -56,9 +61,10 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
         <div className={toClassName(styles.columns, styles.isCentered)}>
           <div className={toClassName(styles.column, styles.isOneThird)}>
             <div className={styles.box}>
-                <h2 className={toClassName(styles.title, styles.hasTextCentered)}>Welcome!</h2>
+                <h2 className={toClassName(styles.title, styles.hasTextCentered)}>{`Welcome, ${name}!`}</h2>
+                <hr />
                 <div className={toClassName(styles.block, styles.hasTextCentered)}>
-                  <p>Click here to view all tracks available to add to your Spotify playlist.&nbsp;</p>
+                  <p>Click below to view all tracks available to add to your Spotify playlist.&nbsp;</p>
                   <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter)}>
                     <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2)} onClick={(e) => goToTracks(e, navigate)}>View Tracks</button>
                   </div>

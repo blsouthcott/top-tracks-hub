@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { styles, toClassName } from "./styles";
 import HeroSection from "./heroSection";
-import { checkToken } from "../utils/utils";
+import { api } from "../utils/api";
 
-function AboutPageContent () {
+function PageContent () {
   return (
     <div className={toClassName(styles.section, styles.margins.m4)}>
       <h1 className={toClassName(styles.title)}>About Us</h1>
@@ -20,9 +20,9 @@ function AboutPageContent () {
 
 export default function About ({ setIsAuthenticated }) {
   useEffect(() => {
-    checkToken(setIsAuthenticated);
+    api.checkToken(setIsAuthenticated);
   }, []);
   return (
-    <HeroSection content={ <AboutPageContent /> }/>
+    <HeroSection content={ <PageContent /> }/>
   )
 }

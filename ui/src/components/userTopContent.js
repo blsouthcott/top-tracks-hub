@@ -8,8 +8,7 @@ import { spinnerStyle } from "./spinnerStyle";
 import { alert } from "../utils/alert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
-import * as api from "../utils/api";
-import { checkToken } from "../utils/utils";
+import { api } from "../utils/api";
 
 
 const loadContent = async (navigate, setIsLoading, personalizationType, timePeriod, setArtists, setTracks) => {
@@ -127,7 +126,7 @@ export default function UserTopContent ({ setIsAuthenticated }) {
   }, [personalizationType, timePeriod])
 
   useEffect(() => {
-    checkToken(setIsAuthenticated, navigate);
+    api.checkToken(setIsAuthenticated);
   }, [])
 
   return (

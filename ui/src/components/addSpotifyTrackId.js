@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate, useParams } from "react-router-dom";
-import { tableHeaders } from "./tableHeaders";
+import { addTrackIdTableHeaders, searchResultsTableHeaders } from "./tableHeaders";
 import { ClipLoader } from "react-spinners";
 import HeroSection from "./heroSection";
 import { styles, toClassName } from "./styles";
@@ -10,15 +10,11 @@ import { alert } from "../utils/alert";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboard } from "@fortawesome/free-solid-svg-icons";
-import * as api from "../utils/api";
+import { api } from "../utils/api";
 
 
 const loadSongInfo = async (navigate, trackId, setTrack) => {
   const resp = await api.loadTrack(trackId)
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-  }
   if (resp.status !== 200) {
     alert.fire({title: `Unable to load information for track with id: ${trackId}`, icon: "error"});
     navigate("/tracks");
@@ -31,10 +27,7 @@ const loadSongInfo = async (navigate, trackId, setTrack) => {
 
 const loadSearchResults = async (navigate, track, trackId, setSearchResults) => {
   const resp = await api.searchTrack(track.name, track.artists.join(", "));
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-  } else if (resp.status !== 200) {
+  if (resp.status !== 200) {
     alert.fire({title: `Unable to load information for Spotify Tracks search for track with id: ${trackId}`, icon: "error"});
     navigate("/tracks", { state: { trackId: trackId } });
   } else {
@@ -51,10 +44,7 @@ const loadSearchResults = async (navigate, track, trackId, setSearchResults) => 
 const addTrackId = async (navigate, setIsLoading, trackId, spotifyTrackId) => {
   setIsLoading(true);
   const resp = await api.addTrackId(trackId, spotifyTrackId);
-  if (resp.status === 401) {
-    alert.fire({title: "Your current login session has expired", icon: "warning"});
-    navigate("/");
-  } else if (resp.status !== 204) {
+  if (resp.status !== 204) {
     alert.fire({title: "Unable to update Spotify Track ID", icon: "error"});
   } else {
     alert.fire({title: "Spotify Track ID successfully updated!", icon: "success"});
@@ -63,51 +53,54 @@ const addTrackId = async (navigate, setIsLoading, trackId, spotifyTrackId) => {
 }
 
 
-const TrackTable = ({ navigate, setIsLoading, track, trackId, spotifyTrackId, setSpotifyTrackId }) => (
-  <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
-    <caption className={styles.title}>Track Info</caption>
-    <thead>
-      <tr>
-        {tableHeaders.map((header, i) => {
-          return (
-            <th
-              className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}
-              key={i}>
-              {header.display}
-            </th>
-          )
-        })}
-        <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>{track.name}</td>
-        <td>{track.artists.join(", ")}</td>
-        <td>{track.genres.join(", ")}</td>
-        <td>{track.date_published}</td>
-        <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
-        <td>{track.site_name}</td>
-        <td>
-          <input 
-            value={spotifyTrackId}
-            onChange={e => setSpotifyTrackId(e.target.value)}
-            className={styles.input}
-            type="text">
-          </input>
-        </td>
-        <td>
-          <input 
-            className={styles.button}
-            type="button" 
-            value="Save"
-            onClick={() => addTrackId(navigate, setIsLoading, trackId, spotifyTrackId)}
-          ></input>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-)
+const TrackTable = ({ navigate, setIsLoading, track, trackId, spotifyTrackId, setSpotifyTrackId }) => {
+  const handleSpotifyTrackIdChange = (e) => setSpotifyTrackId(e.target.value);
+  const handleAddTrackId = () => addTrackId(navigate, setIsLoading, trackId, spotifyTrackId);
+  return (
+    <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
+      <caption className={styles.title}>Track Info</caption>
+      <thead>
+        <tr>
+          {addTrackIdTableHeaders.map((header, i) => {
+            return (
+              <th
+                className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}
+                key={i}>
+                {header.display}
+              </th>
+            )
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{track.name}</td>
+          <td>{track.artists.join(", ")}</td>
+          <td>{track.genres.join(", ")}</td>
+          <td>{track.date_published}</td>
+          <td><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
+          <td>{track.site_name}</td>
+          <td>
+            <input 
+              value={spotifyTrackId}
+              onChange={handleSpotifyTrackIdChange}
+              className={styles.input}
+              type="text">
+            </input>
+          </td>
+          <td>
+            <input 
+              className={styles.button}
+              type="button" 
+              value="Save"
+              onClick={handleAddTrackId}>  
+            </input>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  )
+}
 
 
 const SearchResultsTable = ({ searchResults, copiedIds, setCopiedIds }) => (
@@ -115,10 +108,15 @@ const SearchResultsTable = ({ searchResults, copiedIds, setCopiedIds }) => (
     <caption className={styles.title}>Spotify Search Results</caption>
     <thead>
       <tr>
-        <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
-          Name
-        </th>
-        <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
+        {searchResultsTableHeaders.map((header, i) => {
+          return (
+            <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
+              {header.display}
+            </th>
+          )
+        })}
+        
+        {/* <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
           Album
         </th>
         <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
@@ -129,7 +127,7 @@ const SearchResultsTable = ({ searchResults, copiedIds, setCopiedIds }) => (
         </th>
         <th className={toClassName(styles.hasBackgroundPrimary, styles.hasTextWhite, styles.tableHeader)}>
           Spotify Track ID
-        </th>
+        </th> */}
       </tr>
     </thead>
     <tbody>
@@ -159,6 +157,20 @@ const SearchResultsTable = ({ searchResults, copiedIds, setCopiedIds }) => (
 )
 
 
+const AddSpotifyTrackIdContent = ({ isLoading, setIsLoading, navigate, track, spotifyTrackId, setSpotifyTrackId, searchResults, copiedIds, setCopiedIds }) => (
+  <>
+    {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
+    {!isLoading &&
+      <div className={styles.section}>
+        <TrackTable navigate={navigate} setIsLoading={setIsLoading} track={track} spotifyTrackId={spotifyTrackId} setSpotifyTrackId={setSpotifyTrackId} />
+        <SearchResultsTable searchResults={searchResults} copiedIds={copiedIds} setCopiedIds={setCopiedIds} />
+      </div>
+    }
+  </>
+
+)
+
+
 export default function AddSpotifyTrackId () {
 
   const navigate = useNavigate();
@@ -179,15 +191,16 @@ export default function AddSpotifyTrackId () {
 
   return (
     <HeroSection content={
-      <>
-        {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle}/>}
-        {!isLoading &&
-          <div className={styles.section}>
-            <TrackTable navigate={navigate} setIsLoading={setIsLoading} track={track} spotifyTrackId={spotifyTrackId} setSpotifyTrackId={setSpotifyTrackId} />
-            <SearchResultsTable searchResults={searchResults} copiedIds={copiedIds} setCopiedIds={setCopiedIds} />
-          </div>
-        }
-      </>}
+      <AddSpotifyTrackIdContent
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        track={track}
+        spotifyTrackId={spotifyTrackId}
+        setSpotifyTrackId={setSpotifyTrackId}
+        searchResults={searchResults}
+        copiedIds={copiedIds}
+        setCopiedIds={setCopiedIds}/>
+      }
     />
   )
 }
