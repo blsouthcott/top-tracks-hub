@@ -76,11 +76,13 @@ class SpotifyTrackId(Resource):
         if not spotify_obj:
             return "Unable to authenticate to Spotify API", 500
         tracks = search_spotify_tracks(spotify_obj, song.name, song.artists[0].name)
-        if req["spotify_track_id"] not in [track.id for track in tracks]:
+        preview_url = next((track.preview_url for track in tracks.items if track.id == req["spotify_track_id"]), None)
+        # if preview_url is not assigned, none of the track IDs in the search results matched
+        if not preview_url:
             logger.info("spotify-track-id did not match track id in search results")
             return "invalid spotify track ID", 400
         song.spotify_track_id = req["spotify_track_id"]
-        song.preview_url = [track for track in tracks if track.id == req["spotify_track_id"]][0].preview_url
+        song.preview_url = preview_url
         db.session.commit()
         return (
             f"The Spotify Track ID for {song.name} with Song ID: {song.id} has been updated.",
