@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import HeroSection from "./heroSection";
-import { api } from "../utils/api";
-import { alert } from "../utils/alert";
-import { styles, toClassName } from "./styles";
+import HeroSection from "../common/HeroSection";
+import { api } from "../../utils/api";
+import { alert } from "../../utils/alert";
+import { styles, toClassName } from "../../utils/styles";
 
 const authorizeAccount = async () => {
   const resp = await api.authorizeAccount();

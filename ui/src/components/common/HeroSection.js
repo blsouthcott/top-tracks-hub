@@ -1,6 +1,6 @@
 import React from "react";
-import Footer from "./footer";
-import { styles, toClassName } from "./styles";
+import Footer from "./Footer";
+import { styles, toClassName } from "../../utils/styles";
 
 
 export default function HeroSection ({ content, containerStyle }) {

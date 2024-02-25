@@ -22,6 +22,7 @@
   top: 0;
   z-index: 1;
   background-color: lightgray;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .table-header:hover {
@@ -34,9 +35,8 @@
 
 .is-scrollable {
   overflow-y: auto;
+  overflow-x: auto;
   max-height: 600px;
-  /* width: 100%; */
-  /* margin: auto; */
   border-bottom: 1px solid rgba(220,220,220,0.5);
 }
 

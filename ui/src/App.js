@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
-import Home from './components/home';
-import Account from './components/account';
-import Tracks from './components/tracks';
-import Navbar from './components/navBar';
-import About from './components/about';
-import Contact from './components/contact';
-import ReportAnIssue from './components/reportAnIssue';
-import AddSpotifyTrackId from './components/addSpotifyTrackId';
-import Signup from './components/signUp';
-import UserTopContent from './components/userTopContent';
+import Home from './components/pages/Home';
+import Account from './components/pages/Account';
+import Tracks from './components/pages/Tracks';
+import Navbar from './components/common/Navbar';
+import About from "./components/pages/About";
+import Contact from './components/pages/Contact';
+import ReportAnIssue from './components/pages/ReportAnIssue';
+import AddSpotifyTrackId from './components/pages/AddSpotifyTrackId';
+import Signup from './components/pages/SignUp';
+import UserTopContent from './components/pages/UserTopContent';
 
 
 function App () {

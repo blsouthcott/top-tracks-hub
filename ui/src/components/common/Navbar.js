@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
-import { alert } from "../utils/alert";
-import { styles, toClassName } from "./styles";
+import { alert } from "../../utils/alert";
+import { styles, toClassName } from "../../utils/styles";
 
 
 const logout = async (navigate, setIsAuthenticated) => {

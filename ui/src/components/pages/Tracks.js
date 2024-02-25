@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import 'bulma/css/bulma.min.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import HeroSection from "./heroSection";
+import HeroSection from "../common/HeroSection";
 import { ClipLoader } from 'react-spinners';
-import { tracksTableHeaders } from "./tableHeaders";
-import { spinnerStyle } from "./spinnerStyle";
-import { alert } from "../utils/alert";
-import AudioPlayer, { PlayPauseButton } from "./audioPlayer";
-import { styles, toClassName } from "./styles";
+import { tracksTableHeaders } from "../../utils/tableHeaders";
+import { spinnerStyle } from "../../utils/spinnerStyle";
+import { alert } from "../../utils/alert";
+import AudioPlayer, { PlayPauseButton } from "../common/AudioPlayer";
+import { styles, toClassName } from "../../utils/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBan,  } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
-import { api } from "../utils/api";
+import { api } from "../../utils/api";
 
 
 const loadTracks = async (setIsLoading, setTracks, setDisplayedTracks) => {
@@ -212,7 +212,7 @@ function TracksTable ({ navigate, isMobile, newTrackId, highlightedRowRef, track
   return (
     <>
       <AudioPlayer audioRef={audioRef} src={currSrc} setSongEnded={setSongEnded} />
-      <table className={toClassName(styles.table, styles.fullWidth, styles.isBordered, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
+      <table className={toClassName(styles.table, styles.fullWidth, styles.isHoverable, styles.isStriped, styles.isNarrow)}>
         <thead className={styles.stickyHeader}>
           <tr id="table-header-row">
             <th className={toClassName(styles.hasTextWhite, styles.hasBackgroundPrimary)}>
@@ -240,7 +240,7 @@ function TracksTable ({ navigate, isMobile, newTrackId, highlightedRowRef, track
         <tbody>
           {displayedTracks.map((track) => {
             return (
-              <tr key={track.id} id={`track-${track.id}`} className={track.id == newTrackId && "highlighted-row"} ref={track.id == newTrackId ? highlightedRowRef : null}>
+              <tr key={track.id} id={`track-${track.id}`} className={track.id == newTrackId ? "highlighted-row" : ""} ref={track.id == newTrackId ? highlightedRowRef : null}>
                 {!isMobile && <td data-label="Add to Playlist">
                   <input
                     type="checkbox"

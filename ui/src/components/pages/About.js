@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { styles, toClassName } from "./styles";
-import HeroSection from "./heroSection";
-import { api } from "../utils/api";
+import { styles, toClassName } from "../../utils/styles";
+import HeroSection from "../common/HeroSection";
+import { api } from "../../utils/api";
 
 function PageContent () {
   return (

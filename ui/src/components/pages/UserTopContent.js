@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { styles, toClassName } from "./styles";
-import HeroSection from "./heroSection";
-import AudioPlayer from "./audioPlayer";
+import { styles, toClassName } from "../../utils/styles";
+import HeroSection from "../common/HeroSection";
+import AudioPlayer from "../common/AudioPlayer";
 import { ClipLoader } from "react-spinners";
-import { spinnerStyle } from "./spinnerStyle";
-import { alert } from "../utils/alert";
+import { spinnerStyle } from "../../utils/spinnerStyle";
+import { alert } from "../../utils/alert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
-import { api } from "../utils/api";
+import { api } from "../../utils/api";
 
 
 const loadContent = async (navigate, setIsLoading, personalizationType, timePeriod, setArtists, setTracks) => {

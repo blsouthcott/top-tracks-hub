@@ -1,5 +1,5 @@
 import React from "react";
-import { styles, toClassName } from "./styles";
+import { styles, toClassName } from "../../utils/styles";
 
 export const Field = ({ labelName, fieldType, fieldVal, placeholderText, onChange, requiredField }) => (
   <div className={toClassName(styles.field, styles.isFullWidth)}>

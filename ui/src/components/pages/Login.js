@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { alert } from "../utils/alert";
+import { alert } from "../../utils/alert";
 import { ClipLoader } from 'react-spinners';
-import { spinnerStyle } from "./spinnerStyle";
-import { styles, toClassName } from "./styles";
-import { Field, SubmitButton } from "./formComponents";
-import { api } from "../utils/api";
+import { spinnerStyle } from "../../utils/spinnerStyle";
+import { styles, toClassName } from "../../utils/styles";
+import { Field, SubmitButton } from "../common/Form";
+import { api } from "../../utils/api";
 
 
 const login = async (e, setIsLoading, email, password, setIsAuthenticated) => {

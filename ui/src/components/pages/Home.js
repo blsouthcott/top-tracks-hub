@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import HeroSection from "./heroSection";
-import { styles, toClassName } from "./styles";
+import HeroSection from "../common/HeroSection";
+import { styles, toClassName } from "../../utils/styles";
 import { useNavigate } from "react-router-dom";
-import Login from "./login";
-import { alert } from "../utils/alert";
-import { api } from "../utils/api";
+import Login from "./Login";
+import { alert } from "../../utils/alert";
+import { api } from "../../utils/api";
 
 
 const goToTracks = async (e, navigate) => {

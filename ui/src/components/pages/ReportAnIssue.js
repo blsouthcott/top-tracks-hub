@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { styles, toClassName } from "./styles";
-import { api } from "../utils/api";
-import HeroSection from "./heroSection";
+import { styles, toClassName } from "../../utils/styles";
+import { api } from "../../utils/api";
+import HeroSection from "../common/HeroSection";
 
 export default function ReportAnIssue ({ setIsAuthenticated }) {
   useEffect(() => {

@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from "react";
-import { styles } from "./styles";
+import React, { useState, useEffect } from "react";
+import { styles } from "../../utils/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faPause } from "@fortawesome/free-solid-svg-icons";
 import { ClipLoader } from "react-spinners";

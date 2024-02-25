@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import "../App.css"
-import { styles } from "./styles";
+import "../../App.css"
+import { styles } from "../../utils/styles";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";

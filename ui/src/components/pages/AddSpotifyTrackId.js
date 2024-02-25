@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { addTrackIdTableHeaders, searchResultsTableHeaders } from "./tableHeaders";
+import { useNavigate, useLocation } from "react-router-dom";
+import { addTrackIdTableHeaders, searchResultsTableHeaders } from "../../utils/tableHeaders";
 import { ClipLoader } from "react-spinners";
-import HeroSection from "./heroSection";
-import { styles, toClassName } from "./styles";
-import { spinnerStyle } from "./spinnerStyle";
-import { alert } from "../utils/alert";
+import HeroSection from "../common/HeroSection";
+import { styles, toClassName } from "../../utils/styles";
+import { spinnerStyle } from "../../utils/spinnerStyle";
+import { alert } from "../../utils/alert";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboard } from "@fortawesome/free-solid-svg-icons";
-import { api } from "../utils/api";
+import { api } from "../../utils/api";
 
 
 const loadSearchResults = async (navigate, setIsLoading, track, setSearchResults) => {

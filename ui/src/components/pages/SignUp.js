@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from 'react-spinners';
-import { spinnerStyle } from "./spinnerStyle";
-import { alert } from "../utils/alert";
-import HeroSection from "./heroSection";
-import { styles, toClassName } from "./styles";
-import { Field, SubmitButton } from "./formComponents";
-import { api } from "../utils/api";
+import { spinnerStyle } from "../../utils/spinnerStyle";
+import { alert } from "../../utils/alert";
+import HeroSection from "../common/HeroSection";
+import { styles, toClassName } from "../../utils/styles";
+import { Field, SubmitButton } from "../common/Form";
+import { api } from "../../utils/api";
 
 const signup = async (e, setIsLoading, navigate, email, password, name) => {
   e.preventDefault();
