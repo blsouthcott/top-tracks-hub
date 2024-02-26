@@ -61,6 +61,7 @@ export const styles = {
   button: "button",
   buttons: "buttons",
   isPrimary: "is-primary",
+  isWarning: "is-warning",
   isLight: "is-light",
   hasBackgroundPrimary: "has-background-primary",
   fullWidth: "full-width",

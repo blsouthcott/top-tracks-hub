@@ -20,6 +20,7 @@ const login = async (e, setIsLoading, email, password, setIsAuthenticated) => {
     const displayTestData = email === "test_user@test.com";
     localStorage.setItem("displayTestData", JSON.stringify(displayTestData));
     localStorage.setItem("name", data.name);
+    localStorage.setItem("email", email);
     setIsAuthenticated(true);
     alert.fire({title: `Welcome, ${data.name}!`, icon: "success"});
   };

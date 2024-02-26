@@ -48,9 +48,7 @@ const getSelectedTrackIds = (tracks) => {
 const unselectAllTracks = (tracks, setTracks) => {
   const tracksCopy = [...tracks];
   for (let track of tracksCopy) {
-    if (track.checked) {
-      track.checked = false;
-    };
+    track.checked = false;
   };
   setTracks(tracksCopy);
 }
@@ -115,21 +113,17 @@ const sortTracks = (attr, displayedTracks, setDisplayedTracks, sortedBy, setSort
   setDisplayedTracks(displayedCopy);
 };
 
-const filterTracksTable = (e, tracks, setDisplayedTracks) => {
-  const searchTerm = e.target.value;
+const filterTracksTable = (searchTerm, tracks, setDisplayedTracks) => {
   if (!searchTerm) {
     setDisplayedTracks(tracks);
-  } else {
-    const filteredTracks = tracks.filter(track => {
-      for (let key in track) {
-        if (JSON.stringify(track[key]).indexOf(searchTerm) !== -1) {
-          return true;
-        }
-      }
-      return false;
-    });
-    setDisplayedTracks(filteredTracks);
+    return;
   };
+  const filteredTracks = tracks.filter(track => {
+    return Object.values(track).some(val => {
+      return typeof val == "string" && val.toLowerCase().includes(searchTerm);
+    })
+  });
+  setDisplayedTracks(filteredTracks);
 }
 
 const updateCheckboxes = (e, tracks, setTracks) => {
@@ -153,42 +147,48 @@ const addToPlaylistButtonDisabled = (selectedPlaylistId, tracks) => {
   return false;
 }
 
-function TableControls ({ navigate, setIsLoading, tracks, setDisplayedTracks, playlists }) {
-  
+function TableControls ({ navigate, setIsLoading, tracks, setDisplayedTracks, tracksSearchable, playlists }) {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
-
+  const [searchTerm, setSearchTerm] = useState("");
   const handlePlaylistChange = (e, setSelectedPlaylistId) => setSelectedPlaylistId(e.target.value);
+  const handleAddTracksToPlaylist = () => addTracksToPlaylist(navigate, setIsLoading, tracks, selectedPlaylistId)
+  const handleSearchTermChange = (e) => setSearchTerm(e.target.value);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      filterTracksTable(searchTerm.toLowerCase(), tracks, setDisplayedTracks);
+    }, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, tracks])
 
   return (
-    <>
+    <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter, styles.isFlexWrapWrap, styles.isFlexDirectionColumnTouch)}>
       <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter, styles.isFlexWrapWrap, styles.isFlexDirectionColumnTouch)}>
-        <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter, styles.isFlexWrapWrap, styles.isFlexDirectionColumnTouch)}>
-          <div className={toClassName(styles.select, styles.margins.m1)} style={{"zIndex": 1}}>
-            <select
-              value={selectedPlaylistId} 
-              onChange={e => handlePlaylistChange(e, setSelectedPlaylistId)}>
-              <option></option>
-              {playlists.map((playlist, i) => 
-                <option key={i} value={playlist.id}>{playlist.name}</option>
-              )}
-            </select>
-          </div>
-          <button
-            className={toClassName(styles.margins.m1, styles.button, styles.isPrimary)}
-            disabled={addToPlaylistButtonDisabled(selectedPlaylistId, tracks)}
-            onClick={() => addTracksToPlaylist(navigate, setIsLoading, tracks, selectedPlaylistId)}>
-            Add to Spotify Playlist&nbsp;<FontAwesomeIcon icon={faSpotify} />
-          </button>
-          </div>
-            <input
-              type="search"
-              className={toClassName(styles.margins.m1, styles.input, styles.search)}
-              style={{maxWidth: "400px"}}
-              placeholder="Filter table..."
-              onChange={(e) => filterTracksTable(e, tracks, setDisplayedTracks)}
-            />
+        <div className={toClassName(styles.select, styles.margins.m1)} style={{"zIndex": 1}}>
+          <select
+            value={selectedPlaylistId} 
+            onChange={e => handlePlaylistChange(e, setSelectedPlaylistId)}>
+            <option></option>
+            {playlists.map((playlist, i) => 
+              <option key={i} value={playlist.id}>{playlist.name}</option>
+            )}
+          </select>
         </div>
-    </>
+        <button
+          className={toClassName(styles.margins.m1, styles.button, styles.isPrimary)}
+          disabled={addToPlaylistButtonDisabled(selectedPlaylistId, tracks)}
+          onClick={handleAddTracksToPlaylist}>
+          Add to Spotify Playlist&nbsp;<FontAwesomeIcon icon={faSpotify} />
+        </button>
+      </div>
+      <input
+        type="search"
+        className={toClassName(styles.margins.m1, styles.input, styles.search)}
+        style={{maxWidth: "400px"}}
+        placeholder="Filter table..."
+        onChange={handleSearchTermChange}
+      />
+    </div>
   )
 }
 
@@ -287,13 +287,13 @@ function TracksTable ({ navigate, isMobile, newTrackId, highlightedRowRef, track
 }
 
 
-const TracksContent = ({ isLoading, spinnerStyle, navigate, setIsLoading, tracks, setDisplayedTracks, playlists, isMobile, highlightedRowRef, newTrackId, setTracks, displayedTracks }) => (
+const TracksContent = ({ isLoading, spinnerStyle, navigate, setIsLoading, tracks, setDisplayedTracks, tracksSearchable, playlists, isMobile, highlightedRowRef, newTrackId, setTracks, displayedTracks }) => (
   <>
     {isLoading && <ClipLoader size={75} cssOverride={spinnerStyle} />}
     {!isLoading &&
       <>
         <h1 className={toClassName(styles.title, styles.margins.mt6, styles.sizes.isSize2, styles.hasTextCentered)}>Recommended Tracks</h1>
-        <TableControls navigate={navigate} setIsLoading={setIsLoading} tracks={tracks} setDisplayedTracks={setDisplayedTracks} playlists={playlists} />
+        <TableControls navigate={navigate} setIsLoading={setIsLoading} tracks={tracks} setDisplayedTracks={setDisplayedTracks} tracksSearchable={tracksSearchable} playlists={playlists} />
         <div className={toClassName(styles.isScrollable, styles.margins.mt4)}>
           <TracksTable
             navigate={navigate}
@@ -303,7 +303,7 @@ const TracksContent = ({ isLoading, spinnerStyle, navigate, setIsLoading, tracks
             tracks={tracks}
             setTracks={setTracks} 
             displayedTracks={displayedTracks} 
-            setDisplayedTracks={setDisplayedTracks} 
+            setDisplayedTracks={setDisplayedTracks}
           />
         </div>
       </>
@@ -352,7 +352,7 @@ export default function TracksPage ({ setIsAuthenticated }) {
           navigate={navigate} 
           setIsLoading={setIsLoading} 
           tracks={tracks} 
-          setDisplayedTracks={setDisplayedTracks} 
+          setDisplayedTracks={setDisplayedTracks}
           playlists={playlists} 
           isMobile={isMobile} 
           highlightedRowRef={highlightedRowRef} 

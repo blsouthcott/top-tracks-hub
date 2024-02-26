@@ -7,11 +7,6 @@ import { alert } from "../../utils/alert";
 import { api } from "../../utils/api";
 
 
-const goToTracks = async (e, navigate) => {
-  e.preventDefault();
-  navigate("/tracks");
-}
-
 const welcomeHtml = `
   <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
     <p>After signing up, add tracks to your Spotify Playlists from the Recommended Tracks page and view your Top Artists and Tracks on the Your Top Spotify Content page!</p>
@@ -43,6 +38,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
 
   const navigate = useNavigate();
   const name = localStorage.getItem("name");
+  const goToTracks = () => navigate("/tracks");
 
   useEffect(() => {
     api.setNavigator(navigate);
@@ -66,7 +62,7 @@ export default function Home ({ isAuthenticated, setIsAuthenticated }) {
                 <div className={toClassName(styles.block, styles.hasTextCentered)}>
                   <p>Click below to view all tracks available to add to your Spotify playlist.&nbsp;</p>
                   <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter)}>
-                    <button className={toClassName(styles.button, styles.isPrimary, styles.margins.m2, styles.isFullWidth)} onClick={(e) => goToTracks(e, navigate)}>View Tracks</button>
+                    <button className={toClassName(styles.button, styles.isPrimary, styles.margins.mt4, styles.isFullWidth)} onClick={goToTracks}>View Tracks</button>
                   </div>
                 </div>
             </div>

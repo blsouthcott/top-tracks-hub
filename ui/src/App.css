@@ -25,6 +25,15 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
+.table tbody tr td {
+  border: 1px solid #dbdbdb;
+}
+
+.table thead tr th {
+  border-left: 1px solid #dbdbdb;
+  border-right: 1px solid #dbdbdb;
+}
+
 .table-header:hover {
   cursor: pointer;
 }

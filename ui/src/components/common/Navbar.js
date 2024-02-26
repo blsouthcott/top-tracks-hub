@@ -4,10 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons';
 import { alert } from "../../utils/alert";
 import { styles, toClassName } from "../../utils/styles";
+import { api } from "../../utils/api";
 
 
 const logout = async (navigate, setIsAuthenticated) => {
-  const resp = await fetch("/api/logout", {method: "POST"});
+  const resp = await api.logout();
   if (resp.status === 200) {
     alert.fire({title: "You have been successfully logged out.", icon: "success"});
     localStorage.removeItem("displayTestData");

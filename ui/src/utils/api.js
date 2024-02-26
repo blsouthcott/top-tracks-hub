@@ -89,6 +89,10 @@ class Api {
     })
   }
 
+  async logout () {
+    return await this.authedFetch("/api/logout", this.postOptions);
+  }
+
   async signup (email, password, name) {
     return await fetch("/api/signup", {
       ...this.postOptions,
