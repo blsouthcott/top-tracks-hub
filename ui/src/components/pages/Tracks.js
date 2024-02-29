@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBan,  } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import { api } from "../../utils/api";
+import { useWindowWidth } from "../../utils/windowSize";
 
 
 const loadTracks = async (setIsLoading, setTracks, setDisplayedTracks) => {
@@ -253,19 +254,23 @@ function TracksTable ({ navigate, isMobile, newTrackId, highlightedRowRef, track
                 <td data-label="Artists">{track.artists.join(", ")}</td>
                 <td data-label="Genres">{track.genres.join(", ")}</td>
                 <td data-label="Date Published">{track.date_published}</td>
-                <td data-label="Link to Review"><Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link></td>
+                <td data-label="Link to Review">
+                  <Link to={`https://www.pitchfork.com${track.link}`} target="_blank">Pitchfork.com</Link>
+                </td>
                 <td data-label="Site">{track.site_name}</td>
-                <td data-label="Spotify Track ID">{track.spotify_track_id || <p className={toClassName(styles.hasTextLink, styles.cursorPointer)} value={track.id} onClick={goToAddSpotifyTrackId}>Add Spotify Track ID</p>}
+                <td data-label="Spotify Track ID">
+                  {track.spotify_track_id || <p className={toClassName(styles.hasTextLink, styles.cursorPointer)} value={track.id} onClick={goToAddSpotifyTrackId}>Add Spotify Track ID</p>}
                 </td>
                 <td data-label="Preview Track">
-                  <div className={toClassName(styles.isFlex, styles.isClipped, styles.isJustifyContentCenter)}>
+                  <div className={isMobile ? toClassName(styles.isFlex, styles.isClipped, styles.isJustifyContentEnd) : toClassName(styles.isFlex, styles.isClipped, styles.isJustifyContentCenter)}>
                     {track.spotify_track_id && track.preview_url &&
                       <>
                         <PlayPauseButton audioRef={audioRef} trackSrc={track.preview_url} currSrc={currSrc} setCurrSrc={setCurrSrc} songEnded={songEnded} setSongEnded={setSongEnded} />
-                        &nbsp;<FontAwesomeIcon icon={faSpotify}/>
+                        &nbsp;
+                        <FontAwesomeIcon icon={faSpotify}/>
                       </>
                     }
-                    {!track.spotify_track_id &&
+                    {!track.spotify_track_id || !track.preview_url &&
                       <FontAwesomeIcon icon={faBan} />}
                   </div>
                 </td>
@@ -315,7 +320,7 @@ const TracksContent = ({ isLoading, spinnerStyle, navigate, setIsLoading, tracks
 export default function TracksPage ({ setIsAuthenticated }) {
 
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 769);
+  const isMobile = useWindowWidth();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [tracks, setTracks] = useState([]);
@@ -337,9 +342,6 @@ export default function TracksPage ({ setIsAuthenticated }) {
     api.checkToken(setIsAuthenticated, true);
     loadPlaylists(navigate, setPlaylists);
     loadTracks(setIsLoading, setTracks, setDisplayedTracks);
-    const handleDeviceChange = () => setIsMobile(window.innerWidth < 769);
-    window.addEventListener("resize", handleDeviceChange);
-    return () => window.removeEventListener("resize", handleDeviceChange);
   }, [])
 
   return (

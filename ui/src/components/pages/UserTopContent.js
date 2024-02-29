@@ -9,6 +9,7 @@ import { alert } from "../../utils/alert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import { api } from "../../utils/api";
+import { useWindowWidth } from "../../utils/windowSize";
 
 
 const loadContent = async (navigate, setIsLoading, personalizationType, timePeriod, setArtists, setTracks) => {
@@ -65,14 +66,16 @@ const TopContentCard = ({ num, name, img, cardContent }) => (
 
 
 const ArtistCard = ({ artist, num }) => {
-
+  const isMobile = useWindowWidth();
   const img = <img src={artist.images[0].url} alt={artist.name} style={{width: "10em"}}/>
   const cardContent = (
     <div className={toClassName(styles.column, styles.isTwoThirds)}>
       <div className={styles.content}>
-        <p>Popularity: <b>{artist.popularity}</b></p>
-        <p>Genres: {artist.genres.join(", ")}</p>
-        <Link className={toClassName(styles.button, styles.isPrimary)} to={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer">Listen on Spotify&nbsp;<FontAwesomeIcon icon={faSpotify} /></Link>
+        <p className={isMobile && styles.hasTextCentered}>Popularity: <b>{artist.popularity}</b></p>
+        <p className={isMobile && styles.hasTextLeft}>Genres: {artist.genres.join(", ")}</p>
+        <Link className={isMobile ? toClassName(styles.button, styles.isPrimary, styles.isFullWidth) : toClassName(styles.button, styles.isPrimary)} to={artist.external_urls.spotify} target="_blank" rel="noopener noreferrer">
+          Listen on Spotify&nbsp;<FontAwesomeIcon icon={faSpotify} />
+        </Link>
       </div>
     </div>
   )

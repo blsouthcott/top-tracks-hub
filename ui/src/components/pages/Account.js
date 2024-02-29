@@ -5,6 +5,7 @@ import { alert } from "../../utils/alert";
 import { styles, toClassName } from "../../utils/styles";
 import { ClipLoader } from "react-spinners";
 import { spinnerStyle } from "../../utils/spinnerStyle";
+import { useWindowWidth } from "../../utils/windowSize";
 
 const authorizeAccount = async (setIsLoading) => {
   setIsLoading(true);
@@ -60,6 +61,7 @@ const setSpotifyAccountAuthorizationStatus = async (setIsLoading, setSpotifyAcco
 };
 
 function AccountPageContent ({ isLoading, setIsLoading, spotifyAccountIsAuthorized, setSpotifyAccountIsAuthorized }) {
+  const isMobile = useWindowWidth();
   const handleUnauthorizeAccount = () => unauthorizeAccount(setIsLoading, setSpotifyAccountIsAuthorized);
   const handleAuthorizeAccount = () => authorizeAccount(setIsLoading);
   const name = localStorage.getItem("name");
@@ -79,7 +81,7 @@ function AccountPageContent ({ isLoading, setIsLoading, spotifyAccountIsAuthoriz
               {spotifyAccountIsAuthorized &&
                 <>
                   <p className={toClassName(styles.margins.mb0)}>Your Spotify account is currently authorized.</p>
-                  <p className={styles.hasTextCentered}>If you would like to remove this authorization, please click the button below.&nbsp;</p>
+                  <p className={toClassName(styles.margins.mb0)}>If you would like to remove this authorization, please click the button below.&nbsp;</p>
                   <div className={toClassName(styles.isFlex, styles.isJustifyContentCenter)}>
                     <button className={toClassName(styles.button, styles.isWarning, styles.isFullWidth, styles.margins.mt4)} onClick={handleUnauthorizeAccount}>Unauthorize</button>
                   </div>
