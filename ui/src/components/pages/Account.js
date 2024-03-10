@@ -109,7 +109,7 @@ export default function Account ({ isAuthenticated, setIsAuthenticated }) {
 
   useEffect(() => {
     if (isAuthenticated) {
-      setSpotifyAccountAuthorizationStatus(setSpotifyAccountIsAuthorized);
+      setSpotifyAccountAuthorizationStatus(setIsLoading, setSpotifyAccountIsAuthorized);
     };
   }, [isAuthenticated])
 

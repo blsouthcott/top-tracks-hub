@@ -16,14 +16,12 @@ const loadContent = async (navigate, setIsLoading, personalizationType, timePeri
   setIsLoading(true);
   const displayTestData = JSON.parse(localStorage.getItem("displayTestData"));
   let resp = await api.accountIsAuthorized();
-  let data;
   if (resp.status !== 200) {
     alert.fire({title: "Unable to check Spotify account authorization status", icon: "error"});
     navigate("/");
     return;
-  } else {
-    data = await resp.json();
   };
+  let data = await resp.json();
   if (!data.authorized && !displayTestData) {
     alert.fire("To view your Top Spotify Content please authorize your account 🙂");
     navigate("/");

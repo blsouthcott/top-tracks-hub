@@ -119,9 +119,10 @@ const filterTracksTable = (searchTerm, tracks, setDisplayedTracks) => {
     setDisplayedTracks(tracks);
     return;
   };
+  console.log("search term: ", searchTerm);
   const filteredTracks = tracks.filter(track => {
     return Object.values(track).some(val => {
-      return typeof val == "string" && val.toLowerCase().includes(searchTerm);
+      return JSON.stringify(val).toLowerCase().includes(searchTerm);
     })
   });
   setDisplayedTracks(filteredTracks);
