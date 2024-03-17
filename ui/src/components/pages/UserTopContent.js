@@ -97,7 +97,7 @@ const TrackCard = ({ track, num }) => {
       </div>
       <div className={toClassName(styles.column, styles.isOneThird, styles.hasTextCentered)}>
         <p className={styles.sizes.isSize4}>Track Preview&nbsp;<FontAwesomeIcon icon={faSpotify} /></p>
-        <AudioPlayer src={track.preview_url}/>
+        <AudioPlayer src={track.preview_url} visible={true} displayControls={true}/>
       </div>
     </>
   )

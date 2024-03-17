@@ -63,10 +63,10 @@ export const PlayPauseButton = ({ audioRef, trackSrc, currSrc, setCurrSrc, songE
 }
 
 
-export default function AudioPlayer ({ audioRef, src, setSongEnded, displayControls=false }) {
+export default function AudioPlayer ({ audioRef, src, setSongEnded, visible=false, displayControls=false }) {
   const handleSongEnd = () => setSongEnded(true);
   return (
-    <audio ref={audioRef} onEnded={handleSongEnd} preload="auto" controls={displayControls || undefined} style={{"display": "none"}}>
+    <audio ref={audioRef} onEnded={handleSongEnd} preload="auto" controls={displayControls || undefined} style={visible ? {"width": "100%"} : {"display": "none"}}>
       <source src={src} type="audio/mpeg" />
     </audio>
           
