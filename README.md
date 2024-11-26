@@ -1,13 +1,6 @@
 # top-tracks-hub
 Discover new music effortlessly with Music Recommendations Playlist Manager. This application curates song recommendations from reputable music review sites and integrates seamlessly with your Spotify playlist.
 
-## Visit the app [here](https://top-tracks-a3b9b29d489d.herokuapp.com/)!
-
-If you'd rather not sign up but still want to see the app's functionality, you can log in with the following credentials:
-
-email: test_user@test.com  
-password: testing123
-
 # Features
 - Curated Song Recommendations
 - Spotify Playlist Integration
